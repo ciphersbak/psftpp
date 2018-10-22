@@ -1,1 +1,506 @@
 REM RESTful API in PeopleCode for Assets;
+import PS_PT:Integration:IRequestHandler;
+import PPIOTSERVICE:PPIoTService;
+import AM_ASSET:AssetBasic;
+
+class PPAssetService implements PS_PT:Integration:IRequestHandler
+   method PPAssetService();
+   method onRequest(&MSG As Message) Returns Message;
+   method onError(&MSG As Message) Returns string;
+   property string sFilePath_;
+   property string sString_;
+   property File oLogFile_;
+   property string sSelfLink_;
+   property string sHTTPVerbGET_;
+   property string sForwardSlash_;
+   property time dttmSTART_;
+   property time dttmEND_;
+   property number nAssetCount_;
+   
+private
+   instance object &oLog_;
+   
+end-class;
+
+REM JSON Structure for GET on BU;
+REM {;
+REM   "items":[array];
+REM   "offset":0;
+REM   "limit":10;
+REM   "count":xxx;
+REM   "hasMore":false/true;
+REM };
+
+method PPAssetService
+   
+   Local string &sRESTBaseUrl_, &sSvOpName_;
+   
+   %This.sFilePath_ = "C:\Temp\PSAssetRESTfulSvc.out";
+   If FileExists(%This.sFilePath_, %FilePath_Absolute) Then
+      %This.oLogFile_ = GetFile(%This.sFilePath_, "A", "", %FilePath_Absolute);
+      %This.sString_ = %This.sString_;
+   Else
+      %This.oLogFile_ = GetFile(&sFilePath_, "W", %FilePath_Absolute);
+      %This.sString_ = "";
+   End-If;
+   &oLog_ = create PPIOTSERVICE:PPIoTService();
+   
+   &sSvOpName_ = "PP_ASSET_GET";
+   SQLExec("SELECT IB_RESTBASE_URL FROM PSOPERATION WHERE IB_OPERATIONNAME = :1", &sSvOpName_, &sRESTBaseUrl_);
+   rem %This.sSelfLink_ = "http://yourwebserver:8000/PSIGW/RESTListeningConnector/PSFT_EP/PP_ASSET.v1/";
+   %This.sSelfLink_ = &sRESTBaseUrl_;
+   %This.sHTTPVerbGET_ = "get";
+   %This.sForwardSlash_ = "/";
+   %This.dttmSTART_ = %PerfTime;
+   %This.nAssetCount_ = 0;
+   
+end-method;
+
+method onRequest
+   /+ &MSG as Message +/
+   /+ Returns Message +/
+   /+ Extends/implements PS_PT:Integration:IRequestHandler.OnRequest +/
+   Local Message &response;
+   Local Document &dDocTmpl_, &dDoc1_;
+   Local Compound &cCOM1_;
+   Local Record &oRecIoTSensorData_, &rAssetRec_, &rAssetCostRec_;
+   Local string &sBusinessUnit_, &sAssetID_, &content_, &sResponseJSON_, &assetTag_;
+   Local string &sVal1_, &sVal2_, &sVal3_, &sVal31_, &sVal4_, &sVal5_, &sVal6_, &sVal61_, &sVal7_, &sVal8_, &sVal9_, &sVal13_, &sVal15_, &sVal19_, &sVal20_;
+   Local string &sVal22_, &sVal23_;
+   Local date &dVal10_, &dVal11_, &dVal14_;
+   Local datetime &dttmVal16_, &dttmVal17_, &dttmCache_;
+   Local SQL &sqlAssetRec_, &sqlAssetCostRec_;
+   Local number &m_doccount_, &nVal12_, &nVal18_, &nVal21_;
+   Local JsonBuilder &jsonbldr_;
+   Local boolean &bRet_, &b_ret, &bError_;
+   Local integer &nAssetFetchCount_;
+   Local AM_ASSET:AssetBasic &oAsset_;
+   
+   If &MSG.HTTPMethod = %IntBroker_HTTP_GET Then /* HTTP GET */
+      /* read URI Document to get parms out */
+      &dDocTmpl_ = &MSG.GetURIDocument();
+      &sBusinessUnit_ = &dDocTmpl_.DocumentElement.GetPropertyByName("business_unit").Value;
+      &sAssetID_ = &dDocTmpl_.DocumentElement.GetPropertyByName("asset_id").Value;
+      &nAssetFetchCount_ = &dDocTmpl_.DocumentElement.GetPropertyByName("count").Value;
+      &sBusinessUnit_ = Upper(&sBusinessUnit_);
+      &sAssetID_ = Upper(&sAssetID_);
+      &oLog_.LogRequest("PPIOTSERVICE.PPAssetService.OnRequest:GET ", &sBusinessUnit_ | " : " | &sAssetID_ | " : " | &nAssetFetchCount_);
+      
+      &response = CreateMessage(Operation.PP_ASSET_GET, %IntBroker_Response); /* Create the response message */
+      &dttmCache_ = AddToDateTime(%Datetime, 0, 0, 0, 0, 1, 0); /* Add 1 minute */
+      rem &dDoc1_ = &response.GetDocument();
+      rem &cCOM1_ = &dDoc1_.DocumentElement;
+      rem &oLog_.LogRequest("PPIOTSERVICE.PPAssetService.OnRequest: ", &MSG.GetContentString());
+      
+      &rAssetRec_ = CreateRecord(Record.ASSET); /* Query PS Asset Table */
+      &rAssetCostRec_ = CreateRecord(Record.COST); /* Query PS Cost Table */
+      If All(&sBusinessUnit_) And /* Both BU/Asset provided */
+            All(&sAssetID_) Then
+         rem &response.SetRESTCache(&dttmCache_); /* Set server-side caching for provider REST GET service operations */
+         rem &b_ret = %IntBroker.DeleteRESTCache("PP_ASSET_GET", "v1");
+         &sqlAssetRec_ = CreateSQL("%SelectAll(:1) WHERE BUSINESS_UNIT = :2 AND ASSET_ID = :3", &rAssetRec_, &sBusinessUnit_, &sAssetID_);
+         &sqlAssetCostRec_ = CreateSQL("%SelectAll(:1) WHERE BUSINESS_UNIT = :2 AND ASSET_ID = :3", &rAssetCostRec_, &sBusinessUnit_, &sAssetID_);
+      Else
+         If All(&sBusinessUnit_) Then /* Only BU provided */
+            If All(&nAssetFetchCount_) Then /* Count of assets to be fetched */
+               rem &sqlAssetRec_ = CreateSQL("%SelectAll(:1) WHERE BUSINESS_UNIT = :2 AND ROWNUM <= :3 ORDER BY BUSINESS_UNIT, ASSET_ID", &rAssetRec_, &sBusinessUnit_, &nAssetFetchCount_);
+               &sqlAssetRec_ = CreateSQL("SELECT * FROM (%SelectAll(:1) WHERE BUSINESS_UNIT = :2 ORDER BY BUSINESS_UNIT, ASSET_ID) WHERE ROWNUM <= :3 ", &rAssetRec_, &sBusinessUnit_, &nAssetFetchCount_);
+            Else
+               rem &response.SetRESTCache(&dttmCache_); /* Set server-side caching for provider REST GET service operations */
+               rem &b_ret = %IntBroker.DeleteRESTCache("PP_ASSET_GET", "v1");
+               &sqlAssetRec_ = CreateSQL("%SelectAll(:1) WHERE BUSINESS_UNIT = :2 ORDER BY BUSINESS_UNIT, ASSET_ID", &rAssetRec_, &sBusinessUnit_);
+            End-If;
+            rem &sqlAssetRec_ = CreateSQL("%SelectAll(:1) WHERE BUSINESS_UNIT = :2 AND ROWNUM <= :3 ORDER BY BUSINESS_UNIT, ASSET_ID", &rAssetRec_, &sBusinessUnit_, &nLimit_);
+            rem &sqlAssetCostRec_ = CreateSQL("%SelectAll(:1) WHERE BUSINESS_UNIT = :2", &rAssetCostRec_, &sBusinessUnit_);
+         End-If;
+      End-If;
+      &sqlAssetRec_.ReuseCursor = True;
+      rem &sqlAssetCostRec_.ReuseCursor = True;
+      &jsonbldr_ = CreateJsonBuilder(); /* Generate JSON Response */
+      If All(&sAssetID_) Then
+         REM Handle BU & Asset ID;
+         If &sqlAssetRec_.Fetch(&rAssetRec_) Then /*Only 1 row exists, hence, no need for WHILE */
+            %This.nAssetCount_ = %This.nAssetCount_ + 1; /* Count Assets */
+            &sVal1_ = &rAssetRec_.BUSINESS_UNIT.Value;
+            &sVal2_ = &rAssetRec_.ASSET_ID.Value;
+            &sVal3_ = &rAssetRec_.ASSET_TYPE.Value;
+            SQLExec("SELECT XLATLONGNAME FROM PS_FSFB_XLAT_VW WHERE FIELDNAME = :1 AND FIELDVALUE = :2", "ASSET_TYPE", &sVal3_, &sVal31_);
+            &sVal4_ = &rAssetRec_.ASSET_SUBTYPE.Value;
+            &sVal5_ = &rAssetRec_.DESCR.Value;
+            &sVal6_ = &rAssetRec_.ASSET_STATUS.Value;
+            SQLExec("SELECT XLATLONGNAME FROM PS_FSFB_XLAT_VW WHERE FIELDNAME = :1 AND FIELDVALUE = :2", "ASSET_STATUS", &sVal6_, &sVal61_);
+            &dVal14_ = &rAssetRec_.IN_SERVICE_DT.Value;
+            &sVal15_ = &rAssetRec_.PROFILE_ID.Value;
+            &sVal22_ = &rAssetRec_.TAG_NUMBER.Value;
+            &sVal23_ = &rAssetRec_.SERIAL_ID.Value;
+            &dttmVal16_ = &rAssetRec_.SYNCDTTM.Value;
+         End-If;
+         If All(&sVal1_) And
+               All(&sVal2_) Then
+            If &jsonbldr_.StartObjectReturnsTrue("") Then /* Single Asset START */
+               &jsonbldr_.AddProperty("businessUnit", &sVal1_);
+               &jsonbldr_.AddProperty("assetId", &sVal2_);
+               &jsonbldr_.AddProperty("assetType", &sVal31_);
+               &jsonbldr_.AddProperty("assetSubType", &sVal4_);
+               &jsonbldr_.AddProperty("profileId", &sVal15_);
+               &jsonbldr_.AddProperty("description", &sVal5_);
+               &jsonbldr_.AddProperty("assetStatus", &sVal61_);
+               &jsonbldr_.AddProperty("inServiceDt", &dVal14_);
+               rem &jsonbldr_.AddProperty("assignedPlaceName", "ACMEInternationalAirport"); /* Assigned Place predefined as part of imported project in DS */
+               &jsonbldr_.AddProperty("tagNumber", &sVal22_);
+               &jsonbldr_.AddProperty("serialId", &sVal23_);
+               &jsonbldr_.AddProperty("syncDttm", &dttmVal16_);
+               If &jsonbldr_.StartArrayReturnsTrue("tags") Then
+                  &assetTag_ = "Vanguard TAG";
+                  &jsonbldr_.AddElement(&assetTag_);
+                  &jsonbldr_.EndArray("tags");
+               End-If;
+               If &jsonbldr_.StartArrayReturnsTrue("cost") Then
+                  rem &jsonbldr_.StartObject("cost");
+                  While &sqlAssetCostRec_.Fetch(&rAssetCostRec_)
+                     &sVal7_ = &rAssetCostRec_.BOOK.Value;
+                     &sVal8_ = &rAssetCostRec_.CONVENTION.Value;
+                     &nVal18_ = &rAssetCostRec_.CF_SEQNO.Value;
+                     &sVal19_ = &rAssetCostRec_.DEPTID.Value;
+                     &sVal20_ = &rAssetCostRec_.CATEGORY.Value;
+                     &sVal9_ = &rAssetCostRec_.TRANS_TYPE.Value;
+                     &dVal10_ = &rAssetCostRec_.TRANS_DT.Value;
+                     &dVal11_ = &rAssetCostRec_.ACCOUNTING_DT.Value;
+                     &nVal21_ = &rAssetCostRec_.QUANTITY.Value;
+                     &nVal12_ = &rAssetCostRec_.TXN_COST.Value;
+                     &sVal13_ = &rAssetCostRec_.TXN_CURRENCY_CD.Value;
+                     &dttmVal17_ = &rAssetCostRec_.DTTM_STAMP.Value;
+                     &jsonbldr_.StartObject("cost"); /* For each Book START */
+                     &jsonbldr_.AddProperty("book", &sVal7_);
+                     &jsonbldr_.AddProperty("cfSeqno", &nVal18_);
+                     &jsonbldr_.AddProperty("convention", &sVal8_);
+                     &jsonbldr_.AddProperty("deptId", &sVal19_);
+                     &jsonbldr_.AddProperty("category", &sVal20_);
+                     &jsonbldr_.AddProperty("transType", &sVal9_);
+                     &jsonbldr_.AddProperty("transDt", &dVal10_);
+                     &jsonbldr_.AddProperty("accountingDt", &dVal11_);
+                     &jsonbldr_.AddProperty("quantity", &nVal21_);
+                     &jsonbldr_.AddProperty("txnCost", &nVal12_);
+                     &jsonbldr_.AddProperty("txnCurrencyCd", &sVal13_);
+                     &jsonbldr_.AddProperty("dttmStamp", &dttmVal17_);
+                     &jsonbldr_.EndObject("cost"); /* For each Book END */
+                  End-While;
+                  rem &sqlAssetCostRec_.Close();
+                  rem &jsonbldr_.EndObject("cost");
+                  &jsonbldr_.EndArray("cost");
+               End-If;
+               If &jsonbldr_.StartArrayReturnsTrue("links") Then
+                  &jsonbldr_.StartObject("links"); /* self START */
+                  &jsonbldr_.AddProperty("rel", "self");
+                  &jsonbldr_.AddProperty("href", %This.sSelfLink_ | %This.sHTTPVerbGET_ | %This.sForwardSlash_ | &sVal1_ | %This.sForwardSlash_ | &sVal2_);
+                  &jsonbldr_.EndObject("links"); /* self END */
+                  &jsonbldr_.StartObject("links"); /* canonical START */
+                  &jsonbldr_.AddProperty("rel", "canonical");
+                  &jsonbldr_.AddProperty("href", %This.sSelfLink_ | %This.sHTTPVerbGET_ | %This.sForwardSlash_ | &sVal1_ | %This.sForwardSlash_ | &sVal2_);
+                  &jsonbldr_.EndObject("links"); /* canonical END */
+                  &jsonbldr_.EndArray("links");
+               End-If;
+               &jsonbldr_.EndObject("");
+            End-If; /* Single Asset END */
+         Else /* Incorrect BU and Asset */
+            &jsonbldr_ = CreateJsonBuilder(); /* Generate JSON Error Msg */
+            If &jsonbldr_.StartObjectReturnsTrue("") Then
+               &jsonbldr_.AddProperty("error", "No BU/Asset Found. Please provide valid BU/Asset ID combination.");
+               &jsonbldr_.EndObject("");
+            End-If;
+         End-If; /* Incorrect BU and Asset END */
+      Else /* Its a GET at BU Level. Handle all Assets for that BU */
+         &jsonbldr_.StartObject(""); /* This is required to add offset, limit, count, & hasMore */
+         If &jsonbldr_.StartArrayReturnsTrue("items") Then /* Items Array START */
+            While &sqlAssetRec_.Fetch(&rAssetRec_)
+               %This.nAssetCount_ = %This.nAssetCount_ + 1; /* Count Assets */
+               &sVal1_ = &rAssetRec_.BUSINESS_UNIT.Value;
+               &sVal2_ = &rAssetRec_.ASSET_ID.Value;
+               &sVal3_ = &rAssetRec_.ASSET_TYPE.Value;
+               SQLExec("SELECT XLATLONGNAME FROM PS_FSFB_XLAT_VW WHERE FIELDNAME = :1 AND FIELDVALUE = :2", "ASSET_TYPE", &sVal3_, &sVal31_);
+               &sVal4_ = &rAssetRec_.ASSET_SUBTYPE.Value;
+               &sVal5_ = &rAssetRec_.DESCR.Value;
+               &sVal6_ = &rAssetRec_.ASSET_STATUS.Value;
+               SQLExec("SELECT XLATLONGNAME FROM PS_FSFB_XLAT_VW WHERE FIELDNAME = :1 AND FIELDVALUE = :2", "ASSET_STATUS", &sVal6_, &sVal61_);
+               &dVal14_ = &rAssetRec_.IN_SERVICE_DT.Value;
+               &sVal15_ = &rAssetRec_.PROFILE_ID.Value;
+               &sVal22_ = &rAssetRec_.TAG_NUMBER.Value;
+               &sVal23_ = &rAssetRec_.SERIAL_ID.Value;
+               &dttmVal16_ = &rAssetRec_.SYNCDTTM.Value;
+               &jsonbldr_.StartObject("items"); /* For each Asset START */
+               &jsonbldr_.AddProperty("businessUnit", &sVal1_);
+               &jsonbldr_.AddProperty("assetId", &sVal2_);
+               &jsonbldr_.AddProperty("assetType", &sVal31_);
+               &jsonbldr_.AddProperty("assetSubType", &sVal4_);
+               &jsonbldr_.AddProperty("profileId", &sVal15_);
+               &jsonbldr_.AddProperty("description", &sVal5_);
+               &jsonbldr_.AddProperty("assetStatus", &sVal61_);
+               &jsonbldr_.AddProperty("inServiceDt", &dVal14_);
+               rem &jsonbldr_.AddProperty("assignedPlaceName", "ACMEInternationalAirport"); /* Assigned Place predefined as part of imported project in DS */
+               &jsonbldr_.AddProperty("tagNumber", &sVal22_);
+               &jsonbldr_.AddProperty("serialId", &sVal23_);
+               &jsonbldr_.AddProperty("syncDttm", &dttmVal16_);
+               rem &jsonbldr_.EndObject("items"); /* For each Asset END */
+               &sqlAssetCostRec_ = CreateSQL("%SelectAll(:1) WHERE BUSINESS_UNIT = :2 AND ASSET_ID = :3 ORDER BY BUSINESS_UNIT, ASSET_ID, CF_SEQNO", &rAssetCostRec_, &sBusinessUnit_, &sVal2_);
+               &sqlAssetCostRec_.ReuseCursor = True;
+               If &jsonbldr_.StartArrayReturnsTrue("cost") Then
+                  rem &jsonbldr_.StartObject("cost");
+                  While &sqlAssetCostRec_.Fetch(&rAssetCostRec_)
+                     &sVal7_ = &rAssetCostRec_.BOOK.Value;
+                     &sVal8_ = &rAssetCostRec_.CONVENTION.Value;
+                     &nVal18_ = &rAssetCostRec_.CF_SEQNO.Value;
+                     &sVal19_ = &rAssetCostRec_.DEPTID.Value;
+                     &sVal20_ = &rAssetCostRec_.CATEGORY.Value;
+                     &sVal9_ = &rAssetCostRec_.TRANS_TYPE.Value;
+                     &dVal10_ = &rAssetCostRec_.TRANS_DT.Value;
+                     &dVal11_ = &rAssetCostRec_.ACCOUNTING_DT.Value;
+                     &nVal21_ = &rAssetCostRec_.QUANTITY.Value;
+                     &nVal12_ = &rAssetCostRec_.TXN_COST.Value;
+                     &sVal13_ = &rAssetCostRec_.TXN_CURRENCY_CD.Value;
+                     &dttmVal17_ = &rAssetCostRec_.DTTM_STAMP.Value;
+                     &jsonbldr_.StartObject("cost"); /* For each Book START */
+                     &jsonbldr_.AddProperty("book", &sVal7_);
+                     &jsonbldr_.AddProperty("cfSeqno", &nVal18_);
+                     &jsonbldr_.AddProperty("convention", &sVal8_);
+                     &jsonbldr_.AddProperty("deptId", &sVal19_);
+                     &jsonbldr_.AddProperty("category", &sVal20_);
+                     &jsonbldr_.AddProperty("transType", &sVal9_);
+                     &jsonbldr_.AddProperty("transDt", &dVal10_);
+                     &jsonbldr_.AddProperty("accountingDt", &dVal11_);
+                     &jsonbldr_.AddProperty("quantity", &nVal21_);
+                     &jsonbldr_.AddProperty("txnCost", &nVal12_);
+                     &jsonbldr_.AddProperty("txnCurrencyCd", &sVal13_);
+                     &jsonbldr_.AddProperty("dttmStamp", &dttmVal17_);
+                     &jsonbldr_.EndObject("cost"); /* For each Book END */
+                  End-While;
+                  rem &sqlAssetCostRec_.Close();
+                  rem &jsonbldr_.EndObject("cost");
+                  &jsonbldr_.EndArray("cost");
+               End-If;
+               If &jsonbldr_.StartArrayReturnsTrue("links") Then
+                  &jsonbldr_.StartObject("links"); /* self START */
+                  &jsonbldr_.AddProperty("rel", "self");
+                  &jsonbldr_.AddProperty("href", %This.sSelfLink_ | %This.sHTTPVerbGET_ | %This.sForwardSlash_ | &sVal1_ | %This.sForwardSlash_ | &sVal2_);
+                  &jsonbldr_.EndObject("links"); /* self END */
+                  &jsonbldr_.StartObject("links"); /* canonical START */
+                  &jsonbldr_.AddProperty("rel", "canonical");
+                  &jsonbldr_.AddProperty("href", %This.sSelfLink_ | %This.sHTTPVerbGET_ | %This.sForwardSlash_ | &sVal1_ | %This.sForwardSlash_ | &sVal2_);
+                  &jsonbldr_.EndObject("links"); /* canonical END */
+                  &jsonbldr_.EndArray("links");
+               End-If;
+               &jsonbldr_.EndObject("items"); /* For each Asset END */
+            End-While;
+            &jsonbldr_.EndArray("items");
+         End-If; /* Items Array END */
+         
+         REM Add offset, limit, count, hasMore tags;
+         &jsonbldr_.AddProperty("offset", 0);
+         &jsonbldr_.AddProperty("limit", 10);
+         &jsonbldr_.AddProperty("count", %This.nAssetCount_);
+         If All(&nAssetFetchCount_) Then
+            &jsonbldr_.AddProperty("hasMore", True);
+         Else
+            &jsonbldr_.AddProperty("hasMore", False);
+         End-If;
+         &jsonbldr_.EndObject("");
+         
+      End-If;
+      
+      /* Build response only if BU/Asset are valid */
+      If All(&sVal1_) And
+            All(&sVal2_) Then
+         &content_ = &MSG.GetContentString();
+         
+      Else /* Incorrect BU and Asset */
+         &jsonbldr_ = CreateJsonBuilder(); /* Generate JSON Error Msg */
+         If &jsonbldr_.StartObjectReturnsTrue("") Then
+            &jsonbldr_.AddProperty("error", "No BU/Asset Found. Please provide valid BU/Asset ID combination.");
+            &jsonbldr_.EndObject("");
+         End-If;
+      End-If; /* Incorrect BU and Asset END */
+      
+      &sResponseJSON_ = &jsonbldr_.ToString();
+      %This.dttmEND_ = %PerfTime;
+      rem &oLog_.LogRequest("Generated JSON", &sResponseJSON_); /* Output JSON Response to AppServer Log */
+      &oLog_.LogRequest("Time Taken to Fetch " | %This.nAssetCount_ | " Assets : ", NumberToString("%6.3", Value(%This.dttmEND_ - %This.dttmSTART_)) | " Seconds");
+      &bRet_ = &response.SetContentString(&jsonbldr_.ToString()); /* Assign the JSON String to the Response Message */
+   End-If; /* HTTPMethod GET END */
+   
+   If &MSG.HTTPMethod = %IntBroker_HTTP_POST Then /* HTTP GET */
+      /* read URI Document to get parms out */
+      &dDocTmpl_ = &MSG.GetURIDocument();
+      &sBusinessUnit_ = &dDocTmpl_.DocumentElement.GetPropertyByName("business_unit").Value;
+      &sAssetID_ = &dDocTmpl_.DocumentElement.GetPropertyByName("asset_id").Value;
+      &sBusinessUnit_ = Upper(&sBusinessUnit_);
+      &sAssetID_ = Upper(&sAssetID_);
+      &oLog_.LogRequest("PPIOTSERVICE.PPAssetService.OnRequest:POST ", &sBusinessUnit_ | " : " | &sAssetID_);
+      
+      &response = CreateMessage(Operation.PP_ASSET_POST, %IntBroker_Response); /* Create the response message */
+      
+      &oAsset_ = create AM_ASSET:AssetBasic();
+      If &oAsset_.ErrCode <> "0" Then
+         Warning MsgGet(&oAsset_.ErrSetNum, &oAsset_.ErrNum, &oAsset_.ErrText);
+         Exit (1);
+      End-If;
+      
+      &oAsset_.BUSINESS_UNIT = &sBusinessUnit_; /* Assign CREATE KEYS */
+      &oAsset_.ASSET_ID = &sAssetID_;
+      &oAsset_.ASSET_TYPE = "070";
+      &oAsset_.PROFILE_ID = "MACHINERY";
+      rem &oAsset_.TAG_NUMBER = &MsgRec.TAG_NUMBER.Value;
+      rem &oAsset_.SERIAL_ID = &MsgRec.SERIAL_ID.Value;
+      
+      rem &oAsset_.COMPONENT_OF_ID = &MsgRec.COMPONENT_OF_ID.Value;
+      rem &oAsset_.ASSET_SUBTYPE = &MsgRec.ASSET_SUBTYPE.Value;
+      rem &oAsset_.EMPLID = &MsgRec.EMPLID.Value;
+      rem &oAsset_.CUST_DEPTID = &MsgRec.DEPTID.Value;
+      rem &oAsset_.INV_ITEM_ID = &MsgRec.INV_ITEM_ID.Value;
+      
+      rem &oAsset_.MFG_ID = &MsgRec.MFG_ID.Value;
+      rem &oAsset_.MODEL = &MsgRec.MODEL.Value;
+      rem &oAsset_.LOCATION = &MsgRec.LOCATION.Value;
+      rem &oLog_.LogRequest("PPIOTSERVICE.PPAssetService.OnRequest:POST ", "Create Keys Assigned");
+      If Not &oAsset_.Add() Then /* ADD the Asset */
+         If &oAsset_.ErrCode <> "0" Then
+            Warning MsgGet(&oAsset_.ErrSetNum, &oAsset_.ErrNum, &oAsset_.ErrText);
+            &bError_ = True;
+         End-If;
+      End-If;
+      rem &oLog_.LogRequest("PPIOTSERVICE.PPAssetService.OnRequest:POST ", String(&bError_));
+      If &bError_ Then
+         Exit (1);
+      End-If;
+      &jsonbldr_ = CreateJsonBuilder(); /* Generate JSON Success Msg */
+      
+      &rAssetRec_ = CreateRecord(Record.ASSET); /* Query PS Asset Table */
+      &rAssetCostRec_ = CreateRecord(Record.COST); /* Query PS Cost Table */
+      If All(&sBusinessUnit_) And /* Both BU/Asset provided */
+            All(&sAssetID_) Then
+         rem &response.SetRESTCache(&dttmCache_); /* Set server-side caching for provider REST GET service operations */
+         rem &b_ret = %IntBroker.DeleteRESTCache("PP_ASSET_GET", "v1");
+         &sqlAssetRec_ = CreateSQL("%SelectAll(:1) WHERE BUSINESS_UNIT = :2 AND ASSET_ID = :3", &rAssetRec_, &sBusinessUnit_, &sAssetID_);
+         &sqlAssetCostRec_ = CreateSQL("%SelectAll(:1) WHERE BUSINESS_UNIT = :2 AND ASSET_ID = :3", &rAssetCostRec_, &sBusinessUnit_, &sAssetID_);
+      End-If;
+      &sqlAssetRec_.ReuseCursor = True;
+      
+      If All(&sAssetID_) Then
+         REM Handle BU & Asset ID;
+         If &sqlAssetRec_.Fetch(&rAssetRec_) Then /*Only 1 row exists, hence, no need for WHILE */
+            %This.nAssetCount_ = %This.nAssetCount_ + 1; /* Count Assets */
+            &sVal1_ = &rAssetRec_.BUSINESS_UNIT.Value;
+            &sVal2_ = &rAssetRec_.ASSET_ID.Value;
+            &sVal3_ = &rAssetRec_.ASSET_TYPE.Value;
+            SQLExec("SELECT XLATLONGNAME FROM PS_FSFB_XLAT_VW WHERE FIELDNAME = :1 AND FIELDVALUE = :2", "ASSET_TYPE", &sVal3_, &sVal31_);
+            &sVal4_ = &rAssetRec_.ASSET_SUBTYPE.Value;
+            &sVal5_ = &rAssetRec_.DESCR.Value;
+            &sVal6_ = &rAssetRec_.ASSET_STATUS.Value;
+            SQLExec("SELECT XLATLONGNAME FROM PS_FSFB_XLAT_VW WHERE FIELDNAME = :1 AND FIELDVALUE = :2", "ASSET_STATUS", &sVal6_, &sVal61_);
+            &dVal14_ = &rAssetRec_.IN_SERVICE_DT.Value;
+            &sVal15_ = &rAssetRec_.PROFILE_ID.Value;
+            &sVal22_ = &rAssetRec_.TAG_NUMBER.Value;
+            &sVal23_ = &rAssetRec_.SERIAL_ID.Value;
+            &dttmVal16_ = &rAssetRec_.SYNCDTTM.Value;
+         End-If;
+         If All(&sVal1_) And
+               All(&sVal2_) Then
+            If &jsonbldr_.StartObjectReturnsTrue("") Then /* Single Asset START */
+               &jsonbldr_.AddProperty("businessUnit", &sVal1_);
+               &jsonbldr_.AddProperty("assetId", &sVal2_);
+               &jsonbldr_.AddProperty("assetType", &sVal31_);
+               &jsonbldr_.AddProperty("assetSubType", &sVal4_);
+               &jsonbldr_.AddProperty("profileId", &sVal15_);
+               &jsonbldr_.AddProperty("description", &sVal5_);
+               &jsonbldr_.AddProperty("assetStatus", &sVal61_);
+               &jsonbldr_.AddProperty("inServiceDt", &dVal14_);
+               rem &jsonbldr_.AddProperty("assignedPlaceName", "ACMEInternationalAirport"); /* Assigned Place predefined as part of imported project in DS */
+               &jsonbldr_.AddProperty("tagNumber", &sVal22_);
+               &jsonbldr_.AddProperty("serialId", &sVal23_);
+               &jsonbldr_.AddProperty("syncDttm", &dttmVal16_);
+               If &jsonbldr_.StartArrayReturnsTrue("tags") Then
+                  &assetTag_ = "Vanguard TAG";
+                  &jsonbldr_.AddElement(&assetTag_);
+                  &jsonbldr_.EndArray("tags");
+               End-If;
+               If &jsonbldr_.StartArrayReturnsTrue("cost") Then
+                  rem &jsonbldr_.StartObject("cost");
+                  While &sqlAssetCostRec_.Fetch(&rAssetCostRec_)
+                     &sVal7_ = &rAssetCostRec_.BOOK.Value;
+                     &sVal8_ = &rAssetCostRec_.CONVENTION.Value;
+                     &nVal18_ = &rAssetCostRec_.CF_SEQNO.Value;
+                     &sVal19_ = &rAssetCostRec_.DEPTID.Value;
+                     &sVal20_ = &rAssetCostRec_.CATEGORY.Value;
+                     &sVal9_ = &rAssetCostRec_.TRANS_TYPE.Value;
+                     &dVal10_ = &rAssetCostRec_.TRANS_DT.Value;
+                     &dVal11_ = &rAssetCostRec_.ACCOUNTING_DT.Value;
+                     &nVal21_ = &rAssetCostRec_.QUANTITY.Value;
+                     &nVal12_ = &rAssetCostRec_.TXN_COST.Value;
+                     &sVal13_ = &rAssetCostRec_.TXN_CURRENCY_CD.Value;
+                     &dttmVal17_ = &rAssetCostRec_.DTTM_STAMP.Value;
+                     &jsonbldr_.StartObject("cost"); /* For each Book START */
+                     &jsonbldr_.AddProperty("book", &sVal7_);
+                     &jsonbldr_.AddProperty("cfSeqno", &nVal18_);
+                     &jsonbldr_.AddProperty("convention", &sVal8_);
+                     &jsonbldr_.AddProperty("deptId", &sVal19_);
+                     &jsonbldr_.AddProperty("category", &sVal20_);
+                     &jsonbldr_.AddProperty("transType", &sVal9_);
+                     &jsonbldr_.AddProperty("transDt", &dVal10_);
+                     &jsonbldr_.AddProperty("accountingDt", &dVal11_);
+                     &jsonbldr_.AddProperty("quantity", &nVal21_);
+                     &jsonbldr_.AddProperty("txnCost", &nVal12_);
+                     &jsonbldr_.AddProperty("txnCurrencyCd", &sVal13_);
+                     &jsonbldr_.AddProperty("dttmStamp", &dttmVal17_);
+                     &jsonbldr_.EndObject("cost"); /* For each Book END */
+                  End-While;
+                  rem &sqlAssetCostRec_.Close();
+                  rem &jsonbldr_.EndObject("cost");
+                  &jsonbldr_.EndArray("cost");
+               End-If;
+               If &jsonbldr_.StartArrayReturnsTrue("links") Then
+                  &jsonbldr_.StartObject("links"); /* self START */
+                  &jsonbldr_.AddProperty("rel", "self");
+                  &jsonbldr_.AddProperty("href", %This.sSelfLink_ | %This.sHTTPVerbGET_ | %This.sForwardSlash_ | &sVal1_ | %This.sForwardSlash_ | &sVal2_);
+                  &jsonbldr_.EndObject("links"); /* self END */
+                  &jsonbldr_.StartObject("links"); /* canonical START */
+                  &jsonbldr_.AddProperty("rel", "canonical");
+                  &jsonbldr_.AddProperty("href", %This.sSelfLink_ | %This.sHTTPVerbGET_ | %This.sForwardSlash_ | &sVal1_ | %This.sForwardSlash_ | &sVal2_);
+                  &jsonbldr_.EndObject("links"); /* canonical END */
+                  &jsonbldr_.EndArray("links");
+               End-If;
+               &jsonbldr_.EndObject("");
+            End-If; /* Single Asset END */
+         End-If;
+      End-If;
+      
+      &sResponseJSON_ = &jsonbldr_.ToString();
+      &oLog_.LogRequest("PPIOTSERVICE.PPAssetService.OnRequest:POST ", &sResponseJSON_);
+      &bRet_ = &response.SetContentString(&jsonbldr_.ToString()); /* Assign the JSON String to the Response Message */
+      
+   End-If; /* HTTPMethod POST END */
+   rem &sqlAssetRec_.Close();
+   Return &response;
+   
+end-method;
+
+method onError
+   /+ &MSG as Message +/
+   /+ Returns String +/
+   /+ Extends/implements PS_PT:Integration:IRequestHandler.OnError +/
+   Local integer &nMsgNumber, &nMsgSetNumber;
+   Local string &str;
+   Local Message &Fault_Msg;
+   Local Document &fault_doc;
+   Local Compound &COM;
+   &nMsgNumber = &MSG.IBException.MessageNumber;
+   &nMsgSetNumber = &MSG.IBException.MessageSetNumber;
+   &str = &MSG.IBException.DefaultText;
+   &oLog_.LogRequest("PPIOTSERVICE.PPAssetService.OnError: ", &str);
+   
+   If &MSG.HTTPMethod = %IntBroker_HTTP_GET Then
+      &Fault_Msg = CreateMessage(Operation.PP_ASSET_GET, %IntBroker_Fault);
+      &fault_doc = &Fault_Msg.GetDocument();
+      &COM = &fault_doc.DocumentElement;
+      &COM.GetPropertyByName("fault_data").Value = &MSG.IBException.ToString();
+   End-If;
+   
+   Return &str;
+end-method;
