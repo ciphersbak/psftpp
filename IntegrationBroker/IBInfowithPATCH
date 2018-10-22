@@ -1,0 +1,37 @@
+REM How to use HTTP PATCH;
+&oGenRqstRESTMsg_ = CreateMessage(Operation.IB_GENERIC_REST_POST); /* Use the delivered IB REST POST SvOp */
+&bRet_ = &oGenRqstRESTMsg_.SetContentString(&jsonbldr_.ToString()); /* Assign the JSON String to the Request Message */
+&IBInfo_ = &oGenRqstRESTMsg_.IBInfo;
+      
+&bRet = &IBInfo_.LoadConnectorProp("HTTPTARGET");
+&IBInfo_.ConnectorOverride = True;
+&IBInfo_.IBConnectorInfo.ConnectorClassName = "HttpTargetConnector";
+&IBInfo_.IBConnectorInfo.ConnectorName = "HTTPTARGET";
+&sAuthInfo_ = "iot:welcome1"; /* This should ideally be hidden */
+&oString_ = CreateJavaObject("java.lang.String", &sAuthInfo_);
+&oEncoder_ = CreateJavaObject("sun.misc.BASE64Encoder");
+&sAuthEnc_ = &oEncoder_.encodeBuffer(&oString_.getBytes());
+&sAuthHeader_ = &sAuthEnc_;
+&bRet = &IBInfo_.IBConnectorInfo.AddConnectorProperties("Authorization", "Basic " | &sAuthHeader_, %HttpHeader); /* V IMP */
+rem &bRet = &IBInfo_.IBConnectorInfo.AddConnectorProperties("SearchUser", %UserId, %HttpHeader);
+&bRet = &IBInfo_.IBConnectorInfo.AddConnectorProperties("Content-Type", "application/json; encoding=""UTF-8""", %HttpHeader);
+&bRet = &IBInfo_.IBConnectorInfo.AddConnectorProperties("X-HTTP-Method-Override", "PATCH", %HttpHeader); /* V IMP */
+&bRet = &IBInfo_.IBConnectorInfo.DeleteConnectorProperties("URL");
+&bRet = &IBInfo_.IBConnectorInfo.AddConnectorProperties("URL", &sAssetURI_, %HttpProperty);
+&bRet = &IBInfo_.IBConnectorInfo.DeleteConnectorProperties("Method");
+&bRet = &IBInfo_.IBConnectorInfo.AddConnectorProperties("Method", "POST", %HttpProperty); /* Change this based on HTTP Verbs */
+rem &bRet = &IBInfo_.IBConnectorInfo.AddConnectorProperties("Method", "PATCH", %HttpProperty); /* Change this based on HTTP Verbs */
+      
+&oGenRspnsRESTMsg_ = %IntBroker.ConnectorRequest(&oGenRqstRESTMsg_, True); /* Response received from IoT */
+If &oGenRspnsRESTMsg_.ResponseStatus <> %IB_Status_Success Then
+         
+    MessageBox(0, "", 0, 0, "Update Failed: " | &oGenRspnsRESTMsg_.HTTPResponseCode);
+    rem throw &oGenRspnsRESTMsg_.IBException;
+Else
+    If &oLogFile_.IsOpen Then /* write to file */
+       &oLogFile_.WriteLine("---------" | "Response : " | %Datetime | "---------");
+       &oLogFile_.WriteLine(&oGenRspnsRESTMsg_.GetContentString());
+       &oLogFile_.WriteLine("---------" | "---------");
+    End-If;
+         MessageBox(0, "", 0, 0, "Asset updated " | &oGenRspnsRESTMsg_.HTTPResponseCode);
+End-If;
