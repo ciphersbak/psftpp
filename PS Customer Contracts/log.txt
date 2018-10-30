@@ -1,0 +1,57 @@
+Started:  Tue Jun 10 16:48:36 2014
+Data Mover Release: 8.53.04
+Database: UNDPFST1 (ENG)
+Indexing export file d:\Phire\working\FIN\FIN_CR001514_2_20140610164834\data.dat
+Input file: d:\Phire\working\FIN\FIN_CR001514_2_20140610164834\data.dat (ENG)
+Commit done at end of record
+Importing  BI_IVC_NUM 
+ Import  BI_IVC_NUM  0
+ Update  BI_IVC_NUM  1
+Input file: d:\Phire\working\FIN\FIN_CR001514_2_20140610164834\data.dat (ENG)
+Importing  BI_SRC 
+ Import  BI_SRC  0
+ Update  BI_SRC  1
+Input file: d:\Phire\working\FIN\FIN_CR001514_2_20140610164834\data.dat (ENG)
+Importing  BI_TYPE 
+ Import  BI_TYPE  0
+ Update  BI_TYPE  1
+Input file: d:\Phire\working\FIN\FIN_CR001514_2_20140610164834\data.dat (ENG)
+Importing  CA_PLAN_TMPL 
+ Import  CA_PLAN_TMPL  9
+ Update  CA_PLAN_TMPL  1
+Input file: d:\Phire\working\FIN\FIN_CR001514_2_20140610164834\data.dat (ENG)
+Importing  CA_PLAN_TMPL_EV 
+ Import  CA_PLAN_TMPL_EV  25
+ Update  CA_PLAN_TMPL_EV  1
+Input file: d:\Phire\working\FIN\FIN_CR001514_2_20140610164834\data.dat (ENG)
+Importing  CA_PROD_GRP_TBL 
+ Import  CA_PROD_GRP_TBL  0
+ Update  CA_PROD_GRP_TBL  4
+Input file: d:\Phire\working\FIN\FIN_CR001514_2_20140610164834\data.dat (ENG)
+Importing  DST_CODE_TBL 
+ Import  DST_CODE_TBL  0
+ Update  DST_CODE_TBL  2
+Input file: d:\Phire\working\FIN\FIN_CR001514_2_20140610164834\data.dat (ENG)
+Importing  PROD_COMPTTRS 
+ Import  PROD_COMPTTRS  0
+Input file: d:\Phire\working\FIN\FIN_CR001514_2_20140610164834\data.dat (ENG)
+Importing  PROD_ITEM 
+ Import  PROD_ITEM  0
+ Update  PROD_ITEM  4
+Input file: d:\Phire\working\FIN\FIN_CR001514_2_20140610164834\data.dat (ENG)
+Importing  PROD_ITEM_CURR 
+ Import  PROD_ITEM_CURR  0
+Input file: d:\Phire\working\FIN\FIN_CR001514_2_20140610164834\data.dat (ENG)
+Importing  PROD_PHOTO 
+ Import  PROD_PHOTO  0
+ Update  PROD_PHOTO  4
+Input file: d:\Phire\working\FIN\FIN_CR001514_2_20140610164834\data.dat (ENG)
+Importing  PROD_PGRP_LNK 
+ Import  PROD_PGRP_LNK  0
+ Update  PROD_PGRP_LNK  4
+Input file: d:\Phire\working\FIN\FIN_CR001514_2_20140610164834\data.dat (ENG)
+Importing  PROD_GROUP_TBL 
+ Import  PROD_GROUP_TBL  0
+ Update  PROD_GROUP_TBL  4
+Ended: Tue Jun 10 16:48:39 2014
+Successful completion
