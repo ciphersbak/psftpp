@@ -1,0 +1,20 @@
+--SOURCE DAT File
+This file is the source DAT file which has been created from D1 environment.
+This file should first be placed in a location which would be accessible by the TGTIMPORT.DMS file to import configuration in TARGET environment.
+
+FYI, The TGTIMPORT.DMS file has the SET INPUT command mentioned for C:\TEMP directory as that is the default location Data Mover will search in case the Input Directory is not defined on PS Configuration Manager
+
+--TARGET Import File
+This file SHOULD BE run in TARGET environment.
+This file uses the DAT file "CR001451_00_SRCEXPORT.DAT"as INPUT
+
+SET LOG and SET INPUT commands have been defaulted to C:\TEMP directory
+
+This script contains the command SET UPDATE_DUPS.
+
+FYI, The TGTIMPORT.DMS file has the SET INPUT command mentioned for C:\TEMP directory as that is the default location Data Mover will search in case the Input Directory is not defined on PS Configuration Manager
+
+--TARGET SQL File
+This SQL will setup Row Level Security for the new UNU BU 623UU
+
+Table(s) included - PS_SEC_BU_CLS

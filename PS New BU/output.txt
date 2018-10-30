@@ -1,0 +1,36 @@
+
+SQL*Plus: Release 11.2.0.1.0 Production on Thu Jun 5 16:48:05 2014
+
+Copyright (c) 1982, 2010, Oracle.  All rights reserved.
+
+
+Connected to:
+Oracle Database 11g Enterprise Edition Release 11.2.0.3.0 - 64bit Production
+With the Partitioning, OLAP, Data Mining and Real Application Testing options
+
+SQL> SET DEFINE OFF;
+SQL> SPOOL d:\Phire\working\FIN\FIN_CR001451_3_20140605164805\log.txt;
+SQL> WHENEVER SQLERROR EXIT SQL.SQLCODE;
+SQL> WHENEVER OSERROR EXIT;
+SQL> 
+SQL> --CR001451
+SQL> --Row Level Security set up for the new UNU BU (623UU)
+SQL> --Row Level Security for 623UU
+SQL> INSERT INTO PS_SEC_BU_CLS
+  2  SELECT '623UU' , BUSINESS_UNIT	FROM PS_BUS_UNIT_TBL_FS;
+
+572 rows created.
+
+SQL> --572 rows
+SQL> 
+SQL> INSERT INTO PS_SEC_BU_CLS
+  2  SELECT DISTINCT(OPRCLASS), '623UU' FROM PS_SEC_BU_CLS WHERE OPRCLASS NOT LIKE 'EA%'
+  3  AND OPRCLASS NOT IN (SELECT OPRCLASS FROM PS_SEC_BU_CLS WHERE BUSINESS_UNIT = '623UU');
+
+279 rows created.
+
+SQL> --278 rows
+SQL> 
+SQL> EXIT;
+Disconnected from Oracle Database 11g Enterprise Edition Release 11.2.0.3.0 - 64bit Production
+With the Partitioning, OLAP, Data Mining and Real Application Testing options
