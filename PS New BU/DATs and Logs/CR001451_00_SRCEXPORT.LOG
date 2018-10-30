@@ -1,0 +1,57 @@
+Started:  Tue May 20 11:26:26 2014
+Data Mover Release: 8.53.04
+Database: UNDPFSD1 (ENG)
+Exporting  SET_CNTRL_REC
+ Export  SET_CNTRL_REC 6017
+Exporting  AUTO_NUM_TBL_BU
+ Export  AUTO_NUM_TBL_BU 1
+Exporting  BUS_UNIT_TBL_PM
+ Export  BUS_UNIT_TBL_PM 1
+Exporting  POBUILD_APPR
+ Export  POBUILD_APPR 0
+Exporting  AP_BU_TAX_CF
+ Export  AP_BU_TAX_CF 0
+Exporting  BUS_UNIT_TBL_AP
+ Export  BUS_UNIT_TBL_AP 1
+Exporting  BUS_UNIT_TBL_FS
+ Export  BUS_UNIT_TBL_FS 1
+Exporting  BUS_UNIT_OPT_AP
+ Export  BUS_UNIT_OPT_AP 1
+Exporting  CNTRCT_CONTROL
+ Export  CNTRCT_CONTROL 1
+Exporting  GM_INSTITUTION
+ Export  GM_INSTITUTION 1
+Exporting  GM_IN_ADDRESS
+ Export  GM_IN_ADDRESS 1
+Exporting  GM_IN_ATTR
+ Export  GM_IN_ATTR 0
+Exporting  GM_IN_INFO
+ Export  GM_IN_INFO 1
+Exporting  GM_IN_TYPE
+ Export  GM_IN_TYPE 1
+Exporting  LOCATION_TBL
+ Export  LOCATION_TBL 1
+Exporting  RTE_CNTL_HDR
+ Export  RTE_CNTL_HDR 1
+Exporting  RTE_CNTL_LN
+ Export  RTE_CNTL_LN 3
+Exporting  RTE_CNTL_PROF
+ Export  RTE_CNTL_PROF 1
+Exporting  SETID_TBL
+ Export  SETID_TBL 1
+Exporting  SET_CNTRL_GROUP
+ Export  SET_CNTRL_GROUP 347
+Exporting  SET_CNTRL_TBL
+ Export  SET_CNTRL_TBL 1
+Exporting  SHIPTO_TBL
+ Export  SHIPTO_TBL 1
+Exporting  SHIPTO_VNDR_LOC
+ Export  SHIPTO_VNDR_LOC 1
+Exporting  SUT_CALC_PARMS
+ Export  SUT_CALC_PARMS 0
+Exporting  SUT_DFLT_TBL
+ Export  SUT_DFLT_TBL 1
+Exporting  SUT_EXCPTN_TBL
+ Export  SUT_EXCPTN_TBL 1
+Ended: Tue May 20 11:31:44 2014
+Successful completion

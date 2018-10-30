@@ -1,0 +1,13 @@
+Started:  Fri Jun 06 14:29:40 2014
+Data Mover Release: 8.53.04
+Database: UNDPFSD1 (ENG)
+Exporting  FIN_BU_LGRP_TBL
+ Export  FIN_BU_LGRP_TBL 1
+Exporting  FIN_OPEN_OPTN
+ Export  FIN_OPEN_OPTN 1
+Exporting  FIN_OPEN_PERIOD
+ Export  FIN_OPEN_PERIOD 1
+Exporting  FIN_BU_MAPPING
+ Export  FIN_BU_MAPPING 1
+Ended: Fri Jun 06 14:30:11 2014
+Successful completion
