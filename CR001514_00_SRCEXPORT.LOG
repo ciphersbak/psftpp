@@ -1,0 +1,31 @@
+Started:  Wed Jun 04 15:00:15 2014
+Data Mover Release: 8.53.04
+Database: UNDPFSS1 (ENG)
+Exporting  BI_IVC_NUM
+ Export  BI_IVC_NUM 1
+Exporting  BI_SRC
+ Export  BI_SRC 1
+Exporting  BI_TYPE
+ Export  BI_TYPE 1
+Exporting  CA_PLAN_TMPL
+ Export  CA_PLAN_TMPL 10
+Exporting  CA_PLAN_TMPL_EV
+ Export  CA_PLAN_TMPL_EV 26
+Exporting  CA_PROD_GRP_TBL
+ Export  CA_PROD_GRP_TBL 4
+Exporting  DST_CODE_TBL
+ Export  DST_CODE_TBL 2
+Exporting  PROD_COMPTTRS
+ Export  PROD_COMPTTRS 0
+Exporting  PROD_ITEM
+ Export  PROD_ITEM 4
+Exporting  PROD_ITEM_CURR
+ Export  PROD_ITEM_CURR 0
+Exporting  PROD_PHOTO
+ Export  PROD_PHOTO 4
+Exporting  PROD_PGRP_LNK
+ Export  PROD_PGRP_LNK 4
+Exporting  PROD_GROUP_TBL
+ Export  PROD_GROUP_TBL 4
+Ended: Wed Jun 04 15:03:07 2014
+Successful completion
