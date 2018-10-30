@@ -1,0 +1,17 @@
+Started:  Tue May 27 11:10:25 2014
+Data Mover Release: 8.53.04
+Database: UNDPFSD1 (ENG)
+Exporting  LED_FLDS_TBL
+ Export  LED_FLDS_TBL 21
+Exporting  BU_LED_GRP_TBL
+ Export  BU_LED_GRP_TBL 1
+Exporting  LED_DEFN_TBL
+ Export  LED_DEFN_TBL 1
+Exporting  LED_GRP_FLD_TBL
+ Export  LED_GRP_FLD_TBL 21
+Exporting  LED_GRP_LED_TBL
+ Export  LED_GRP_LED_TBL 1
+Exporting  LED_GRP_TBL
+ Export  LED_GRP_TBL 1
+Ended: Tue May 27 11:11:25 2014
+Successful completion
