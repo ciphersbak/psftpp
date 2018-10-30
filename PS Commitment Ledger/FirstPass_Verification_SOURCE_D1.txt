@@ -1,0 +1,1206 @@
+Time Start: 5/26/2014 3:19:09 PM
+
+ORA_DATABASE_NAME                                                               
+--------------------------------------------------------------------------------
+SYSDATE  
+---------
+UNDPFSD1                                                                        
+26-MAY-14
+                                                                                
+1 row selected.
+
+TABLE_NAME    ROW_COUNT
+------------ ----------
+LED_DEFN_TBL          1
+1 row selected.
+
+TABLE_NAME   SETID LEDGER     DESCR                          LEDGER_TEMPLATE
+------------ ----- ---------- ------------------------------ ---------------
+LEDGER_TYPE BUDGET_TYPE SCENARIO   EFFDT     DETAIL_TMPLT
+----------- ----------- ---------- --------- ------------
+LED_DEFN_TBL SHARE UNU_COMMIT UNU Commitment Ledger          STANDARD       
+D                                  23-MAY-14             
+                                                                                
+1 row selected.
+
+TABLE_NAME       ROW_COUNT
+--------------- ----------
+LED_GRP_LED_TBL          1
+1 row selected.
+
+TABLE_NAME      SETID LEDGER_GROUP LEDGER     PRIMARY_LEDGER INHERIT_BASE_CUR
+--------------- ----- ------------ ---------- -------------- ----------------
+BASE_CURRENCY RT_TYPE CUR_RT_TYPE_DFLT TRANSL_LEDGER OPEN_ITEM_LEDGER VAT_LEDGER
+------------- ------- ---------------- ------------- ---------------- ----------
+COMMITMENT_CNTL LEDGER_TYPE_KK AFFECT_SPEND_OPTN
+--------------- -------------- -----------------
+LED_GRP_LED_TBL SHARE UNU_COMMIT   UNU_COMMIT Y              Y               
+              UNORE   UNORE            N             N                N         
+Y                              Y                
+                                                                                
+1 row selected.
+
+TABLE_NAME   ROW_COUNT
+----------- ----------
+LED_GRP_TBL          1
+1 row selected.
+
+TABLE_NAME  SETID LEDGER_GROUP DESCR                          LEDGER_TEMPLATE
+----------- ----- ------------ ------------------------------ ---------------
+LEDGER_GROUP_TYPE LEDGERS_SYNC SECOND_LEDGERS GEN_BAL_ENTRIES
+----------------- ------------ -------------- ---------------
+LED_GRP_TBL SHARE UNU_COMMIT   UNU Commitment Ledger          STANDARD       
+S                 N            N              Y              
+                                                                                
+1 row selected.
+
+TABLE_NAME       ROW_COUNT
+--------------- ----------
+LED_GRP_FLD_TBL         21
+1 row selected.
+
+TABLE_NAME      SETID LEDGER_GROUP FIELD_SEQUENCE CHARTFIELD        
+--------------- ----- ------------ -------------- ------------------
+RECNAME         RECNAME_NO_EFFDT BALANCE_FLAG AFFILIATE_USE
+--------------- ---------------- ------------ -------------
+LED_GRP_FLD_TBL SHARE UNU_COMMIT                1 BUSINESS_UNIT     
+SP_BU_GL_CLSVW  SP_BU_GL_CLSVW   Y            Y            
+                                                                                
+LED_GRP_FLD_TBL SHARE UNU_COMMIT                2 ACCOUNT           
+GL_ACCOUNT_TBL  GL_ACCT_ALL_VW   N            N            
+                                                                                
+LED_GRP_FLD_TBL SHARE UNU_COMMIT                3 ALTACCT           
+ALTACCT_TBL     ALT_ALL_VW       N            N            
+                                                                                
+LED_GRP_FLD_TBL SHARE UNU_COMMIT                4 DEPTID            
+DEPT_TBL        DEPT_ALL_VW      N            N            
+                                                                                
+LED_GRP_FLD_TBL SHARE UNU_COMMIT                5 OPERATING_UNIT    
+OPER_UNIT_TBL   OPERUNIT_ALL_VW  Y            Y            
+                                                                                
+LED_GRP_FLD_TBL SHARE UNU_COMMIT                6 PRODUCT           
+PRODUCT_TBL     PROD_ALL_VW      N            N            
+                                                                                
+LED_GRP_FLD_TBL SHARE UNU_COMMIT                7 FUND_CODE         
+
+TABLE_NAME      SETID LEDGER_GROUP FIELD_SEQUENCE CHARTFIELD        
+--------------- ----- ------------ -------------- ------------------
+RECNAME         RECNAME_NO_EFFDT BALANCE_FLAG AFFILIATE_USE
+--------------- ---------------- ------------ -------------
+FUND_TBL        FUND_ALL_VW      Y            Y            
+                                                                                
+LED_GRP_FLD_TBL SHARE UNU_COMMIT                8 CLASS_FLD         
+CLASS_CF_TBL    CLASS_CF_ALL_VW  N            N            
+                                                                                
+LED_GRP_FLD_TBL SHARE UNU_COMMIT                9 PROGRAM_CODE      
+PROGRAM_TBL     PROGRAM_ALL_VW   N            N            
+                                                                                
+LED_GRP_FLD_TBL SHARE UNU_COMMIT               10 BUDGET_REF        
+BUD_REF_TBL     BUDREF_ALL_VW    N            N            
+                                                                                
+LED_GRP_FLD_TBL SHARE UNU_COMMIT               11 AFFILIATE         
+AFFILIATE_VW    AFFILIATE_VW     N            N            
+                                                                                
+LED_GRP_FLD_TBL SHARE UNU_COMMIT               12 AFFILIATE_INTRA1  
+AFFINTRA1_VW    AFFINTRA1_ALLVW  N            N            
+                                                                                
+LED_GRP_FLD_TBL SHARE UNU_COMMIT               13 AFFILIATE_INTRA2  
+AFFINTRA2_VW    AFFINTRA2_ALLVW  N            N            
+
+TABLE_NAME      SETID LEDGER_GROUP FIELD_SEQUENCE CHARTFIELD        
+--------------- ----- ------------ -------------- ------------------
+RECNAME         RECNAME_NO_EFFDT BALANCE_FLAG AFFILIATE_USE
+--------------- ---------------- ------------ -------------
+                                                                                
+LED_GRP_FLD_TBL SHARE UNU_COMMIT               14 CHARTFIELD1       
+CHARTFIELD1_TBL CF1_ALL_VW       N            N            
+                                                                                
+LED_GRP_FLD_TBL SHARE UNU_COMMIT               15 CHARTFIELD2       
+CHARTFIELD2_TBL CF2_ALL_VW       N            N            
+                                                                                
+LED_GRP_FLD_TBL SHARE UNU_COMMIT               16 CHARTFIELD3       
+CHARTFIELD3_TBL CF3_ALL_VW       N            N            
+                                                                                
+LED_GRP_FLD_TBL SHARE UNU_COMMIT               17 PROJECT_ID        
+PROJECT_ID_VW   PROJECT_ID_VW    N            N            
+                                                                                
+LED_GRP_FLD_TBL SHARE UNU_COMMIT               18 BOOK_CODE         
+BOOK_CODE_TBL   BOOKCODE_ALL_VW  Y            N            
+                                                                                
+LED_GRP_FLD_TBL SHARE UNU_COMMIT               19 GL_ADJUST_TYPE    
+ADJUST_TYPE_TBL ADJ_TYPE_ALL_VW  Y            N            
+                                                                                
+
+TABLE_NAME      SETID LEDGER_GROUP FIELD_SEQUENCE CHARTFIELD        
+--------------- ----- ------------ -------------- ------------------
+RECNAME         RECNAME_NO_EFFDT BALANCE_FLAG AFFILIATE_USE
+--------------- ---------------- ------------ -------------
+LED_GRP_FLD_TBL SHARE UNU_COMMIT               20 CURRENCY_CD       
+CURRENCY_CD_TBL CUR_CD_ALL_VW    Y            N            
+                                                                                
+LED_GRP_FLD_TBL SHARE UNU_COMMIT               21 STATISTICS_CODE   
+STAT_TBL        STAT_ALL_VW      N            N            
+                                                                                
+
+21 rows selected.
+
+TABLE_NAME       ROW_COUNT
+--------------- ----------
+BUS_UNIT_TBL_GL          1
+1 row selected.
+
+TABLE_NAME      BUSINESS_UNIT AS_OF_DATE BASE_CURRENCY ELIMS_ONLY
+--------------- ------------- ---------- ------------- ----------
+JRNL_BALANCE_OPTN JRNL_EDIT_ERR_OPTN JRNL_AMT_ERR_OPTN JRNL_DT_ERR_OPTN
+----------------- ------------------ ----------------- ----------------
+JRNL_DT_ERR_OPTN2 CONTROL_TOTAL_OPTN CURRENCY_BAL_OPTN BASE_CUR_ADJ_OPTN
+----------------- ------------------ ----------------- -----------------
+JRNL_FOREIGN_OPTN ENABLE_UNPOST_DT JRNL_APPRVL_OPTN BD_JRNL_APPR_OPTN
+----------------- ---------------- ---------------- -----------------
+BUSPROCNAME                    APPR_RULE_SET                 
+------------------------------ ------------------------------
+BUSPROCNAME_BD                 APPR_RULE_SET_BD               TR_RVL_RATE_INDEX
+------------------------------ ------------------------------ -----------------
+TR_RVL_RT_TYPE INT_ENTITYCD EXT_ENTITYCD PYMNT_METHOD DOC_SEQ DOC_TYPE
+-------------- ------------ ------------ ------------ ------- --------
+VAT_NRCVR_PRO_FLG VAT_NRCVR_ALL_FLG HOLIDAY_LIST_ID POST_DATE_OPTN PROCESS_DATE
+----------------- ----------------- --------------- -------------- ------------
+IU_INTER_TMPLT_CD IU_INTRA_TMPLT_CD IU_LEGAL_ENT_BU BUSINESS_UNIT_AP
+----------------- ----------------- --------------- ----------------
+VENDOR_SETID VENDOR_ID  LOCATION   BUSINESS_UNIT_BI CUST_ID        
+------------ ---------- ---------- ---------------- ---------------
+OPERATING_UNIT PRODUCT FUND_CODE CLASS_FLD PROGRAM_CODE BUDGET_REF AFFILIATE
+-------------- ------- --------- --------- ------------ ---------- ---------
+AFFILIATE_INTRA1 AFFILIATE_INTRA2 CHARTFIELD1 CHARTFIELD2 CHARTFIELD3
+---------------- ---------------- ----------- ----------- -----------
+PROJECT_ID      DEPTID     CUST_VNDR_AFFILIAT LED_GRP_DEFAULT PHYSICAL_NATURE
+--------------- ---------- ------------------ --------------- ---------------
+    SYNCID SYNCDTTM                       
+---------- -------------------------------
+BUS_UNIT_TBL_GL UNUNI         01-JAN-01  USD           N         
+
+TABLE_NAME      BUSINESS_UNIT AS_OF_DATE BASE_CURRENCY ELIMS_ONLY
+--------------- ------------- ---------- ------------- ----------
+JRNL_BALANCE_OPTN JRNL_EDIT_ERR_OPTN JRNL_AMT_ERR_OPTN JRNL_DT_ERR_OPTN
+----------------- ------------------ ----------------- ----------------
+JRNL_DT_ERR_OPTN2 CONTROL_TOTAL_OPTN CURRENCY_BAL_OPTN BASE_CUR_ADJ_OPTN
+----------------- ------------------ ----------------- -----------------
+JRNL_FOREIGN_OPTN ENABLE_UNPOST_DT JRNL_APPRVL_OPTN BD_JRNL_APPR_OPTN
+----------------- ---------------- ---------------- -----------------
+BUSPROCNAME                    APPR_RULE_SET                 
+------------------------------ ------------------------------
+BUSPROCNAME_BD                 APPR_RULE_SET_BD               TR_RVL_RATE_INDEX
+------------------------------ ------------------------------ -----------------
+TR_RVL_RT_TYPE INT_ENTITYCD EXT_ENTITYCD PYMNT_METHOD DOC_SEQ DOC_TYPE
+-------------- ------------ ------------ ------------ ------- --------
+VAT_NRCVR_PRO_FLG VAT_NRCVR_ALL_FLG HOLIDAY_LIST_ID POST_DATE_OPTN PROCESS_DATE
+----------------- ----------------- --------------- -------------- ------------
+IU_INTER_TMPLT_CD IU_INTRA_TMPLT_CD IU_LEGAL_ENT_BU BUSINESS_UNIT_AP
+----------------- ----------------- --------------- ----------------
+VENDOR_SETID VENDOR_ID  LOCATION   BUSINESS_UNIT_BI CUST_ID        
+------------ ---------- ---------- ---------------- ---------------
+OPERATING_UNIT PRODUCT FUND_CODE CLASS_FLD PROGRAM_CODE BUDGET_REF AFFILIATE
+-------------- ------- --------- --------- ------------ ---------- ---------
+AFFILIATE_INTRA1 AFFILIATE_INTRA2 CHARTFIELD1 CHARTFIELD2 CHARTFIELD3
+---------------- ---------------- ----------- ----------- -----------
+PROJECT_ID      DEPTID     CUST_VNDR_AFFILIAT LED_GRP_DEFAULT PHYSICAL_NATURE
+--------------- ---------- ------------------ --------------- ---------------
+    SYNCID SYNCDTTM                       
+---------- -------------------------------
+R                 R                  R                 R               
+
+TABLE_NAME      BUSINESS_UNIT AS_OF_DATE BASE_CURRENCY ELIMS_ONLY
+--------------- ------------- ---------- ------------- ----------
+JRNL_BALANCE_OPTN JRNL_EDIT_ERR_OPTN JRNL_AMT_ERR_OPTN JRNL_DT_ERR_OPTN
+----------------- ------------------ ----------------- ----------------
+JRNL_DT_ERR_OPTN2 CONTROL_TOTAL_OPTN CURRENCY_BAL_OPTN BASE_CUR_ADJ_OPTN
+----------------- ------------------ ----------------- -----------------
+JRNL_FOREIGN_OPTN ENABLE_UNPOST_DT JRNL_APPRVL_OPTN BD_JRNL_APPR_OPTN
+----------------- ---------------- ---------------- -----------------
+BUSPROCNAME                    APPR_RULE_SET                 
+------------------------------ ------------------------------
+BUSPROCNAME_BD                 APPR_RULE_SET_BD               TR_RVL_RATE_INDEX
+------------------------------ ------------------------------ -----------------
+TR_RVL_RT_TYPE INT_ENTITYCD EXT_ENTITYCD PYMNT_METHOD DOC_SEQ DOC_TYPE
+-------------- ------------ ------------ ------------ ------- --------
+VAT_NRCVR_PRO_FLG VAT_NRCVR_ALL_FLG HOLIDAY_LIST_ID POST_DATE_OPTN PROCESS_DATE
+----------------- ----------------- --------------- -------------- ------------
+IU_INTER_TMPLT_CD IU_INTRA_TMPLT_CD IU_LEGAL_ENT_BU BUSINESS_UNIT_AP
+----------------- ----------------- --------------- ----------------
+VENDOR_SETID VENDOR_ID  LOCATION   BUSINESS_UNIT_BI CUST_ID        
+------------ ---------- ---------- ---------------- ---------------
+OPERATING_UNIT PRODUCT FUND_CODE CLASS_FLD PROGRAM_CODE BUDGET_REF AFFILIATE
+-------------- ------- --------- --------- ------------ ---------- ---------
+AFFILIATE_INTRA1 AFFILIATE_INTRA2 CHARTFIELD1 CHARTFIELD2 CHARTFIELD3
+---------------- ---------------- ----------- ----------- -----------
+PROJECT_ID      DEPTID     CUST_VNDR_AFFILIAT LED_GRP_DEFAULT PHYSICAL_NATURE
+--------------- ---------- ------------------ --------------- ---------------
+    SYNCID SYNCDTTM                       
+---------- -------------------------------
+R                 N                  B                 Y                
+
+TABLE_NAME      BUSINESS_UNIT AS_OF_DATE BASE_CURRENCY ELIMS_ONLY
+--------------- ------------- ---------- ------------- ----------
+JRNL_BALANCE_OPTN JRNL_EDIT_ERR_OPTN JRNL_AMT_ERR_OPTN JRNL_DT_ERR_OPTN
+----------------- ------------------ ----------------- ----------------
+JRNL_DT_ERR_OPTN2 CONTROL_TOTAL_OPTN CURRENCY_BAL_OPTN BASE_CUR_ADJ_OPTN
+----------------- ------------------ ----------------- -----------------
+JRNL_FOREIGN_OPTN ENABLE_UNPOST_DT JRNL_APPRVL_OPTN BD_JRNL_APPR_OPTN
+----------------- ---------------- ---------------- -----------------
+BUSPROCNAME                    APPR_RULE_SET                 
+------------------------------ ------------------------------
+BUSPROCNAME_BD                 APPR_RULE_SET_BD               TR_RVL_RATE_INDEX
+------------------------------ ------------------------------ -----------------
+TR_RVL_RT_TYPE INT_ENTITYCD EXT_ENTITYCD PYMNT_METHOD DOC_SEQ DOC_TYPE
+-------------- ------------ ------------ ------------ ------- --------
+VAT_NRCVR_PRO_FLG VAT_NRCVR_ALL_FLG HOLIDAY_LIST_ID POST_DATE_OPTN PROCESS_DATE
+----------------- ----------------- --------------- -------------- ------------
+IU_INTER_TMPLT_CD IU_INTRA_TMPLT_CD IU_LEGAL_ENT_BU BUSINESS_UNIT_AP
+----------------- ----------------- --------------- ----------------
+VENDOR_SETID VENDOR_ID  LOCATION   BUSINESS_UNIT_BI CUST_ID        
+------------ ---------- ---------- ---------------- ---------------
+OPERATING_UNIT PRODUCT FUND_CODE CLASS_FLD PROGRAM_CODE BUDGET_REF AFFILIATE
+-------------- ------- --------- --------- ------------ ---------- ---------
+AFFILIATE_INTRA1 AFFILIATE_INTRA2 CHARTFIELD1 CHARTFIELD2 CHARTFIELD3
+---------------- ---------------- ----------- ----------- -----------
+PROJECT_ID      DEPTID     CUST_VNDR_AFFILIAT LED_GRP_DEFAULT PHYSICAL_NATURE
+--------------- ---------- ------------------ --------------- ---------------
+    SYNCID SYNCDTTM                       
+---------- -------------------------------
+M                 Y                P                P                
+
+TABLE_NAME      BUSINESS_UNIT AS_OF_DATE BASE_CURRENCY ELIMS_ONLY
+--------------- ------------- ---------- ------------- ----------
+JRNL_BALANCE_OPTN JRNL_EDIT_ERR_OPTN JRNL_AMT_ERR_OPTN JRNL_DT_ERR_OPTN
+----------------- ------------------ ----------------- ----------------
+JRNL_DT_ERR_OPTN2 CONTROL_TOTAL_OPTN CURRENCY_BAL_OPTN BASE_CUR_ADJ_OPTN
+----------------- ------------------ ----------------- -----------------
+JRNL_FOREIGN_OPTN ENABLE_UNPOST_DT JRNL_APPRVL_OPTN BD_JRNL_APPR_OPTN
+----------------- ---------------- ---------------- -----------------
+BUSPROCNAME                    APPR_RULE_SET                 
+------------------------------ ------------------------------
+BUSPROCNAME_BD                 APPR_RULE_SET_BD               TR_RVL_RATE_INDEX
+------------------------------ ------------------------------ -----------------
+TR_RVL_RT_TYPE INT_ENTITYCD EXT_ENTITYCD PYMNT_METHOD DOC_SEQ DOC_TYPE
+-------------- ------------ ------------ ------------ ------- --------
+VAT_NRCVR_PRO_FLG VAT_NRCVR_ALL_FLG HOLIDAY_LIST_ID POST_DATE_OPTN PROCESS_DATE
+----------------- ----------------- --------------- -------------- ------------
+IU_INTER_TMPLT_CD IU_INTRA_TMPLT_CD IU_LEGAL_ENT_BU BUSINESS_UNIT_AP
+----------------- ----------------- --------------- ----------------
+VENDOR_SETID VENDOR_ID  LOCATION   BUSINESS_UNIT_BI CUST_ID        
+------------ ---------- ---------- ---------------- ---------------
+OPERATING_UNIT PRODUCT FUND_CODE CLASS_FLD PROGRAM_CODE BUDGET_REF AFFILIATE
+-------------- ------- --------- --------- ------------ ---------- ---------
+AFFILIATE_INTRA1 AFFILIATE_INTRA2 CHARTFIELD1 CHARTFIELD2 CHARTFIELD3
+---------------- ---------------- ----------- ----------- -----------
+PROJECT_ID      DEPTID     CUST_VNDR_AFFILIAT LED_GRP_DEFAULT PHYSICAL_NATURE
+--------------- ---------- ------------------ --------------- ---------------
+    SYNCID SYNCDTTM                       
+---------- -------------------------------
+                                                             
+
+TABLE_NAME      BUSINESS_UNIT AS_OF_DATE BASE_CURRENCY ELIMS_ONLY
+--------------- ------------- ---------- ------------- ----------
+JRNL_BALANCE_OPTN JRNL_EDIT_ERR_OPTN JRNL_AMT_ERR_OPTN JRNL_DT_ERR_OPTN
+----------------- ------------------ ----------------- ----------------
+JRNL_DT_ERR_OPTN2 CONTROL_TOTAL_OPTN CURRENCY_BAL_OPTN BASE_CUR_ADJ_OPTN
+----------------- ------------------ ----------------- -----------------
+JRNL_FOREIGN_OPTN ENABLE_UNPOST_DT JRNL_APPRVL_OPTN BD_JRNL_APPR_OPTN
+----------------- ---------------- ---------------- -----------------
+BUSPROCNAME                    APPR_RULE_SET                 
+------------------------------ ------------------------------
+BUSPROCNAME_BD                 APPR_RULE_SET_BD               TR_RVL_RATE_INDEX
+------------------------------ ------------------------------ -----------------
+TR_RVL_RT_TYPE INT_ENTITYCD EXT_ENTITYCD PYMNT_METHOD DOC_SEQ DOC_TYPE
+-------------- ------------ ------------ ------------ ------- --------
+VAT_NRCVR_PRO_FLG VAT_NRCVR_ALL_FLG HOLIDAY_LIST_ID POST_DATE_OPTN PROCESS_DATE
+----------------- ----------------- --------------- -------------- ------------
+IU_INTER_TMPLT_CD IU_INTRA_TMPLT_CD IU_LEGAL_ENT_BU BUSINESS_UNIT_AP
+----------------- ----------------- --------------- ----------------
+VENDOR_SETID VENDOR_ID  LOCATION   BUSINESS_UNIT_BI CUST_ID        
+------------ ---------- ---------- ---------------- ---------------
+OPERATING_UNIT PRODUCT FUND_CODE CLASS_FLD PROGRAM_CODE BUDGET_REF AFFILIATE
+-------------- ------- --------- --------- ------------ ---------- ---------
+AFFILIATE_INTRA1 AFFILIATE_INTRA2 CHARTFIELD1 CHARTFIELD2 CHARTFIELD3
+---------------- ---------------- ----------- ----------- -----------
+PROJECT_ID      DEPTID     CUST_VNDR_AFFILIAT LED_GRP_DEFAULT PHYSICAL_NATURE
+--------------- ---------- ------------------ --------------- ---------------
+    SYNCID SYNCDTTM                       
+---------- -------------------------------
+                                                              UNORE            
+
+TABLE_NAME      BUSINESS_UNIT AS_OF_DATE BASE_CURRENCY ELIMS_ONLY
+--------------- ------------- ---------- ------------- ----------
+JRNL_BALANCE_OPTN JRNL_EDIT_ERR_OPTN JRNL_AMT_ERR_OPTN JRNL_DT_ERR_OPTN
+----------------- ------------------ ----------------- ----------------
+JRNL_DT_ERR_OPTN2 CONTROL_TOTAL_OPTN CURRENCY_BAL_OPTN BASE_CUR_ADJ_OPTN
+----------------- ------------------ ----------------- -----------------
+JRNL_FOREIGN_OPTN ENABLE_UNPOST_DT JRNL_APPRVL_OPTN BD_JRNL_APPR_OPTN
+----------------- ---------------- ---------------- -----------------
+BUSPROCNAME                    APPR_RULE_SET                 
+------------------------------ ------------------------------
+BUSPROCNAME_BD                 APPR_RULE_SET_BD               TR_RVL_RATE_INDEX
+------------------------------ ------------------------------ -----------------
+TR_RVL_RT_TYPE INT_ENTITYCD EXT_ENTITYCD PYMNT_METHOD DOC_SEQ DOC_TYPE
+-------------- ------------ ------------ ------------ ------- --------
+VAT_NRCVR_PRO_FLG VAT_NRCVR_ALL_FLG HOLIDAY_LIST_ID POST_DATE_OPTN PROCESS_DATE
+----------------- ----------------- --------------- -------------- ------------
+IU_INTER_TMPLT_CD IU_INTRA_TMPLT_CD IU_LEGAL_ENT_BU BUSINESS_UNIT_AP
+----------------- ----------------- --------------- ----------------
+VENDOR_SETID VENDOR_ID  LOCATION   BUSINESS_UNIT_BI CUST_ID        
+------------ ---------- ---------- ---------------- ---------------
+OPERATING_UNIT PRODUCT FUND_CODE CLASS_FLD PROGRAM_CODE BUDGET_REF AFFILIATE
+-------------- ------- --------- --------- ------------ ---------- ---------
+AFFILIATE_INTRA1 AFFILIATE_INTRA2 CHARTFIELD1 CHARTFIELD2 CHARTFIELD3
+---------------- ---------------- ----------- ----------- -----------
+PROJECT_ID      DEPTID     CUST_VNDR_AFFILIAT LED_GRP_DEFAULT PHYSICAL_NATURE
+--------------- ---------- ------------------ --------------- ---------------
+    SYNCID SYNCDTTM                       
+---------- -------------------------------
+UNORE          GLBU         BANK                      N               
+
+TABLE_NAME      BUSINESS_UNIT AS_OF_DATE BASE_CURRENCY ELIMS_ONLY
+--------------- ------------- ---------- ------------- ----------
+JRNL_BALANCE_OPTN JRNL_EDIT_ERR_OPTN JRNL_AMT_ERR_OPTN JRNL_DT_ERR_OPTN
+----------------- ------------------ ----------------- ----------------
+JRNL_DT_ERR_OPTN2 CONTROL_TOTAL_OPTN CURRENCY_BAL_OPTN BASE_CUR_ADJ_OPTN
+----------------- ------------------ ----------------- -----------------
+JRNL_FOREIGN_OPTN ENABLE_UNPOST_DT JRNL_APPRVL_OPTN BD_JRNL_APPR_OPTN
+----------------- ---------------- ---------------- -----------------
+BUSPROCNAME                    APPR_RULE_SET                 
+------------------------------ ------------------------------
+BUSPROCNAME_BD                 APPR_RULE_SET_BD               TR_RVL_RATE_INDEX
+------------------------------ ------------------------------ -----------------
+TR_RVL_RT_TYPE INT_ENTITYCD EXT_ENTITYCD PYMNT_METHOD DOC_SEQ DOC_TYPE
+-------------- ------------ ------------ ------------ ------- --------
+VAT_NRCVR_PRO_FLG VAT_NRCVR_ALL_FLG HOLIDAY_LIST_ID POST_DATE_OPTN PROCESS_DATE
+----------------- ----------------- --------------- -------------- ------------
+IU_INTER_TMPLT_CD IU_INTRA_TMPLT_CD IU_LEGAL_ENT_BU BUSINESS_UNIT_AP
+----------------- ----------------- --------------- ----------------
+VENDOR_SETID VENDOR_ID  LOCATION   BUSINESS_UNIT_BI CUST_ID        
+------------ ---------- ---------- ---------------- ---------------
+OPERATING_UNIT PRODUCT FUND_CODE CLASS_FLD PROGRAM_CODE BUDGET_REF AFFILIATE
+-------------- ------- --------- --------- ------------ ---------- ---------
+AFFILIATE_INTRA1 AFFILIATE_INTRA2 CHARTFIELD1 CHARTFIELD2 CHARTFIELD3
+---------------- ---------------- ----------- ----------- -----------
+PROJECT_ID      DEPTID     CUST_VNDR_AFFILIAT LED_GRP_DEFAULT PHYSICAL_NATURE
+--------------- ---------- ------------------ --------------- ---------------
+    SYNCID SYNCDTTM                       
+---------- -------------------------------
+Y                 N                                 C                          
+
+TABLE_NAME      BUSINESS_UNIT AS_OF_DATE BASE_CURRENCY ELIMS_ONLY
+--------------- ------------- ---------- ------------- ----------
+JRNL_BALANCE_OPTN JRNL_EDIT_ERR_OPTN JRNL_AMT_ERR_OPTN JRNL_DT_ERR_OPTN
+----------------- ------------------ ----------------- ----------------
+JRNL_DT_ERR_OPTN2 CONTROL_TOTAL_OPTN CURRENCY_BAL_OPTN BASE_CUR_ADJ_OPTN
+----------------- ------------------ ----------------- -----------------
+JRNL_FOREIGN_OPTN ENABLE_UNPOST_DT JRNL_APPRVL_OPTN BD_JRNL_APPR_OPTN
+----------------- ---------------- ---------------- -----------------
+BUSPROCNAME                    APPR_RULE_SET                 
+------------------------------ ------------------------------
+BUSPROCNAME_BD                 APPR_RULE_SET_BD               TR_RVL_RATE_INDEX
+------------------------------ ------------------------------ -----------------
+TR_RVL_RT_TYPE INT_ENTITYCD EXT_ENTITYCD PYMNT_METHOD DOC_SEQ DOC_TYPE
+-------------- ------------ ------------ ------------ ------- --------
+VAT_NRCVR_PRO_FLG VAT_NRCVR_ALL_FLG HOLIDAY_LIST_ID POST_DATE_OPTN PROCESS_DATE
+----------------- ----------------- --------------- -------------- ------------
+IU_INTER_TMPLT_CD IU_INTRA_TMPLT_CD IU_LEGAL_ENT_BU BUSINESS_UNIT_AP
+----------------- ----------------- --------------- ----------------
+VENDOR_SETID VENDOR_ID  LOCATION   BUSINESS_UNIT_BI CUST_ID        
+------------ ---------- ---------- ---------------- ---------------
+OPERATING_UNIT PRODUCT FUND_CODE CLASS_FLD PROGRAM_CODE BUDGET_REF AFFILIATE
+-------------- ------- --------- --------- ------------ ---------- ---------
+AFFILIATE_INTRA1 AFFILIATE_INTRA2 CHARTFIELD1 CHARTFIELD2 CHARTFIELD3
+---------------- ---------------- ----------- ----------- -----------
+PROJECT_ID      DEPTID     CUST_VNDR_AFFILIAT LED_GRP_DEFAULT PHYSICAL_NATURE
+--------------- ---------- ------------------ --------------- ---------------
+    SYNCID SYNCDTTM                       
+---------- -------------------------------
+                  INTRA             UNUNI                           
+
+TABLE_NAME      BUSINESS_UNIT AS_OF_DATE BASE_CURRENCY ELIMS_ONLY
+--------------- ------------- ---------- ------------- ----------
+JRNL_BALANCE_OPTN JRNL_EDIT_ERR_OPTN JRNL_AMT_ERR_OPTN JRNL_DT_ERR_OPTN
+----------------- ------------------ ----------------- ----------------
+JRNL_DT_ERR_OPTN2 CONTROL_TOTAL_OPTN CURRENCY_BAL_OPTN BASE_CUR_ADJ_OPTN
+----------------- ------------------ ----------------- -----------------
+JRNL_FOREIGN_OPTN ENABLE_UNPOST_DT JRNL_APPRVL_OPTN BD_JRNL_APPR_OPTN
+----------------- ---------------- ---------------- -----------------
+BUSPROCNAME                    APPR_RULE_SET                 
+------------------------------ ------------------------------
+BUSPROCNAME_BD                 APPR_RULE_SET_BD               TR_RVL_RATE_INDEX
+------------------------------ ------------------------------ -----------------
+TR_RVL_RT_TYPE INT_ENTITYCD EXT_ENTITYCD PYMNT_METHOD DOC_SEQ DOC_TYPE
+-------------- ------------ ------------ ------------ ------- --------
+VAT_NRCVR_PRO_FLG VAT_NRCVR_ALL_FLG HOLIDAY_LIST_ID POST_DATE_OPTN PROCESS_DATE
+----------------- ----------------- --------------- -------------- ------------
+IU_INTER_TMPLT_CD IU_INTRA_TMPLT_CD IU_LEGAL_ENT_BU BUSINESS_UNIT_AP
+----------------- ----------------- --------------- ----------------
+VENDOR_SETID VENDOR_ID  LOCATION   BUSINESS_UNIT_BI CUST_ID        
+------------ ---------- ---------- ---------------- ---------------
+OPERATING_UNIT PRODUCT FUND_CODE CLASS_FLD PROGRAM_CODE BUDGET_REF AFFILIATE
+-------------- ------- --------- --------- ------------ ---------- ---------
+AFFILIATE_INTRA1 AFFILIATE_INTRA2 CHARTFIELD1 CHARTFIELD2 CHARTFIELD3
+---------------- ---------------- ----------- ----------- -----------
+PROJECT_ID      DEPTID     CUST_VNDR_AFFILIAT LED_GRP_DEFAULT PHYSICAL_NATURE
+--------------- ---------- ------------------ --------------- ---------------
+    SYNCID SYNCDTTM                       
+---------- -------------------------------
+                                                                   
+
+TABLE_NAME      BUSINESS_UNIT AS_OF_DATE BASE_CURRENCY ELIMS_ONLY
+--------------- ------------- ---------- ------------- ----------
+JRNL_BALANCE_OPTN JRNL_EDIT_ERR_OPTN JRNL_AMT_ERR_OPTN JRNL_DT_ERR_OPTN
+----------------- ------------------ ----------------- ----------------
+JRNL_DT_ERR_OPTN2 CONTROL_TOTAL_OPTN CURRENCY_BAL_OPTN BASE_CUR_ADJ_OPTN
+----------------- ------------------ ----------------- -----------------
+JRNL_FOREIGN_OPTN ENABLE_UNPOST_DT JRNL_APPRVL_OPTN BD_JRNL_APPR_OPTN
+----------------- ---------------- ---------------- -----------------
+BUSPROCNAME                    APPR_RULE_SET                 
+------------------------------ ------------------------------
+BUSPROCNAME_BD                 APPR_RULE_SET_BD               TR_RVL_RATE_INDEX
+------------------------------ ------------------------------ -----------------
+TR_RVL_RT_TYPE INT_ENTITYCD EXT_ENTITYCD PYMNT_METHOD DOC_SEQ DOC_TYPE
+-------------- ------------ ------------ ------------ ------- --------
+VAT_NRCVR_PRO_FLG VAT_NRCVR_ALL_FLG HOLIDAY_LIST_ID POST_DATE_OPTN PROCESS_DATE
+----------------- ----------------- --------------- -------------- ------------
+IU_INTER_TMPLT_CD IU_INTRA_TMPLT_CD IU_LEGAL_ENT_BU BUSINESS_UNIT_AP
+----------------- ----------------- --------------- ----------------
+VENDOR_SETID VENDOR_ID  LOCATION   BUSINESS_UNIT_BI CUST_ID        
+------------ ---------- ---------- ---------------- ---------------
+OPERATING_UNIT PRODUCT FUND_CODE CLASS_FLD PROGRAM_CODE BUDGET_REF AFFILIATE
+-------------- ------- --------- --------- ------------ ---------- ---------
+AFFILIATE_INTRA1 AFFILIATE_INTRA2 CHARTFIELD1 CHARTFIELD2 CHARTFIELD3
+---------------- ---------------- ----------- ----------- -----------
+PROJECT_ID      DEPTID     CUST_VNDR_AFFILIAT LED_GRP_DEFAULT PHYSICAL_NATURE
+--------------- ---------- ------------------ --------------- ---------------
+    SYNCID SYNCDTTM                       
+---------- -------------------------------
+600                    02000                                                
+
+TABLE_NAME      BUSINESS_UNIT AS_OF_DATE BASE_CURRENCY ELIMS_ONLY
+--------------- ------------- ---------- ------------- ----------
+JRNL_BALANCE_OPTN JRNL_EDIT_ERR_OPTN JRNL_AMT_ERR_OPTN JRNL_DT_ERR_OPTN
+----------------- ------------------ ----------------- ----------------
+JRNL_DT_ERR_OPTN2 CONTROL_TOTAL_OPTN CURRENCY_BAL_OPTN BASE_CUR_ADJ_OPTN
+----------------- ------------------ ----------------- -----------------
+JRNL_FOREIGN_OPTN ENABLE_UNPOST_DT JRNL_APPRVL_OPTN BD_JRNL_APPR_OPTN
+----------------- ---------------- ---------------- -----------------
+BUSPROCNAME                    APPR_RULE_SET                 
+------------------------------ ------------------------------
+BUSPROCNAME_BD                 APPR_RULE_SET_BD               TR_RVL_RATE_INDEX
+------------------------------ ------------------------------ -----------------
+TR_RVL_RT_TYPE INT_ENTITYCD EXT_ENTITYCD PYMNT_METHOD DOC_SEQ DOC_TYPE
+-------------- ------------ ------------ ------------ ------- --------
+VAT_NRCVR_PRO_FLG VAT_NRCVR_ALL_FLG HOLIDAY_LIST_ID POST_DATE_OPTN PROCESS_DATE
+----------------- ----------------- --------------- -------------- ------------
+IU_INTER_TMPLT_CD IU_INTRA_TMPLT_CD IU_LEGAL_ENT_BU BUSINESS_UNIT_AP
+----------------- ----------------- --------------- ----------------
+VENDOR_SETID VENDOR_ID  LOCATION   BUSINESS_UNIT_BI CUST_ID        
+------------ ---------- ---------- ---------------- ---------------
+OPERATING_UNIT PRODUCT FUND_CODE CLASS_FLD PROGRAM_CODE BUDGET_REF AFFILIATE
+-------------- ------- --------- --------- ------------ ---------- ---------
+AFFILIATE_INTRA1 AFFILIATE_INTRA2 CHARTFIELD1 CHARTFIELD2 CHARTFIELD3
+---------------- ---------------- ----------- ----------- -----------
+PROJECT_ID      DEPTID     CUST_VNDR_AFFILIAT LED_GRP_DEFAULT PHYSICAL_NATURE
+--------------- ---------- ------------------ --------------- ---------------
+    SYNCID SYNCDTTM                       
+---------- -------------------------------
+                                                                     
+
+TABLE_NAME      BUSINESS_UNIT AS_OF_DATE BASE_CURRENCY ELIMS_ONLY
+--------------- ------------- ---------- ------------- ----------
+JRNL_BALANCE_OPTN JRNL_EDIT_ERR_OPTN JRNL_AMT_ERR_OPTN JRNL_DT_ERR_OPTN
+----------------- ------------------ ----------------- ----------------
+JRNL_DT_ERR_OPTN2 CONTROL_TOTAL_OPTN CURRENCY_BAL_OPTN BASE_CUR_ADJ_OPTN
+----------------- ------------------ ----------------- -----------------
+JRNL_FOREIGN_OPTN ENABLE_UNPOST_DT JRNL_APPRVL_OPTN BD_JRNL_APPR_OPTN
+----------------- ---------------- ---------------- -----------------
+BUSPROCNAME                    APPR_RULE_SET                 
+------------------------------ ------------------------------
+BUSPROCNAME_BD                 APPR_RULE_SET_BD               TR_RVL_RATE_INDEX
+------------------------------ ------------------------------ -----------------
+TR_RVL_RT_TYPE INT_ENTITYCD EXT_ENTITYCD PYMNT_METHOD DOC_SEQ DOC_TYPE
+-------------- ------------ ------------ ------------ ------- --------
+VAT_NRCVR_PRO_FLG VAT_NRCVR_ALL_FLG HOLIDAY_LIST_ID POST_DATE_OPTN PROCESS_DATE
+----------------- ----------------- --------------- -------------- ------------
+IU_INTER_TMPLT_CD IU_INTRA_TMPLT_CD IU_LEGAL_ENT_BU BUSINESS_UNIT_AP
+----------------- ----------------- --------------- ----------------
+VENDOR_SETID VENDOR_ID  LOCATION   BUSINESS_UNIT_BI CUST_ID        
+------------ ---------- ---------- ---------------- ---------------
+OPERATING_UNIT PRODUCT FUND_CODE CLASS_FLD PROGRAM_CODE BUDGET_REF AFFILIATE
+-------------- ------- --------- --------- ------------ ---------- ---------
+AFFILIATE_INTRA1 AFFILIATE_INTRA2 CHARTFIELD1 CHARTFIELD2 CHARTFIELD3
+---------------- ---------------- ----------- ----------- -----------
+PROJECT_ID      DEPTID     CUST_VNDR_AFFILIAT LED_GRP_DEFAULT PHYSICAL_NATURE
+--------------- ---------- ------------------ --------------- ---------------
+    SYNCID SYNCDTTM                       
+---------- -------------------------------
+                           N                  ACTUALS         G              
+
+TABLE_NAME      BUSINESS_UNIT AS_OF_DATE BASE_CURRENCY ELIMS_ONLY
+--------------- ------------- ---------- ------------- ----------
+JRNL_BALANCE_OPTN JRNL_EDIT_ERR_OPTN JRNL_AMT_ERR_OPTN JRNL_DT_ERR_OPTN
+----------------- ------------------ ----------------- ----------------
+JRNL_DT_ERR_OPTN2 CONTROL_TOTAL_OPTN CURRENCY_BAL_OPTN BASE_CUR_ADJ_OPTN
+----------------- ------------------ ----------------- -----------------
+JRNL_FOREIGN_OPTN ENABLE_UNPOST_DT JRNL_APPRVL_OPTN BD_JRNL_APPR_OPTN
+----------------- ---------------- ---------------- -----------------
+BUSPROCNAME                    APPR_RULE_SET                 
+------------------------------ ------------------------------
+BUSPROCNAME_BD                 APPR_RULE_SET_BD               TR_RVL_RATE_INDEX
+------------------------------ ------------------------------ -----------------
+TR_RVL_RT_TYPE INT_ENTITYCD EXT_ENTITYCD PYMNT_METHOD DOC_SEQ DOC_TYPE
+-------------- ------------ ------------ ------------ ------- --------
+VAT_NRCVR_PRO_FLG VAT_NRCVR_ALL_FLG HOLIDAY_LIST_ID POST_DATE_OPTN PROCESS_DATE
+----------------- ----------------- --------------- -------------- ------------
+IU_INTER_TMPLT_CD IU_INTRA_TMPLT_CD IU_LEGAL_ENT_BU BUSINESS_UNIT_AP
+----------------- ----------------- --------------- ----------------
+VENDOR_SETID VENDOR_ID  LOCATION   BUSINESS_UNIT_BI CUST_ID        
+------------ ---------- ---------- ---------------- ---------------
+OPERATING_UNIT PRODUCT FUND_CODE CLASS_FLD PROGRAM_CODE BUDGET_REF AFFILIATE
+-------------- ------- --------- --------- ------------ ---------- ---------
+AFFILIATE_INTRA1 AFFILIATE_INTRA2 CHARTFIELD1 CHARTFIELD2 CHARTFIELD3
+---------------- ---------------- ----------- ----------- -----------
+PROJECT_ID      DEPTID     CUST_VNDR_AFFILIAT LED_GRP_DEFAULT PHYSICAL_NATURE
+--------------- ---------- ------------------ --------------- ---------------
+    SYNCID SYNCDTTM                       
+---------- -------------------------------
+        12 19-DEC-10 05.27.24.000000 PM   
+
+TABLE_NAME      BUSINESS_UNIT AS_OF_DATE BASE_CURRENCY ELIMS_ONLY
+--------------- ------------- ---------- ------------- ----------
+JRNL_BALANCE_OPTN JRNL_EDIT_ERR_OPTN JRNL_AMT_ERR_OPTN JRNL_DT_ERR_OPTN
+----------------- ------------------ ----------------- ----------------
+JRNL_DT_ERR_OPTN2 CONTROL_TOTAL_OPTN CURRENCY_BAL_OPTN BASE_CUR_ADJ_OPTN
+----------------- ------------------ ----------------- -----------------
+JRNL_FOREIGN_OPTN ENABLE_UNPOST_DT JRNL_APPRVL_OPTN BD_JRNL_APPR_OPTN
+----------------- ---------------- ---------------- -----------------
+BUSPROCNAME                    APPR_RULE_SET                 
+------------------------------ ------------------------------
+BUSPROCNAME_BD                 APPR_RULE_SET_BD               TR_RVL_RATE_INDEX
+------------------------------ ------------------------------ -----------------
+TR_RVL_RT_TYPE INT_ENTITYCD EXT_ENTITYCD PYMNT_METHOD DOC_SEQ DOC_TYPE
+-------------- ------------ ------------ ------------ ------- --------
+VAT_NRCVR_PRO_FLG VAT_NRCVR_ALL_FLG HOLIDAY_LIST_ID POST_DATE_OPTN PROCESS_DATE
+----------------- ----------------- --------------- -------------- ------------
+IU_INTER_TMPLT_CD IU_INTRA_TMPLT_CD IU_LEGAL_ENT_BU BUSINESS_UNIT_AP
+----------------- ----------------- --------------- ----------------
+VENDOR_SETID VENDOR_ID  LOCATION   BUSINESS_UNIT_BI CUST_ID        
+------------ ---------- ---------- ---------------- ---------------
+OPERATING_UNIT PRODUCT FUND_CODE CLASS_FLD PROGRAM_CODE BUDGET_REF AFFILIATE
+-------------- ------- --------- --------- ------------ ---------- ---------
+AFFILIATE_INTRA1 AFFILIATE_INTRA2 CHARTFIELD1 CHARTFIELD2 CHARTFIELD3
+---------------- ---------------- ----------- ----------- -----------
+PROJECT_ID      DEPTID     CUST_VNDR_AFFILIAT LED_GRP_DEFAULT PHYSICAL_NATURE
+--------------- ---------- ------------------ --------------- ---------------
+    SYNCID SYNCDTTM                       
+---------- -------------------------------
+                                                                                
+1 row selected.
+
+TABLE_NAME      ROW_COUNT
+-------------- ----------
+BU_LED_GRP_TBL          1
+1 row selected.
+
+TABLE_NAME     BUSINESS_UNIT LEDGER_GROUP LEDGER     LEDGER_TYPE BALANCED_LEDGER
+-------------- ------------- ------------ ---------- ----------- ---------------
+JRNL_BALANCE_OPTN JRNL_EDIT_ERR_OPTN JRNL_AMT_ERR_OPTN JRNL_DT_ERR_OPTN
+----------------- ------------------ ----------------- ----------------
+JRNL_DT_ERR_OPTN2 CONTROL_TOTAL_OPTN CALENDAR_ID UPD_OPENPER ASSOCIATED_LED_GRP
+----------------- ------------------ ----------- ----------- ------------------
+DTTM_STAMP_SEC                  UPDATE_TIMING ROUND_ADJ_OPTN ADB_REPORTING
+------------------------------- ------------- -------------- -------------
+ADB_STATUTORY_RPT ADB_FILTER_ACCNTS CALENDAR_ID_ADB CURRENCY_BAL_OPTN
+----------------- ----------------- --------------- -----------------
+BASE_CUR_ADJ_OPTN JRNL_FOREIGN_OPTN ALLOW_LEDG_LOAD_SW ALLOW_WF_UPDATE
+----------------- ----------------- ------------------ ---------------
+BASE_CURRENCY DEFAULT_LEDGER_GRP SEPARATE_DRCR SEPARATE_DRCR_AMT ALTACCT_OPTN
+------------- ------------------ ------------- ----------------- ------------
+ACCT_ALT_SUSPENSE ALT_ACCT_SUSPENSE UPDATE_CLOSING_SW JRNL_APPRVL_OPTN
+----------------- ----------------- ----------------- ----------------
+BD_JRNL_APPR_OPTN BUSPROCNAME                    APPR_RULE_SET                 
+----------------- ------------------------------ ------------------------------
+BUSPROCNAME_BD                 APPR_RULE_SET_BD               DOC_TYPE
+------------------------------ ------------------------------ --------
+DOC_TYPE_UNPOST COMMITMENT_CNTL KK_REVERSAL_OPTN KK_ERR_OPTN KK_INCLUDE_PRE_ENC
+--------------- --------------- ---------------- ----------- ------------------
+KK_ALLOW_INC_SA POSITION_ACCOUNT NO_POST_FUTURE_DT POST_REVERSAL_SW
+--------------- ---------------- ----------------- ----------------
+POST_SUMLED_SW UNPOST_DOCTYPE_OPT UNPOST_INTERUNIT UNPOST_REVERSALS
+-------------- ------------------ ---------------- ----------------
+ENABLE_INC_SLED ENABLE_INC_LLOAD DETAIL_LEDGER
+--------------- ---------------- -------------
+BU_LED_GRP_TBL UNUNI         UNU_COMMIT              D           Y              
+
+TABLE_NAME     BUSINESS_UNIT LEDGER_GROUP LEDGER     LEDGER_TYPE BALANCED_LEDGER
+-------------- ------------- ------------ ---------- ----------- ---------------
+JRNL_BALANCE_OPTN JRNL_EDIT_ERR_OPTN JRNL_AMT_ERR_OPTN JRNL_DT_ERR_OPTN
+----------------- ------------------ ----------------- ----------------
+JRNL_DT_ERR_OPTN2 CONTROL_TOTAL_OPTN CALENDAR_ID UPD_OPENPER ASSOCIATED_LED_GRP
+----------------- ------------------ ----------- ----------- ------------------
+DTTM_STAMP_SEC                  UPDATE_TIMING ROUND_ADJ_OPTN ADB_REPORTING
+------------------------------- ------------- -------------- -------------
+ADB_STATUTORY_RPT ADB_FILTER_ACCNTS CALENDAR_ID_ADB CURRENCY_BAL_OPTN
+----------------- ----------------- --------------- -----------------
+BASE_CUR_ADJ_OPTN JRNL_FOREIGN_OPTN ALLOW_LEDG_LOAD_SW ALLOW_WF_UPDATE
+----------------- ----------------- ------------------ ---------------
+BASE_CURRENCY DEFAULT_LEDGER_GRP SEPARATE_DRCR SEPARATE_DRCR_AMT ALTACCT_OPTN
+------------- ------------------ ------------- ----------------- ------------
+ACCT_ALT_SUSPENSE ALT_ACCT_SUSPENSE UPDATE_CLOSING_SW JRNL_APPRVL_OPTN
+----------------- ----------------- ----------------- ----------------
+BD_JRNL_APPR_OPTN BUSPROCNAME                    APPR_RULE_SET                 
+----------------- ------------------------------ ------------------------------
+BUSPROCNAME_BD                 APPR_RULE_SET_BD               DOC_TYPE
+------------------------------ ------------------------------ --------
+DOC_TYPE_UNPOST COMMITMENT_CNTL KK_REVERSAL_OPTN KK_ERR_OPTN KK_INCLUDE_PRE_ENC
+--------------- --------------- ---------------- ----------- ------------------
+KK_ALLOW_INC_SA POSITION_ACCOUNT NO_POST_FUTURE_DT POST_REVERSAL_SW
+--------------- ---------------- ----------------- ----------------
+POST_SUMLED_SW UNPOST_DOCTYPE_OPT UNPOST_INTERUNIT UNPOST_REVERSALS
+-------------- ------------------ ---------------- ----------------
+ENABLE_INC_SLED ENABLE_INC_LLOAD DETAIL_LEDGER
+--------------- ---------------- -------------
+D                 D                  D                 D               
+
+TABLE_NAME     BUSINESS_UNIT LEDGER_GROUP LEDGER     LEDGER_TYPE BALANCED_LEDGER
+-------------- ------------- ------------ ---------- ----------- ---------------
+JRNL_BALANCE_OPTN JRNL_EDIT_ERR_OPTN JRNL_AMT_ERR_OPTN JRNL_DT_ERR_OPTN
+----------------- ------------------ ----------------- ----------------
+JRNL_DT_ERR_OPTN2 CONTROL_TOTAL_OPTN CALENDAR_ID UPD_OPENPER ASSOCIATED_LED_GRP
+----------------- ------------------ ----------- ----------- ------------------
+DTTM_STAMP_SEC                  UPDATE_TIMING ROUND_ADJ_OPTN ADB_REPORTING
+------------------------------- ------------- -------------- -------------
+ADB_STATUTORY_RPT ADB_FILTER_ACCNTS CALENDAR_ID_ADB CURRENCY_BAL_OPTN
+----------------- ----------------- --------------- -----------------
+BASE_CUR_ADJ_OPTN JRNL_FOREIGN_OPTN ALLOW_LEDG_LOAD_SW ALLOW_WF_UPDATE
+----------------- ----------------- ------------------ ---------------
+BASE_CURRENCY DEFAULT_LEDGER_GRP SEPARATE_DRCR SEPARATE_DRCR_AMT ALTACCT_OPTN
+------------- ------------------ ------------- ----------------- ------------
+ACCT_ALT_SUSPENSE ALT_ACCT_SUSPENSE UPDATE_CLOSING_SW JRNL_APPRVL_OPTN
+----------------- ----------------- ----------------- ----------------
+BD_JRNL_APPR_OPTN BUSPROCNAME                    APPR_RULE_SET                 
+----------------- ------------------------------ ------------------------------
+BUSPROCNAME_BD                 APPR_RULE_SET_BD               DOC_TYPE
+------------------------------ ------------------------------ --------
+DOC_TYPE_UNPOST COMMITMENT_CNTL KK_REVERSAL_OPTN KK_ERR_OPTN KK_INCLUDE_PRE_ENC
+--------------- --------------- ---------------- ----------- ------------------
+KK_ALLOW_INC_SA POSITION_ACCOUNT NO_POST_FUTURE_DT POST_REVERSAL_SW
+--------------- ---------------- ----------------- ----------------
+POST_SUMLED_SW UNPOST_DOCTYPE_OPT UNPOST_INTERUNIT UNPOST_REVERSALS
+-------------- ------------------ ---------------- ----------------
+ENABLE_INC_SLED ENABLE_INC_LLOAD DETAIL_LEDGER
+--------------- ---------------- -------------
+D                 D                  01          G                             
+
+TABLE_NAME     BUSINESS_UNIT LEDGER_GROUP LEDGER     LEDGER_TYPE BALANCED_LEDGER
+-------------- ------------- ------------ ---------- ----------- ---------------
+JRNL_BALANCE_OPTN JRNL_EDIT_ERR_OPTN JRNL_AMT_ERR_OPTN JRNL_DT_ERR_OPTN
+----------------- ------------------ ----------------- ----------------
+JRNL_DT_ERR_OPTN2 CONTROL_TOTAL_OPTN CALENDAR_ID UPD_OPENPER ASSOCIATED_LED_GRP
+----------------- ------------------ ----------- ----------- ------------------
+DTTM_STAMP_SEC                  UPDATE_TIMING ROUND_ADJ_OPTN ADB_REPORTING
+------------------------------- ------------- -------------- -------------
+ADB_STATUTORY_RPT ADB_FILTER_ACCNTS CALENDAR_ID_ADB CURRENCY_BAL_OPTN
+----------------- ----------------- --------------- -----------------
+BASE_CUR_ADJ_OPTN JRNL_FOREIGN_OPTN ALLOW_LEDG_LOAD_SW ALLOW_WF_UPDATE
+----------------- ----------------- ------------------ ---------------
+BASE_CURRENCY DEFAULT_LEDGER_GRP SEPARATE_DRCR SEPARATE_DRCR_AMT ALTACCT_OPTN
+------------- ------------------ ------------- ----------------- ------------
+ACCT_ALT_SUSPENSE ALT_ACCT_SUSPENSE UPDATE_CLOSING_SW JRNL_APPRVL_OPTN
+----------------- ----------------- ----------------- ----------------
+BD_JRNL_APPR_OPTN BUSPROCNAME                    APPR_RULE_SET                 
+----------------- ------------------------------ ------------------------------
+BUSPROCNAME_BD                 APPR_RULE_SET_BD               DOC_TYPE
+------------------------------ ------------------------------ --------
+DOC_TYPE_UNPOST COMMITMENT_CNTL KK_REVERSAL_OPTN KK_ERR_OPTN KK_INCLUDE_PRE_ENC
+--------------- --------------- ---------------- ----------- ------------------
+KK_ALLOW_INC_SA POSITION_ACCOUNT NO_POST_FUTURE_DT POST_REVERSAL_SW
+--------------- ---------------- ----------------- ----------------
+POST_SUMLED_SW UNPOST_DOCTYPE_OPT UNPOST_INTERUNIT UNPOST_REVERSALS
+-------------- ------------------ ---------------- ----------------
+ENABLE_INC_SLED ENABLE_INC_LLOAD DETAIL_LEDGER
+--------------- ---------------- -------------
+                                B             L              N            
+
+TABLE_NAME     BUSINESS_UNIT LEDGER_GROUP LEDGER     LEDGER_TYPE BALANCED_LEDGER
+-------------- ------------- ------------ ---------- ----------- ---------------
+JRNL_BALANCE_OPTN JRNL_EDIT_ERR_OPTN JRNL_AMT_ERR_OPTN JRNL_DT_ERR_OPTN
+----------------- ------------------ ----------------- ----------------
+JRNL_DT_ERR_OPTN2 CONTROL_TOTAL_OPTN CALENDAR_ID UPD_OPENPER ASSOCIATED_LED_GRP
+----------------- ------------------ ----------- ----------- ------------------
+DTTM_STAMP_SEC                  UPDATE_TIMING ROUND_ADJ_OPTN ADB_REPORTING
+------------------------------- ------------- -------------- -------------
+ADB_STATUTORY_RPT ADB_FILTER_ACCNTS CALENDAR_ID_ADB CURRENCY_BAL_OPTN
+----------------- ----------------- --------------- -----------------
+BASE_CUR_ADJ_OPTN JRNL_FOREIGN_OPTN ALLOW_LEDG_LOAD_SW ALLOW_WF_UPDATE
+----------------- ----------------- ------------------ ---------------
+BASE_CURRENCY DEFAULT_LEDGER_GRP SEPARATE_DRCR SEPARATE_DRCR_AMT ALTACCT_OPTN
+------------- ------------------ ------------- ----------------- ------------
+ACCT_ALT_SUSPENSE ALT_ACCT_SUSPENSE UPDATE_CLOSING_SW JRNL_APPRVL_OPTN
+----------------- ----------------- ----------------- ----------------
+BD_JRNL_APPR_OPTN BUSPROCNAME                    APPR_RULE_SET                 
+----------------- ------------------------------ ------------------------------
+BUSPROCNAME_BD                 APPR_RULE_SET_BD               DOC_TYPE
+------------------------------ ------------------------------ --------
+DOC_TYPE_UNPOST COMMITMENT_CNTL KK_REVERSAL_OPTN KK_ERR_OPTN KK_INCLUDE_PRE_ENC
+--------------- --------------- ---------------- ----------- ------------------
+KK_ALLOW_INC_SA POSITION_ACCOUNT NO_POST_FUTURE_DT POST_REVERSAL_SW
+--------------- ---------------- ----------------- ----------------
+POST_SUMLED_SW UNPOST_DOCTYPE_OPT UNPOST_INTERUNIT UNPOST_REVERSALS
+-------------- ------------------ ---------------- ----------------
+ENABLE_INC_SLED ENABLE_INC_LLOAD DETAIL_LEDGER
+--------------- ---------------- -------------
+N                 N                                 D                
+
+TABLE_NAME     BUSINESS_UNIT LEDGER_GROUP LEDGER     LEDGER_TYPE BALANCED_LEDGER
+-------------- ------------- ------------ ---------- ----------- ---------------
+JRNL_BALANCE_OPTN JRNL_EDIT_ERR_OPTN JRNL_AMT_ERR_OPTN JRNL_DT_ERR_OPTN
+----------------- ------------------ ----------------- ----------------
+JRNL_DT_ERR_OPTN2 CONTROL_TOTAL_OPTN CALENDAR_ID UPD_OPENPER ASSOCIATED_LED_GRP
+----------------- ------------------ ----------- ----------- ------------------
+DTTM_STAMP_SEC                  UPDATE_TIMING ROUND_ADJ_OPTN ADB_REPORTING
+------------------------------- ------------- -------------- -------------
+ADB_STATUTORY_RPT ADB_FILTER_ACCNTS CALENDAR_ID_ADB CURRENCY_BAL_OPTN
+----------------- ----------------- --------------- -----------------
+BASE_CUR_ADJ_OPTN JRNL_FOREIGN_OPTN ALLOW_LEDG_LOAD_SW ALLOW_WF_UPDATE
+----------------- ----------------- ------------------ ---------------
+BASE_CURRENCY DEFAULT_LEDGER_GRP SEPARATE_DRCR SEPARATE_DRCR_AMT ALTACCT_OPTN
+------------- ------------------ ------------- ----------------- ------------
+ACCT_ALT_SUSPENSE ALT_ACCT_SUSPENSE UPDATE_CLOSING_SW JRNL_APPRVL_OPTN
+----------------- ----------------- ----------------- ----------------
+BD_JRNL_APPR_OPTN BUSPROCNAME                    APPR_RULE_SET                 
+----------------- ------------------------------ ------------------------------
+BUSPROCNAME_BD                 APPR_RULE_SET_BD               DOC_TYPE
+------------------------------ ------------------------------ --------
+DOC_TYPE_UNPOST COMMITMENT_CNTL KK_REVERSAL_OPTN KK_ERR_OPTN KK_INCLUDE_PRE_ENC
+--------------- --------------- ---------------- ----------- ------------------
+KK_ALLOW_INC_SA POSITION_ACCOUNT NO_POST_FUTURE_DT POST_REVERSAL_SW
+--------------- ---------------- ----------------- ----------------
+POST_SUMLED_SW UNPOST_DOCTYPE_OPT UNPOST_INTERUNIT UNPOST_REVERSALS
+-------------- ------------------ ---------------- ----------------
+ENABLE_INC_SLED ENABLE_INC_LLOAD DETAIL_LEDGER
+--------------- ---------------- -------------
+D                 D                 Y                  N              
+
+TABLE_NAME     BUSINESS_UNIT LEDGER_GROUP LEDGER     LEDGER_TYPE BALANCED_LEDGER
+-------------- ------------- ------------ ---------- ----------- ---------------
+JRNL_BALANCE_OPTN JRNL_EDIT_ERR_OPTN JRNL_AMT_ERR_OPTN JRNL_DT_ERR_OPTN
+----------------- ------------------ ----------------- ----------------
+JRNL_DT_ERR_OPTN2 CONTROL_TOTAL_OPTN CALENDAR_ID UPD_OPENPER ASSOCIATED_LED_GRP
+----------------- ------------------ ----------- ----------- ------------------
+DTTM_STAMP_SEC                  UPDATE_TIMING ROUND_ADJ_OPTN ADB_REPORTING
+------------------------------- ------------- -------------- -------------
+ADB_STATUTORY_RPT ADB_FILTER_ACCNTS CALENDAR_ID_ADB CURRENCY_BAL_OPTN
+----------------- ----------------- --------------- -----------------
+BASE_CUR_ADJ_OPTN JRNL_FOREIGN_OPTN ALLOW_LEDG_LOAD_SW ALLOW_WF_UPDATE
+----------------- ----------------- ------------------ ---------------
+BASE_CURRENCY DEFAULT_LEDGER_GRP SEPARATE_DRCR SEPARATE_DRCR_AMT ALTACCT_OPTN
+------------- ------------------ ------------- ----------------- ------------
+ACCT_ALT_SUSPENSE ALT_ACCT_SUSPENSE UPDATE_CLOSING_SW JRNL_APPRVL_OPTN
+----------------- ----------------- ----------------- ----------------
+BD_JRNL_APPR_OPTN BUSPROCNAME                    APPR_RULE_SET                 
+----------------- ------------------------------ ------------------------------
+BUSPROCNAME_BD                 APPR_RULE_SET_BD               DOC_TYPE
+------------------------------ ------------------------------ --------
+DOC_TYPE_UNPOST COMMITMENT_CNTL KK_REVERSAL_OPTN KK_ERR_OPTN KK_INCLUDE_PRE_ENC
+--------------- --------------- ---------------- ----------- ------------------
+KK_ALLOW_INC_SA POSITION_ACCOUNT NO_POST_FUTURE_DT POST_REVERSAL_SW
+--------------- ---------------- ----------------- ----------------
+POST_SUMLED_SW UNPOST_DOCTYPE_OPT UNPOST_INTERUNIT UNPOST_REVERSALS
+-------------- ------------------ ---------------- ----------------
+ENABLE_INC_SLED ENABLE_INC_LLOAD DETAIL_LEDGER
+--------------- ---------------- -------------
+USD           N                  N             N                 N           
+
+TABLE_NAME     BUSINESS_UNIT LEDGER_GROUP LEDGER     LEDGER_TYPE BALANCED_LEDGER
+-------------- ------------- ------------ ---------- ----------- ---------------
+JRNL_BALANCE_OPTN JRNL_EDIT_ERR_OPTN JRNL_AMT_ERR_OPTN JRNL_DT_ERR_OPTN
+----------------- ------------------ ----------------- ----------------
+JRNL_DT_ERR_OPTN2 CONTROL_TOTAL_OPTN CALENDAR_ID UPD_OPENPER ASSOCIATED_LED_GRP
+----------------- ------------------ ----------- ----------- ------------------
+DTTM_STAMP_SEC                  UPDATE_TIMING ROUND_ADJ_OPTN ADB_REPORTING
+------------------------------- ------------- -------------- -------------
+ADB_STATUTORY_RPT ADB_FILTER_ACCNTS CALENDAR_ID_ADB CURRENCY_BAL_OPTN
+----------------- ----------------- --------------- -----------------
+BASE_CUR_ADJ_OPTN JRNL_FOREIGN_OPTN ALLOW_LEDG_LOAD_SW ALLOW_WF_UPDATE
+----------------- ----------------- ------------------ ---------------
+BASE_CURRENCY DEFAULT_LEDGER_GRP SEPARATE_DRCR SEPARATE_DRCR_AMT ALTACCT_OPTN
+------------- ------------------ ------------- ----------------- ------------
+ACCT_ALT_SUSPENSE ALT_ACCT_SUSPENSE UPDATE_CLOSING_SW JRNL_APPRVL_OPTN
+----------------- ----------------- ----------------- ----------------
+BD_JRNL_APPR_OPTN BUSPROCNAME                    APPR_RULE_SET                 
+----------------- ------------------------------ ------------------------------
+BUSPROCNAME_BD                 APPR_RULE_SET_BD               DOC_TYPE
+------------------------------ ------------------------------ --------
+DOC_TYPE_UNPOST COMMITMENT_CNTL KK_REVERSAL_OPTN KK_ERR_OPTN KK_INCLUDE_PRE_ENC
+--------------- --------------- ---------------- ----------- ------------------
+KK_ALLOW_INC_SA POSITION_ACCOUNT NO_POST_FUTURE_DT POST_REVERSAL_SW
+--------------- ---------------- ----------------- ----------------
+POST_SUMLED_SW UNPOST_DOCTYPE_OPT UNPOST_INTERUNIT UNPOST_REVERSALS
+-------------- ------------------ ---------------- ----------------
+ENABLE_INC_SLED ENABLE_INC_LLOAD DETAIL_LEDGER
+--------------- ---------------- -------------
+                                    N                 D               
+
+TABLE_NAME     BUSINESS_UNIT LEDGER_GROUP LEDGER     LEDGER_TYPE BALANCED_LEDGER
+-------------- ------------- ------------ ---------- ----------- ---------------
+JRNL_BALANCE_OPTN JRNL_EDIT_ERR_OPTN JRNL_AMT_ERR_OPTN JRNL_DT_ERR_OPTN
+----------------- ------------------ ----------------- ----------------
+JRNL_DT_ERR_OPTN2 CONTROL_TOTAL_OPTN CALENDAR_ID UPD_OPENPER ASSOCIATED_LED_GRP
+----------------- ------------------ ----------- ----------- ------------------
+DTTM_STAMP_SEC                  UPDATE_TIMING ROUND_ADJ_OPTN ADB_REPORTING
+------------------------------- ------------- -------------- -------------
+ADB_STATUTORY_RPT ADB_FILTER_ACCNTS CALENDAR_ID_ADB CURRENCY_BAL_OPTN
+----------------- ----------------- --------------- -----------------
+BASE_CUR_ADJ_OPTN JRNL_FOREIGN_OPTN ALLOW_LEDG_LOAD_SW ALLOW_WF_UPDATE
+----------------- ----------------- ------------------ ---------------
+BASE_CURRENCY DEFAULT_LEDGER_GRP SEPARATE_DRCR SEPARATE_DRCR_AMT ALTACCT_OPTN
+------------- ------------------ ------------- ----------------- ------------
+ACCT_ALT_SUSPENSE ALT_ACCT_SUSPENSE UPDATE_CLOSING_SW JRNL_APPRVL_OPTN
+----------------- ----------------- ----------------- ----------------
+BD_JRNL_APPR_OPTN BUSPROCNAME                    APPR_RULE_SET                 
+----------------- ------------------------------ ------------------------------
+BUSPROCNAME_BD                 APPR_RULE_SET_BD               DOC_TYPE
+------------------------------ ------------------------------ --------
+DOC_TYPE_UNPOST COMMITMENT_CNTL KK_REVERSAL_OPTN KK_ERR_OPTN KK_INCLUDE_PRE_ENC
+--------------- --------------- ---------------- ----------- ------------------
+KK_ALLOW_INC_SA POSITION_ACCOUNT NO_POST_FUTURE_DT POST_REVERSAL_SW
+--------------- ---------------- ----------------- ----------------
+POST_SUMLED_SW UNPOST_DOCTYPE_OPT UNPOST_INTERUNIT UNPOST_REVERSALS
+-------------- ------------------ ---------------- ----------------
+ENABLE_INC_SLED ENABLE_INC_LLOAD DETAIL_LEDGER
+--------------- ---------------- -------------
+D                                                                              
+
+TABLE_NAME     BUSINESS_UNIT LEDGER_GROUP LEDGER     LEDGER_TYPE BALANCED_LEDGER
+-------------- ------------- ------------ ---------- ----------- ---------------
+JRNL_BALANCE_OPTN JRNL_EDIT_ERR_OPTN JRNL_AMT_ERR_OPTN JRNL_DT_ERR_OPTN
+----------------- ------------------ ----------------- ----------------
+JRNL_DT_ERR_OPTN2 CONTROL_TOTAL_OPTN CALENDAR_ID UPD_OPENPER ASSOCIATED_LED_GRP
+----------------- ------------------ ----------- ----------- ------------------
+DTTM_STAMP_SEC                  UPDATE_TIMING ROUND_ADJ_OPTN ADB_REPORTING
+------------------------------- ------------- -------------- -------------
+ADB_STATUTORY_RPT ADB_FILTER_ACCNTS CALENDAR_ID_ADB CURRENCY_BAL_OPTN
+----------------- ----------------- --------------- -----------------
+BASE_CUR_ADJ_OPTN JRNL_FOREIGN_OPTN ALLOW_LEDG_LOAD_SW ALLOW_WF_UPDATE
+----------------- ----------------- ------------------ ---------------
+BASE_CURRENCY DEFAULT_LEDGER_GRP SEPARATE_DRCR SEPARATE_DRCR_AMT ALTACCT_OPTN
+------------- ------------------ ------------- ----------------- ------------
+ACCT_ALT_SUSPENSE ALT_ACCT_SUSPENSE UPDATE_CLOSING_SW JRNL_APPRVL_OPTN
+----------------- ----------------- ----------------- ----------------
+BD_JRNL_APPR_OPTN BUSPROCNAME                    APPR_RULE_SET                 
+----------------- ------------------------------ ------------------------------
+BUSPROCNAME_BD                 APPR_RULE_SET_BD               DOC_TYPE
+------------------------------ ------------------------------ --------
+DOC_TYPE_UNPOST COMMITMENT_CNTL KK_REVERSAL_OPTN KK_ERR_OPTN KK_INCLUDE_PRE_ENC
+--------------- --------------- ---------------- ----------- ------------------
+KK_ALLOW_INC_SA POSITION_ACCOUNT NO_POST_FUTURE_DT POST_REVERSAL_SW
+--------------- ---------------- ----------------- ----------------
+POST_SUMLED_SW UNPOST_DOCTYPE_OPT UNPOST_INTERUNIT UNPOST_REVERSALS
+-------------- ------------------ ---------------- ----------------
+ENABLE_INC_SLED ENABLE_INC_LLOAD DETAIL_LEDGER
+--------------- ---------------- -------------
+                                                                      
+
+TABLE_NAME     BUSINESS_UNIT LEDGER_GROUP LEDGER     LEDGER_TYPE BALANCED_LEDGER
+-------------- ------------- ------------ ---------- ----------- ---------------
+JRNL_BALANCE_OPTN JRNL_EDIT_ERR_OPTN JRNL_AMT_ERR_OPTN JRNL_DT_ERR_OPTN
+----------------- ------------------ ----------------- ----------------
+JRNL_DT_ERR_OPTN2 CONTROL_TOTAL_OPTN CALENDAR_ID UPD_OPENPER ASSOCIATED_LED_GRP
+----------------- ------------------ ----------- ----------- ------------------
+DTTM_STAMP_SEC                  UPDATE_TIMING ROUND_ADJ_OPTN ADB_REPORTING
+------------------------------- ------------- -------------- -------------
+ADB_STATUTORY_RPT ADB_FILTER_ACCNTS CALENDAR_ID_ADB CURRENCY_BAL_OPTN
+----------------- ----------------- --------------- -----------------
+BASE_CUR_ADJ_OPTN JRNL_FOREIGN_OPTN ALLOW_LEDG_LOAD_SW ALLOW_WF_UPDATE
+----------------- ----------------- ------------------ ---------------
+BASE_CURRENCY DEFAULT_LEDGER_GRP SEPARATE_DRCR SEPARATE_DRCR_AMT ALTACCT_OPTN
+------------- ------------------ ------------- ----------------- ------------
+ACCT_ALT_SUSPENSE ALT_ACCT_SUSPENSE UPDATE_CLOSING_SW JRNL_APPRVL_OPTN
+----------------- ----------------- ----------------- ----------------
+BD_JRNL_APPR_OPTN BUSPROCNAME                    APPR_RULE_SET                 
+----------------- ------------------------------ ------------------------------
+BUSPROCNAME_BD                 APPR_RULE_SET_BD               DOC_TYPE
+------------------------------ ------------------------------ --------
+DOC_TYPE_UNPOST COMMITMENT_CNTL KK_REVERSAL_OPTN KK_ERR_OPTN KK_INCLUDE_PRE_ENC
+--------------- --------------- ---------------- ----------- ------------------
+KK_ALLOW_INC_SA POSITION_ACCOUNT NO_POST_FUTURE_DT POST_REVERSAL_SW
+--------------- ---------------- ----------------- ----------------
+POST_SUMLED_SW UNPOST_DOCTYPE_OPT UNPOST_INTERUNIT UNPOST_REVERSALS
+-------------- ------------------ ---------------- ----------------
+ENABLE_INC_SLED ENABLE_INC_LLOAD DETAIL_LEDGER
+--------------- ---------------- -------------
+                N               A                Y           3                 
+
+TABLE_NAME     BUSINESS_UNIT LEDGER_GROUP LEDGER     LEDGER_TYPE BALANCED_LEDGER
+-------------- ------------- ------------ ---------- ----------- ---------------
+JRNL_BALANCE_OPTN JRNL_EDIT_ERR_OPTN JRNL_AMT_ERR_OPTN JRNL_DT_ERR_OPTN
+----------------- ------------------ ----------------- ----------------
+JRNL_DT_ERR_OPTN2 CONTROL_TOTAL_OPTN CALENDAR_ID UPD_OPENPER ASSOCIATED_LED_GRP
+----------------- ------------------ ----------- ----------- ------------------
+DTTM_STAMP_SEC                  UPDATE_TIMING ROUND_ADJ_OPTN ADB_REPORTING
+------------------------------- ------------- -------------- -------------
+ADB_STATUTORY_RPT ADB_FILTER_ACCNTS CALENDAR_ID_ADB CURRENCY_BAL_OPTN
+----------------- ----------------- --------------- -----------------
+BASE_CUR_ADJ_OPTN JRNL_FOREIGN_OPTN ALLOW_LEDG_LOAD_SW ALLOW_WF_UPDATE
+----------------- ----------------- ------------------ ---------------
+BASE_CURRENCY DEFAULT_LEDGER_GRP SEPARATE_DRCR SEPARATE_DRCR_AMT ALTACCT_OPTN
+------------- ------------------ ------------- ----------------- ------------
+ACCT_ALT_SUSPENSE ALT_ACCT_SUSPENSE UPDATE_CLOSING_SW JRNL_APPRVL_OPTN
+----------------- ----------------- ----------------- ----------------
+BD_JRNL_APPR_OPTN BUSPROCNAME                    APPR_RULE_SET                 
+----------------- ------------------------------ ------------------------------
+BUSPROCNAME_BD                 APPR_RULE_SET_BD               DOC_TYPE
+------------------------------ ------------------------------ --------
+DOC_TYPE_UNPOST COMMITMENT_CNTL KK_REVERSAL_OPTN KK_ERR_OPTN KK_INCLUDE_PRE_ENC
+--------------- --------------- ---------------- ----------- ------------------
+KK_ALLOW_INC_SA POSITION_ACCOUNT NO_POST_FUTURE_DT POST_REVERSAL_SW
+--------------- ---------------- ----------------- ----------------
+POST_SUMLED_SW UNPOST_DOCTYPE_OPT UNPOST_INTERUNIT UNPOST_REVERSALS
+-------------- ------------------ ---------------- ----------------
+ENABLE_INC_SLED ENABLE_INC_LLOAD DETAIL_LEDGER
+--------------- ---------------- -------------
+N                                N                 N               
+
+TABLE_NAME     BUSINESS_UNIT LEDGER_GROUP LEDGER     LEDGER_TYPE BALANCED_LEDGER
+-------------- ------------- ------------ ---------- ----------- ---------------
+JRNL_BALANCE_OPTN JRNL_EDIT_ERR_OPTN JRNL_AMT_ERR_OPTN JRNL_DT_ERR_OPTN
+----------------- ------------------ ----------------- ----------------
+JRNL_DT_ERR_OPTN2 CONTROL_TOTAL_OPTN CALENDAR_ID UPD_OPENPER ASSOCIATED_LED_GRP
+----------------- ------------------ ----------- ----------- ------------------
+DTTM_STAMP_SEC                  UPDATE_TIMING ROUND_ADJ_OPTN ADB_REPORTING
+------------------------------- ------------- -------------- -------------
+ADB_STATUTORY_RPT ADB_FILTER_ACCNTS CALENDAR_ID_ADB CURRENCY_BAL_OPTN
+----------------- ----------------- --------------- -----------------
+BASE_CUR_ADJ_OPTN JRNL_FOREIGN_OPTN ALLOW_LEDG_LOAD_SW ALLOW_WF_UPDATE
+----------------- ----------------- ------------------ ---------------
+BASE_CURRENCY DEFAULT_LEDGER_GRP SEPARATE_DRCR SEPARATE_DRCR_AMT ALTACCT_OPTN
+------------- ------------------ ------------- ----------------- ------------
+ACCT_ALT_SUSPENSE ALT_ACCT_SUSPENSE UPDATE_CLOSING_SW JRNL_APPRVL_OPTN
+----------------- ----------------- ----------------- ----------------
+BD_JRNL_APPR_OPTN BUSPROCNAME                    APPR_RULE_SET                 
+----------------- ------------------------------ ------------------------------
+BUSPROCNAME_BD                 APPR_RULE_SET_BD               DOC_TYPE
+------------------------------ ------------------------------ --------
+DOC_TYPE_UNPOST COMMITMENT_CNTL KK_REVERSAL_OPTN KK_ERR_OPTN KK_INCLUDE_PRE_ENC
+--------------- --------------- ---------------- ----------- ------------------
+KK_ALLOW_INC_SA POSITION_ACCOUNT NO_POST_FUTURE_DT POST_REVERSAL_SW
+--------------- ---------------- ----------------- ----------------
+POST_SUMLED_SW UNPOST_DOCTYPE_OPT UNPOST_INTERUNIT UNPOST_REVERSALS
+-------------- ------------------ ---------------- ----------------
+ENABLE_INC_SLED ENABLE_INC_LLOAD DETAIL_LEDGER
+--------------- ---------------- -------------
+N              S                  Y                Y               
+
+TABLE_NAME     BUSINESS_UNIT LEDGER_GROUP LEDGER     LEDGER_TYPE BALANCED_LEDGER
+-------------- ------------- ------------ ---------- ----------- ---------------
+JRNL_BALANCE_OPTN JRNL_EDIT_ERR_OPTN JRNL_AMT_ERR_OPTN JRNL_DT_ERR_OPTN
+----------------- ------------------ ----------------- ----------------
+JRNL_DT_ERR_OPTN2 CONTROL_TOTAL_OPTN CALENDAR_ID UPD_OPENPER ASSOCIATED_LED_GRP
+----------------- ------------------ ----------- ----------- ------------------
+DTTM_STAMP_SEC                  UPDATE_TIMING ROUND_ADJ_OPTN ADB_REPORTING
+------------------------------- ------------- -------------- -------------
+ADB_STATUTORY_RPT ADB_FILTER_ACCNTS CALENDAR_ID_ADB CURRENCY_BAL_OPTN
+----------------- ----------------- --------------- -----------------
+BASE_CUR_ADJ_OPTN JRNL_FOREIGN_OPTN ALLOW_LEDG_LOAD_SW ALLOW_WF_UPDATE
+----------------- ----------------- ------------------ ---------------
+BASE_CURRENCY DEFAULT_LEDGER_GRP SEPARATE_DRCR SEPARATE_DRCR_AMT ALTACCT_OPTN
+------------- ------------------ ------------- ----------------- ------------
+ACCT_ALT_SUSPENSE ALT_ACCT_SUSPENSE UPDATE_CLOSING_SW JRNL_APPRVL_OPTN
+----------------- ----------------- ----------------- ----------------
+BD_JRNL_APPR_OPTN BUSPROCNAME                    APPR_RULE_SET                 
+----------------- ------------------------------ ------------------------------
+BUSPROCNAME_BD                 APPR_RULE_SET_BD               DOC_TYPE
+------------------------------ ------------------------------ --------
+DOC_TYPE_UNPOST COMMITMENT_CNTL KK_REVERSAL_OPTN KK_ERR_OPTN KK_INCLUDE_PRE_ENC
+--------------- --------------- ---------------- ----------- ------------------
+KK_ALLOW_INC_SA POSITION_ACCOUNT NO_POST_FUTURE_DT POST_REVERSAL_SW
+--------------- ---------------- ----------------- ----------------
+POST_SUMLED_SW UNPOST_DOCTYPE_OPT UNPOST_INTERUNIT UNPOST_REVERSALS
+-------------- ------------------ ---------------- ----------------
+ENABLE_INC_SLED ENABLE_INC_LLOAD DETAIL_LEDGER
+--------------- ---------------- -------------
+N               N                             
+
+TABLE_NAME     BUSINESS_UNIT LEDGER_GROUP LEDGER     LEDGER_TYPE BALANCED_LEDGER
+-------------- ------------- ------------ ---------- ----------- ---------------
+JRNL_BALANCE_OPTN JRNL_EDIT_ERR_OPTN JRNL_AMT_ERR_OPTN JRNL_DT_ERR_OPTN
+----------------- ------------------ ----------------- ----------------
+JRNL_DT_ERR_OPTN2 CONTROL_TOTAL_OPTN CALENDAR_ID UPD_OPENPER ASSOCIATED_LED_GRP
+----------------- ------------------ ----------- ----------- ------------------
+DTTM_STAMP_SEC                  UPDATE_TIMING ROUND_ADJ_OPTN ADB_REPORTING
+------------------------------- ------------- -------------- -------------
+ADB_STATUTORY_RPT ADB_FILTER_ACCNTS CALENDAR_ID_ADB CURRENCY_BAL_OPTN
+----------------- ----------------- --------------- -----------------
+BASE_CUR_ADJ_OPTN JRNL_FOREIGN_OPTN ALLOW_LEDG_LOAD_SW ALLOW_WF_UPDATE
+----------------- ----------------- ------------------ ---------------
+BASE_CURRENCY DEFAULT_LEDGER_GRP SEPARATE_DRCR SEPARATE_DRCR_AMT ALTACCT_OPTN
+------------- ------------------ ------------- ----------------- ------------
+ACCT_ALT_SUSPENSE ALT_ACCT_SUSPENSE UPDATE_CLOSING_SW JRNL_APPRVL_OPTN
+----------------- ----------------- ----------------- ----------------
+BD_JRNL_APPR_OPTN BUSPROCNAME                    APPR_RULE_SET                 
+----------------- ------------------------------ ------------------------------
+BUSPROCNAME_BD                 APPR_RULE_SET_BD               DOC_TYPE
+------------------------------ ------------------------------ --------
+DOC_TYPE_UNPOST COMMITMENT_CNTL KK_REVERSAL_OPTN KK_ERR_OPTN KK_INCLUDE_PRE_ENC
+--------------- --------------- ---------------- ----------- ------------------
+KK_ALLOW_INC_SA POSITION_ACCOUNT NO_POST_FUTURE_DT POST_REVERSAL_SW
+--------------- ---------------- ----------------- ----------------
+POST_SUMLED_SW UNPOST_DOCTYPE_OPT UNPOST_INTERUNIT UNPOST_REVERSALS
+-------------- ------------------ ---------------- ----------------
+ENABLE_INC_SLED ENABLE_INC_LLOAD DETAIL_LEDGER
+--------------- ---------------- -------------
+                                                                                
+1 row selected.
+
+TABLE_NAME       ROW_COUNT
+--------------- ----------
+BU_LED_COMB_TBL          5
+1 row selected.
+
+TABLE_NAME      BUSINESS_UNIT LEDGER_GROUP PROCESS_GROUP
+--------------- ------------- ------------ -------------
+BU_LED_COMB_TBL UNUNI         ACTUALS      ACC_DEPT     
+BU_LED_COMB_TBL UNUNI         ACTUALS      ACC_DONOR    
+BU_LED_COMB_TBL UNUNI         ACTUALS      ACC_FU_DON   
+BU_LED_COMB_TBL UNUNI         ACTUALS      ACC_FU_OU    
+BU_LED_COMB_TBL UNUNI         ACTUALS      ACC_PROJ     
+
+5 rows selected.
+
+TABLE_NAME    ROW_COUNT
+------------ ----------
+BUL_CNTL_BUD          0
+1 row selected.
+no rows selected.
+
+TABLE_NAME    ROW_COUNT
+------------ ----------
+LED_FLDS_TBL         21
+1 row selected.
+
+TABLE_NAME   SETID LEDGER     FIELD_SEQUENCE CHARTFIELD         RECNAME        
+------------ ----- ---------- -------------- ------------------ ---------------
+RECNAME_NO_EFFDT DETAIL_CHARTFIELD  HOW_FIELD_SPECIFY TREE_NAME         
+---------------- ------------------ ----------------- ------------------
+TREE_LEVEL BALANCE_FLAG
+---------- ------------
+LED_FLDS_TBL SHARE UNU_COMMIT              1 BUSINESS_UNIT      SP_BU_GL_CLSVW 
+SP_BU_GL_CLSVW                      1                                   
+           Y           
+                                                                                
+LED_FLDS_TBL SHARE UNU_COMMIT              2 ACCOUNT            GL_ACCOUNT_TBL 
+GL_ACCT_ALL_VW                      1                                   
+           N           
+                                                                                
+LED_FLDS_TBL SHARE UNU_COMMIT              3 ALTACCT            ALTACCT_TBL    
+ALT_ALL_VW                          1                                   
+           N           
+                                                                                
+LED_FLDS_TBL SHARE UNU_COMMIT              4 DEPTID             DEPT_TBL       
+DEPT_ALL_VW                         1                                   
+           N           
+                                                                                
+LED_FLDS_TBL SHARE UNU_COMMIT              5 OPERATING_UNIT     OPER_UNIT_TBL  
+
+TABLE_NAME   SETID LEDGER     FIELD_SEQUENCE CHARTFIELD         RECNAME        
+------------ ----- ---------- -------------- ------------------ ---------------
+RECNAME_NO_EFFDT DETAIL_CHARTFIELD  HOW_FIELD_SPECIFY TREE_NAME         
+---------------- ------------------ ----------------- ------------------
+TREE_LEVEL BALANCE_FLAG
+---------- ------------
+OPERUNIT_ALL_VW                     1                                   
+           Y           
+                                                                                
+LED_FLDS_TBL SHARE UNU_COMMIT              6 PRODUCT            PRODUCT_TBL    
+PROD_ALL_VW                         1                                   
+           N           
+                                                                                
+LED_FLDS_TBL SHARE UNU_COMMIT              7 FUND_CODE          FUND_TBL       
+FUND_ALL_VW                         1                                   
+           Y           
+                                                                                
+LED_FLDS_TBL SHARE UNU_COMMIT              8 CLASS_FLD          CLASS_CF_TBL   
+CLASS_CF_ALL_VW                     1                                   
+           N           
+                                                                                
+LED_FLDS_TBL SHARE UNU_COMMIT              9 PROGRAM_CODE       PROGRAM_TBL    
+PROGRAM_ALL_VW                      1                                   
+
+TABLE_NAME   SETID LEDGER     FIELD_SEQUENCE CHARTFIELD         RECNAME        
+------------ ----- ---------- -------------- ------------------ ---------------
+RECNAME_NO_EFFDT DETAIL_CHARTFIELD  HOW_FIELD_SPECIFY TREE_NAME         
+---------------- ------------------ ----------------- ------------------
+TREE_LEVEL BALANCE_FLAG
+---------- ------------
+           N           
+                                                                                
+LED_FLDS_TBL SHARE UNU_COMMIT             10 BUDGET_REF         BUD_REF_TBL    
+BUDREF_ALL_VW                       1                                   
+           N           
+                                                                                
+LED_FLDS_TBL SHARE UNU_COMMIT             11 AFFILIATE          AFFILIATE_VW   
+AFFILIATE_VW                        1                                   
+           N           
+                                                                                
+LED_FLDS_TBL SHARE UNU_COMMIT             12 AFFILIATE_INTRA1   AFFINTRA1_VW   
+AFFINTRA1_ALLVW                     1                                   
+           N           
+                                                                                
+LED_FLDS_TBL SHARE UNU_COMMIT             13 AFFILIATE_INTRA2   AFFINTRA2_VW   
+AFFINTRA2_ALLVW                     1                                   
+           N           
+
+TABLE_NAME   SETID LEDGER     FIELD_SEQUENCE CHARTFIELD         RECNAME        
+------------ ----- ---------- -------------- ------------------ ---------------
+RECNAME_NO_EFFDT DETAIL_CHARTFIELD  HOW_FIELD_SPECIFY TREE_NAME         
+---------------- ------------------ ----------------- ------------------
+TREE_LEVEL BALANCE_FLAG
+---------- ------------
+                                                                                
+LED_FLDS_TBL SHARE UNU_COMMIT             14 CHARTFIELD1        CHARTFIELD1_TBL
+CF1_ALL_VW                          1                                   
+           N           
+                                                                                
+LED_FLDS_TBL SHARE UNU_COMMIT             15 CHARTFIELD2        CHARTFIELD2_TBL
+CF2_ALL_VW                          1                                   
+           N           
+                                                                                
+LED_FLDS_TBL SHARE UNU_COMMIT             16 CHARTFIELD3        CHARTFIELD3_TBL
+CF3_ALL_VW                          1                                   
+           N           
+                                                                                
+LED_FLDS_TBL SHARE UNU_COMMIT             17 PROJECT_ID         PROJECT_ID_VW  
+PROJECT_ID_VW                       1                                   
+           N           
+                                                                                
+
+TABLE_NAME   SETID LEDGER     FIELD_SEQUENCE CHARTFIELD         RECNAME        
+------------ ----- ---------- -------------- ------------------ ---------------
+RECNAME_NO_EFFDT DETAIL_CHARTFIELD  HOW_FIELD_SPECIFY TREE_NAME         
+---------------- ------------------ ----------------- ------------------
+TREE_LEVEL BALANCE_FLAG
+---------- ------------
+LED_FLDS_TBL SHARE UNU_COMMIT             18 BOOK_CODE          BOOK_CODE_TBL  
+BOOKCODE_ALL_VW                     1                                   
+           Y           
+                                                                                
+LED_FLDS_TBL SHARE UNU_COMMIT             19 GL_ADJUST_TYPE     ADJUST_TYPE_TBL
+ADJ_TYPE_ALL_VW                     1                                   
+           Y           
+                                                                                
+LED_FLDS_TBL SHARE UNU_COMMIT             20 CURRENCY_CD        CURRENCY_CD_TBL
+CUR_CD_ALL_VW                       1                                   
+           Y           
+                                                                                
+LED_FLDS_TBL SHARE UNU_COMMIT             21 STATISTICS_CODE    STAT_TBL       
+STAT_ALL_VW                         1                                   
+           N           
+                                                                                
+
+21 rows selected.
+Time End: 5/26/2014 3:19:18 PM
+Elapsed Time for Script Execution: 8 secs
