@@ -1,0 +1,137 @@
+UPDATE PSPPPARSEAET A
+SET A.PM_SQL_TYPE = NVL(
+  (SELECT PM_SQL_TYPE
+  FROM PSPPPARSEAET B
+  WHERE A.PROCESS_INSTANCE = B.PROCESS_INSTANCE
+  AND A.AE_APPLID          = B.AE_APPLID
+  AND A.SQLID              = B.SQLID
+    --AND B.PM_SQL_TYPE       <> ' '
+  AND B.ACTION_PLAN_DESCR = A.ACTION_PLAN_DESCR
+  AND B.SEQ_NBR           =
+    (SELECT MIN(C.SEQ_NBR)
+    FROM PSPPPARSEAET C
+    WHERE C.PROCESS_INSTANCE = B.PROCESS_INSTANCE
+    AND C.AE_APPLID          = B.AE_APPLID
+    AND C.SQLID              = B.SQLID
+    AND C.ACTION_PLAN_DESCR  = B.ACTION_PLAN_DESCR
+      -- AND C.PM_SQL_TYPE        = B.PM_SQL_TYPE
+    )
+  ), 'Not Found')
+WHERE PROCESS_INSTANCE = 10691980
+AND PM_SQL_TYPE        = ' ';
+
+UPDATE PSPPPARSEAET A
+SET END_TIME =
+  (SELECT START_TIME
+  FROM PSPPPARSEAET B
+  WHERE A.PROCESS_INSTANCE = B.PROCESS_INSTANCE
+  AND B.SEQ_NBR            =
+    (SELECT MIN(C.SEQ_NBR)
+    FROM PSPPPARSEAET C
+    WHERE A.PROCESS_INSTANCE = C.PROCESS_INSTANCE
+    AND A.SEQ_NBR            < C.SEQ_NBR
+    )
+  )
+WHERE PROCESS_INSTANCE = 144321;
+
+--Generate Output
+WITH t1 AS
+(
+SELECT
+PROCESS_INSTANCE, SEQ_NBR, AERP, AE_APPLID, SQLID, ACTION_PLAN_DESCR, PM_SQL_TYPE, PF_ITERATION_NBR, COUNTER, SQLROWS_2, DP_RESTART_CONTROL, COMMIT_ACTN_STRNG, 
+FIELD_LIST_AET, BINDNAME, DBID, START_TIME, END_TIME, CALC_TIME, 
+SQLTEXT2, AE_RUN_DATA,
+TO_DATE(TO_CHAR(START_TIME,'yyyymmddhh24.mi.ss'),'yyyymmddhh24.mi.ss') real_start,
+TO_DATE(TO_CHAR(END_TIME,'yyyymmddhh24.mi.ss'),'yyyymmddhh24.mi.ss') real_end
+FROM PSPPPARSEAET
+)
+SELECT
+PROCESS_INSTANCE, SEQ_NBR, AERP "Parent", AE_APPLID "App Engine", SQLID "Section.Step", 
+--trunc(mod(real_end - real_start,1)*24*60*60,1) as Total_Seconds,
+ACTION_PLAN_DESCR "Action", PM_SQL_TYPE "DDL/DML", PF_ITERATION_NBR "Iteration", 
+COUNTER "Counter", SQLROWS_2 "Rows(s) Affected", 
+CASE 
+    WHEN trunc(24*mod(real_end - real_start,1)) < 0
+    THEN 86400 + trunc(mod(real_end - real_start,1)*24*60*60,1) --assumption is that its one day
+    ELSE trunc(mod(real_end - real_start,1)*24*60*60,1)
+END AS TOTAL_SECONDS, --extract(second from real_end - real_start) * 1000 "MILLISECONDS",
+DP_RESTART_CONTROL "CHKPOINT", COMMIT_ACTN_STRNG "COMMIT", FIELD_LIST_AET "Buffers", BINDNAME "Bind variables", DBID "Oracle SQLID", 
+SQLTEXT2 "SQL Statement", AE_RUN_DATA "AE Tree",
+--real_start,
+--real_end,
+--real_end - real_start,
+START_TIME "Begin Time", END_TIME "End Time",
+trunc(real_end - real_start) days,
+trunc(24*mod(real_end - real_start,1)) as hrs,
+trunc(mod(mod(real_end - real_start,1)*24,1)*60 ) as mins, 
+trunc(mod(mod(mod(real_end - real_start,1)*24,1)*60, 1)*60) as seconds
+FROM t1 
+WHERE PROCESS_INSTANCE = 144321
+  --AND SQLID IN ('CLEANUP3.UPD_PDS', 'INSPRT.DELETE', 'MN1200.LOCK')  
+ORDER BY PROCESS_INSTANCE, SEQ_NBR ASC;
+
+--Analytics
+--Across runs, find how a particular Action has been performing
+--Process Instance is NOT INLCUDED
+SELECT F.*, COUNT(*) OVER (PARTITION BY AE_APPLID, SQLID, ACTION_PLAN_DESCR) CT
+FROM PSPPPARSEAET F
+WHERE F.ACTION_PLAN_DESCR = 'SQL'
+  --AND F.SQLID IN ('CLEANUP3.UPD_PDS', 'INSPRT.DELETE', 'MN1200.LOCK', 'MN1200.PR_TA1', 'CLEANUP3.DEL_PRC');
+  AND F.SQLID IN ('CLEANUP3.UPD_PDS', 'MN1200.LOCK', 'MN1200.PR_TA1', 'CLEANUP3.DEL_PRC');
+
+--Inline View
+SELECT * FROM (
+SELECT F.*, COUNT(*) OVER (PARTITION BY PROCESS_INSTANCE, AE_APPLID, SQLID, ACTION_PLAN_DESCR) CT
+FROM PSPPPARSEAET F
+WHERE F.ACTION_PLAN_DESCR = 'SQL'
+  --AND F.SQLID IN ('CLEANUP3.UPD_PDS', 'INSPRT.DELETE', 'MN1200.LOCK', 'MN1200.PR_TA1', 'CLEANUP3.DEL_PRC');
+  --AND F.SQLID IN ('CLEANUP3.UPD_PDS', 'MN1200.LOCK', 'MN1200.PR_TA1', 'CLEANUP3.DEL_PRC');
+) WHERE CT > 1
+ORDER BY AE_APPLID, SQLID, ACTION_PLAN_DESCR, PROCESS_INSTANCE;
+
+--WITH Clause
+WITH COUNTS AS (
+SELECT F.*, COUNT(*) OVER (PARTITION BY PROCESS_INSTANCE, AE_APPLID, SQLID, ACTION_PLAN_DESCR) CT
+FROM PSPPPARSEAET F
+WHERE F.ACTION_PLAN_DESCR = 'SQL'
+  AND F.SQLID IN ('CLEANUP3.UPD_PDS', 'MN1200.LOCK', 'MN1200.PR_TA1', 'CLEANUP3.DEL_PRC')
+)
+SELECT * FROM COUNTS 
+WHERE CT > 1
+ORDER BY AE_APPLID, SQLID, ACTION_PLAN_DESCR, PROCESS_INSTANCE;
+
+--Added Over (Partition BY) Clause
+WITH t1 AS
+(
+SELECT
+PROCESS_INSTANCE, SEQ_NBR, AERP, AE_APPLID, SQLID, ACTION_PLAN_DESCR, PM_SQL_TYPE, PF_ITERATION_NBR, COUNTER, SQLROWS_2, DP_RESTART_CONTROL, COMMIT_ACTN_STRNG, 
+FIELD_LIST_AET, BINDNAME, DBID, START_TIME, END_TIME, CALC_TIME, COUNT(*) OVER (PARTITION BY PROCESS_INSTANCE, AE_APPLID, SQLID, ACTION_PLAN_DESCR) CT,
+SQLTEXT2, AE_RUN_DATA,
+TO_DATE(TO_CHAR(START_TIME,'yyyymmddhh24.mi.ss'),'yyyymmddhh24.mi.ss') real_start,
+TO_DATE(TO_CHAR(END_TIME,'yyyymmddhh24.mi.ss'),'yyyymmddhh24.mi.ss') real_end
+FROM PSPPPARSEAET
+)
+SELECT
+PROCESS_INSTANCE, SEQ_NBR, AERP "Parent", AE_APPLID "App Engine", SQLID "Section.Step", 
+--trunc(mod(real_end - real_start,1)*24*60*60,1) as Total_Seconds,
+ACTION_PLAN_DESCR "Action", PM_SQL_TYPE "DDL/DML", PF_ITERATION_NBR "Iteration", 
+COUNTER "Counter", SQLROWS_2 "Rows(s) Affected", 
+CASE 
+    WHEN trunc(24*mod(real_end - real_start,1)) < 0
+    THEN 86400 + trunc(mod(real_end - real_start,1)*24*60*60,1) --assumption is that its one day
+    ELSE trunc(mod(real_end - real_start,1)*24*60*60,1)
+END AS TOTAL_SECONDS, --extract(second from real_end - real_start) * 1000 "MILLISECONDS",
+DP_RESTART_CONTROL "CHKPOINT", COMMIT_ACTN_STRNG "COMMIT", FIELD_LIST_AET "Buffers", BINDNAME "Bind variables", DBID "Oracle SQLID", CT,
+SQLTEXT2 "SQL Statement", AE_RUN_DATA "AE Tree",
+--real_start,
+--real_end,
+--real_end - real_start,
+START_TIME "Begin Time", END_TIME "End Time",
+trunc(real_end - real_start) days,
+trunc(24*mod(real_end - real_start,1)) as hrs,
+trunc(mod(mod(real_end - real_start,1)*24,1)*60 ) as mins, 
+trunc(mod(mod(mod(real_end - real_start,1)*24,1)*60, 1)*60) as seconds
+FROM t1 
+WHERE PROCESS_INSTANCE = 10691980
+  --AND SQLID IN ('CLEANUP3.UPD_PDS', 'INSPRT.DELETE', 'MN1200.LOCK')  
+ORDER BY PROCESS_INSTANCE, SEQ_NBR ASC;
