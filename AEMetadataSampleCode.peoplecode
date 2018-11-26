@@ -1,0 +1,282 @@
+--Original Code
+import %metadata:*;
+import %metadata:Key;
+import %metadata:PeopleCodeProgram:PeopleCodeProgram_Manager;
+import %metadata:PeopleCodeProgram:PeopleCodeProgram;
+import %metadata:AppEngineProgramDefn:*;
+import %metadata:AppEngineProgramDefn:AppEngineProgramDefn_Manager;
+import %metadata:AppEngineProgramDefn:AppEngineProgramDefn;
+import %metadata:AppEngineProgramDefn:AeTempTbl;
+import %metadata:AppEngineSectionDefn:AppEngineSectionDefn_Manager;
+import %metadata:AppEngineSectionDefn:AppEngineSectionDefn;
+import %metadata:AppEngineSectionDefn:*;
+import %metadata:SqlRepositoryDefn:*;
+
+REM Checkpoint file;
+REM [AEAPPLICATIONID.PPTESTAELOG.AESECTION.MAIN.MARKET.GBL.DBTYPE.default.EFFDT.1900-01-01.AESTEP.Step02.METHOD.OnExecute];
+
+Function BuildID(&prog_ As string, &sect_ As string, &step_ As string) Returns string; /* DO NOT CHANGE THIS FUNCTION */
+   Local string &progstring_, &sectstring_, &stepstring_;
+   &progstring_ = "            ";
+   &sectstring_ = "        ";
+   &stepstring_ = "        ";
+   Return Replace(&progstring_, 1, Len(&prog_), &prog_) | Replace(&sectstring_, 1, Len(&sect_), &sect_) | Replace(&stepstring_, 1, Len(&step_), &step_);
+End-Function;
+
+Local Rowset &RS_LEVEL0_;
+Local Record &recPP_GEN1_WRK_;
+Local string &sPCMText_, &AEid_, &sTest_, &sRandonText_, &sSQL_, &sSQLID_, &sOrigSQL_, &sDelimiterFound_;
+Local boolean &exists_, &done_, &bret_;
+Local integer &nChild_, &nFldCount_;
+Local number &nFindDelimiter_, &nFound_, &nDefaultDelimiter_, &nNonDefaultDelimiter_;
+REM AE Program Manager, Defn, & Key;
+Local %metadata:AppEngineProgramDefn:AppEngineProgramDefn_Manager &mgrAE_;
+Local %metadata:AppEngineProgramDefn:AppEngineProgramDefn &AEDefn_;
+Local %metadata:Key &aeKey_;
+Local %metadata:Key &aeStepKey_;
+REM AE Section Manager, Defn, & Key;
+Local %metadata:AppEngineSectionDefn:AppEngineSectionDefn_Manager &mgrAESect_;
+Local %metadata:AppEngineSectionDefn:AppEngineSectionDefn &AESectDefn_;
+Local %metadata:Key &AESectKey_;
+REM SQL Text Manager, Defn, & Key;
+Local %metadata:SqlRepositoryDefn:SqlRepositoryDefn_Manager &mgrSQL_;
+Local %metadata:SqlRepositoryDefn:SqlRepositoryDefn &SQLdefn_;
+Local %metadata:SqlRepositoryDefn:SrmStmt &stmtdefn_;
+
+REM For testing purpose;
+&AEid_ = "PPTESTAELOG";
+REM Create Manager and Key Objects for AE;
+&mgrAE_ = create %metadata:AppEngineProgramDefn:AppEngineProgramDefn_Manager();
+&aeKey_ = create %metadata:Key(Key:Class_AEApplicationId, &AEid_);
+REM Create Manager for SQL;
+&mgrSQL_ = create %metadata:SqlRepositoryDefn:SqlRepositoryDefn_Manager();
+
+/*** Retrieve SQL text for a given AE/Section/Step combination ***/
+&sSQLID_ = BuildID(&AEid_, "MAIN", "Step01") | "S";
+rem MessageBox(0, "", 0, 0, "&sqlid: " | &sqlid | " :Key:Class_SqlType " | Key:Class_SqlType);
+&aeStepKey_ = create %metadata:Key(Key:Class_Sql, &sSQLID_, Key:Class_SqlType, "1");
+rem &aeStepKey_ = create %metadata:Key(65, "PPTESTAELOG MAIN    Step01  S", 81, "1"); /* Use PSPROJECTITEM directly */
+If &mgrSQL_.DefnExists(&aeStepKey_) Then /* Check existence */
+   &SQLdefn_ = &mgrSQL_.GetDefnToUpdate(&aeStepKey_); /* Retrieve definition to update */
+   If (&SQLdefn_.Count_StmtT > 0) Then
+      &stmtdefn_ = &SQLdefn_.Get_StmtT(1); /* Get the SQL Statement */
+      &sSQL_ = &stmtdefn_.SqlText; /* Get the SQL Text */
+      MessageBox(0, "", 0, 0, "&stmtdefn.SqlText " | &sSQL_);
+      &sOrigSQL_ = &sSQL_;
+      REM Add logic here to check if %Execute(/) is already added;
+      REM If %Execute is not found, then add that function at the beginning of the SQL statement;
+      REM If %Execute is found, then add your statements right after the separator definition;
+      REM Statements to be added - One before the SQL, which will insert a row with Start Time;
+      REM                          One after the SQL, to capture %SQLRows and the End Time;
+      If Find("PS_PP_AE_LOG_TBL", &sOrigSQL_) = 0 Then /* Check if the INSERT statement is already present */
+         REM Add INSERT Statement;
+         If Find("%Execute", &sOrigSQL_) > 0 Then /* SQL Statement is already using %Execute */
+            rem &nFindDelimiter_ = Find("(", &sOrigSQL_); /* Find the delimiter. By default, it is ";" */
+            rem &sDelimiterFound_ = Substring(&sOrigSQL_, &nFindDelimiter_ + 1, 1); /* See if a delimiter is provided or is it the default */
+            &sDelimiterFound_ = Substring(&sOrigSQL_, Find("(", &sOrigSQL_) + 1, 1);
+            MessageBox(0, "", 0, 0, "&sDelimiterFound_ " | &sDelimiterFound_);
+            REM Check the delimiter within the function parantheses. Both %Execute() and %Execute(/) are valid;
+            If &sDelimiterFound_ <> ")" And
+                  Len(&sDelimiterFound_) > 0 Then
+               REM Non default delimiter;
+               &nNonDefaultDelimiter_ = Find(&sDelimiterFound_, &sOrigSQL_, 11);
+               MessageBox(0, "", 0, 0, "&nNonDefaultDelimiter_ " | &nNonDefaultDelimiter_);
+            Else
+               REM Using default delimiter;
+               &nDefaultDelimiter_ = Find(";", &sOrigSQL_, 11);
+               MessageBox(0, "", 0, 0, "&nDefaultDelimiter_ " | &nDefaultDelimiter_);
+            End-If;
+         Else /* SQL Statement is NOT using %Execute */
+            rem &stmtdefn_.SqlText = "%Execute(/) %SQL(PP$INSERT$AE$LOG$TBL$SQL) / " | &sSQL_ | " / " | "%SQL(PP$UPDATE$AE$LOG$TBL$SQL)";
+         End-If;
+      Else /* INSERT Statement is already present */
+         REM do nothing;
+      End-If;
+      rem &stmtdefn_.SqlText = "%Execute(/)" | &sSQL_ | "/" | "SELECT OPRID FROM PSOPRDEFN WHERE OPRID = 'VP1'";
+      If Not &SQLdefn_.UpdateDefn() Then
+         MessageBox(0, "", 0, 0, "Update Failed");
+      End-If;
+   End-If;
+End-If;
+
+REM .RenameDefn and .SaveAs;
+rem &aeKeySaveAs_ = create %metadata:Key(Key:Class_AEApplicationId, "NEWPPAE");
+rem &done_ = &mgrAE_.RenameDefn(&aeKey_, &aeKeySaveAs_); /* Rename the metadata definition given by the OldKey to have the NewKey */
+rem MessageBox(0, "", 0, 0, "Rename done ? " | &done_);
+&exists_ = &mgrAE_.DefnExists(&aeKey_);
+rem MessageBox(0, "", 0, 0, "Defn Exists (Y/N)? " | &exists_);
+SQLExec("SELECT 'Y' FROM PSAEAPPLDEFN WHERE AE_APPLID = '" | &AEid_ | "'", &sTest_); /* Double check for AE existence */
+If All(&sTest_) Then
+   &AEDefn_ = &mgrAE_.GetDefnToUpdate(&aeKey_);
+   rem MessageBox(0, "", 0, 0, "AEDescr: " | &AEDefn_.Descr | " : AE DescrLong: " | &AEDefn_.DescrLong);
+   rem MessageBox(0, "", 0, 0, "# of Temp Tbl Instances : " | &AEDefn_.TempTblInstances);
+   rem MessageBox(0, "", 0, 0, "AE License Code : " | &AEDefn_.LicenseCode);
+Else
+   WriteToLog(%ApplicationLogFence_Error, Char(10) | MsgGetText(65, 30, "###Application Engine %1 does not exist.", &AEid_));
+   throw CreateException(65, 30, "###Application Engine %1 does not exist.", &AEid_);
+End-If;
+REM Change something and then update;
+&sRandonText_ = "This was changed via PeopleCode";
+&AEDefn_.Descr = Substring(&sRandonText_, 1, 30);
+&AEDefn_.DescrLong = "This object has been changed via PeopleCode and is now considered a custom object";
+&AEDefn_.ObjectOwnerId = "FPC"; /* Projects */
+&AEDefn_.LastUpdDttm = %Datetime;
+&AEDefn_.LastUpdOprId = "VP1";
+rem &AEDefn_.DisableRestart = "Y";
+rem MessageBox(0, "", 0, 0, "&AEDefn_.ChildCount " | &AEDefn_.ChildCount);
+rem MessageBox(0, "", 0, 0, "&AEDefn_.FieldCount : " | &AEDefn_.FieldCount);
+<*
+For &nFldCount_ = 1 To &AEDefn_.FieldCount
+   &sFieldName_ = &AEDefn_.GetFieldName(&nFldCount_);
+   rem MessageBox(0, "", 0, 0, "&sFieldName_ " | &sFieldName_);
+End-For;
+For &nChild_ = 1 To &AEDefn_.ChildCount
+   Local integer &nRow_;
+   For &nRow_ = 1 To &AEDefn_.GetChildRowCount(&nChild_)
+      &ChildRow_ = &AEDefn_.GetChildRow(&nChild_, &nRow_);
+      rem MessageBox(0, "", 0, 0, "&ChildRow_ " | &ChildRow_);
+   End-For;
+   Local string &sChildName_ = &AEDefn_.GetChildName(&nChild_);
+   rem MessageBox(0, "", 0, 0, "&AEDefn_.Get_ChildName(&nChild_) " | &AEDefn_.GetChildName(&nChild_));
+   Local integer &nChildRows_ = &AEDefn_.GetChildRowCount(&nChild_);
+   rem MessageBox(0, "", 0, 0, "&sChildName_ " | &sChildName_);
+End-For;
+*>
+If Not &AEDefn_.UpdateDefn() Then
+   WriteToLog(%ApplicationLogFence_Error, Char(10) | MsgGetText(65, 30, "###Unable to update the Application Engine %1.", &AEid_));
+End-If;
+
+REM -- START;
+
+/*** Get managed object version ***/
+&sql = CreateSQL("SELECT VERSION, OBJECTTYPENAME FROM PSLOCK WHERE OBJECTTYPENAME IN ('PCM', 'AEM', 'AES', 'SRM') FOR UPDATE OF VERSION");
+While &sql.Fetch(&version, &objecttype)
+   Evaluate &objecttype
+   When "PCM"
+      &pcm = Value(&version) + 1;
+      Break;
+   When "AEM"
+      &aem = Value(&version) + 1;
+      Break;
+   When "AES"
+      &aes = Value(&version) + 1;
+      Break;
+   When "SRM"
+      &srm = Value(&version) + 1;
+      Break;
+   End-Evaluate;
+End-While;
+SQLExec("UPDATE PSLOCK SET VERSION = VERSION + 1 WHERE OBJECTTYPENAME IN ('PCM', 'AEM', 'AES', 'SRM')");
+
+rem SQLExec("INSERT INTO PSAESTMTDEFN (AE_APPLID, AE_SECTION, MARKET, DBTYPE, EFFDT, AE_STEP,  AE_STMT_TYPE, AE_REUSE_STMT, AE_DO_SELECT_TYPE, SQLID, DESCR) VALUES (:1,:2,:3,:4,%DateIn(:5),:6,:7,:8,:9,:10,:11)", IB_TRANS_DEFN.IB_TRANSFORM_NAME, IB_TRANS_DEFN.AE_SECTION, IB_TRANS_DEFN.MARKET, "", Date3(1900, 1, 1), &rec.IB_STEP_NAME.Value, "X", "Y", "", BuildID(IB_TRANS_DEFN.IB_TRANSFORM_NAME, IB_TRANS_DEFN.AE_SECTION, &rec.IB_STEP_NAME.Value) | "X", &rec.IB_STEP_DESC.Value);
+rem SQLExec("INSERT INTO PSAESTEPDEFN (AE_APPLID, AE_SECTION, MARKET, DBTYPE, EFFDT, AE_STEP,  AE_SEQ_NUM, AE_ACTIVE_STATUS, AE_ABEND_ACTION, AE_COMMIT_AFTER, AE_DO_APPL_ID, AE_DO_SECTION,  AE_DYNAMIC_DO, AE_PC_ON_FALSE,  MESSAGE_SET_NBR, MESSAGE_NBR, AE_MESSAGE_SET_FLD, AE_MESSAGE_NBR_FLD,  AE_COMMIT_FREQ, AE_ON_NOROWS, DESCR) VALUES (:1,:2,:3,:4,%DateIn(:5),:6,:7,:8,:9,:10,:11,:12,:13,:14,:15,:16,:17,:18,:19,:20,:21)", IB_TRANS_DEFN.IB_TRANSFORM_NAME, IB_TRANS_DEFN.AE_SECTION, IB_TRANS_DEFN.MARKET, "", Date3(1900, 1, 1), &rec.IB_STEP_NAME.Value, &idx, &rec.IB_INTACTIVE.Value, "A", "D", "", "", "N", "", 0, 0, "", "", 0, "C", &rec.IB_STEP_DESC.Value);
+
+SQLExec("INSERT INTO PSAESTMTDEFN (AE_APPLID,AE_SECTION,MARKET,DBTYPE,EFFDT,AE_STEP,AE_STMT_TYPE,AE_REUSE_STMT,AE_DO_SELECT_TYPE,SQLID,DESCR) values ('PPTESTAELOG','MAIN','GBL',' ',to_date('01-JAN-00','DD-MON-RR'),'Step02','S','N',' ','PPTESTAELOG MAIN    Step02  S','SQL description')");
+SQLExec("INSERT INTO PSAESTEPDEFN (AE_APPLID,AE_SECTION,MARKET,DBTYPE,EFFDT,AE_STEP,AE_SEQ_NUM,AE_ACTIVE_STATUS,AE_ABEND_ACTION,AE_COMMIT_AFTER,AE_DO_SECTION,AE_DO_APPL_ID,AE_DYNAMIC_DO,AE_PC_ON_FALSE,AE_ON_NOROWS,DESCR,MESSAGE_SET_NBR, MESSAGE_NBR,AE_MESSAGE_SET_FLD,AE_MESSAGE_NBR_FLD,AE_COMMIT_FREQ) values ('PPTESTAELOG','MAIN','GBL',' ',to_date('01-JAN-00','DD-MON-RR'),'Step02',2,'A','A','D',' ',' ','N',' ','C','Step02 description',0,0,' ',' ',0)");
+
+/*** Insert Application Engine Section ***/
+rem SQLExec("INSERT INTO PSAESECTDTLDEFN (AE_APPLID, AE_SECTION, MARKET, DBTYPE, EFFDT, EFF_STATUS, AE_AUTO_COMMIT, DESCR) VALUES (:1,:2,:3,:4,%DateIn(:5),:6,:7,:8)", IB_TRANS_DEFN.IB_TRANSFORM_NAME, IB_TRANS_DEFN.AE_SECTION, IB_TRANS_DEFN.MARKET, "", Date3(1900, 1, 1), "A", "N", "MAIN Description");
+rem SQLExec("INSERT INTO PSAESECTDEFN (AE_APPLID, AE_SECTION, VERSION, AE_SECTION_TYPE, AE_PUBLIC_SW, LASTUPDDTTM, LASTUPDOPRID) VALUES (:1,:2,:3,:4,:5,%CurrentDateTimeIn, :6)", IB_TRANS_DEFN.IB_TRANSFORM_NAME, IB_TRANS_DEFN.AE_SECTION, &aes, "P", "Y", %UserId);
+
+/*** Update Managed Object Definition ***/
+SQLExec("UPDATE PSVERSION SET VERSION = VERSION + 1 WHERE OBJECTTYPENAME = 'SYS'");
+SQLExec("UPDATE PSLOCK SET VERSION = :1 WHERE OBJECTTYPENAME = :2", &pcm, "PCM");
+SQLExec("UPDATE PSLOCK SET VERSION = :1 WHERE OBJECTTYPENAME = :2", &aem, "AEM");
+SQLExec("UPDATE PSLOCK SET VERSION = :1 WHERE OBJECTTYPENAME = :2", &aes, "AES");
+SQLExec("UPDATE PSLOCK SET VERSION = :1 WHERE OBJECTTYPENAME = :2", &srm, "SRM");
+SQLExec("UPDATE PSVERSION SET VERSION = :1 WHERE OBJECTTYPENAME = :2", &pcm, "PCM");
+SQLExec("UPDATE PSVERSION SET VERSION = :1 WHERE OBJECTTYPENAME = :2", &aem, "AEM");
+SQLExec("UPDATE PSVERSION SET VERSION = :1 WHERE OBJECTTYPENAME = :2", &aes, "AES");
+SQLExec("UPDATE PSVERSION SET VERSION = :1 WHERE OBJECTTYPENAME = :2", &srm, "SRM");
+
+/*** Trying to create a new step in existing AE ***/
+REM First create a new SQLID;
+&sSQLID_ = BuildID(&AEid_, "MAIN", "Step02") | "S";
+&aeStepKey_ = create %metadata:Key(Key:Class_Sql, &sSQLID_, Key:Class_SqlType, "1");
+If &mgrSQL_.DefnExists(&aeStepKey_) Then /* Check existence */
+   MessageBox(0, "", 0, 0, "SQL Object Exists");
+   &SQLdefn_ = &mgrSQL_.GetDefnToUpdate(&aeStepKey_);
+Else
+   &SQLdefn_ = &mgrSQL_.CreateDefn();
+   &SQLdefn_.EnableEffDt = False;
+   &SQLdefn_.SqlId = BuildID(&AEid_, "MAIN", "Step02") | "S"; /* Create the string for the new SQL action */
+   &SQLdefn_.SqlType = "1"; /* PSSQLDEFN.SQLTYPE */
+   &SQLdefn_.LanguageCd = %Language;
+   If &SQLdefn_.Count_StmtT = 0 Then
+      &stmtdefn_ = &SQLdefn_.Append_StmtT(&SQLdefn_.Count_StmtT); /* Core */
+      &stmtdefn_.DbType = 32; /* Generic DB */
+      &stmtdefn_.Market = "GBL";
+      &stmtdefn_.EffDt = Date3(1900, 1, 1);
+   Else
+      &stmtdefn_ = &SQLdefn_.Get_StmtT(1);
+   End-If;
+   &stmtdefn_.SqlText = "SELECT COUNT(1) FROM PS_INSTALLATION";
+   If Not &bret_ = &SQLdefn_.UpdateDefn() Then /* SQL Defn created */
+      &bret_ = &SQLdefn_.SaveNewDefn();
+   End-If;
+End-If;
+<*
+REM Now insert this SQLID into a new Step/Action;
+REM Create Manager and Key Objects for AE;
+&mgrAESect_ = create %metadata:AppEngineSectionDefn:AppEngineSectionDefn_Manager();
+&AESectKey_ = create %metadata:Key(66, "PPTESTAELOG", 77, "MAIN");
+If &mgrAESect_.DefnExists(&AESectKey_) Then
+   MessageBox(0, "", 0, 0, "Exists");
+   &AESectDefn_ = &mgrAESect_.GetDefnToUpdate(&AESectKey_);
+Else
+   MessageBox(0, "", 0, 0, "Create");
+   &AESectDefn_ = &mgrAESect_.CreateDefn();
+End-If;
+If Not &bret_ = &AESectDefn_.SaveNewDefn() Then /* AE Step created */
+   &bret_ = &AESectDefn_.UpdateDefn();
+End-If;
+*>
+
+REM -- END;
+rem &VERS = UpdateSysVersion();
+rem SQLExec("COMMIT");
+<*
+REM Retrieve values from buffer;
+&RS_LEVEL0_ = GetLevel0();
+&recPP_GEN1_WRK_ = &RS_LEVEL0_.GetRow(1).GetRecord(Record.PP_GEN1_RIC_WRK);
+
+Local %metadata:Key &oKey_ = create %metadata:Key(); /* Instantiate the Key object */
+
+&oKey_.AddItem(Key:Class_PanelGroup, "USERMAINT"); /* Add the USERMAINT Component key */
+&oKey_.AddItem(Key:Class_Market, "GBL"); /* Add the GBL Market key */
+&oKey_.AddItem(Key:Class_Method, "PostBuild"); /* Add the PostBuild Event Name key */
+
+/* Instantiate the PeopleCode Program Manager object */
+Local %metadata:PeopleCodeProgram:PeopleCodeProgram_Manager &oManager_ = create %metadata:PeopleCodeProgram:PeopleCodeProgram_Manager();
+
+/* Determine if a PeopleCode Program Definition exists for the given key */
+Local boolean &bExists_ = &oManager_.DefnExists(&oKey_);
+If Not (&bExists_) Then /* Throw an exception if the definiton does not exists */
+   throw CreateException(0, 0, "No Definition exists for the specified key(s)");
+End-If;
+
+/* Get the PeopleCode Program Definition */
+Local %metadata:PeopleCodeProgram:PeopleCodeProgram &oPeopleCodeProgram_ = &oManager_.GetDefnToUpdate(&oKey_);
+
+/* Get the PeopleCode that is definied for the loaded PeopleCode Program */
+Local string &sProgram_ = &oPeopleCodeProgram_.GetProgram();
+
+/* Append a messagebox to the obtained PeopleCode string */
+&sProgram_ = &sProgram_ | "messagebox(0,"""",0,0, ""Modifying PeopleCode with %metadata!"");";
+
+/* Update the PeopleCode for the Peoplecode Program */
+Local any &test1_, &test2_, &test3_;
+Local boolean &bUpdatedPeopleCode_ = &oPeopleCodeProgram_.UpdateProgram(&sProgram_, &test1_, &test2_, &test3_);
+
+If Not (&bUpdatedPeopleCode_) Then /* Throw an exception if PeopleCode could not updated */
+   throw CreateException(0, 0, "PeopleCode could not be updated");
+End-If;
+
+Local boolean &bDefnUpdated_ = &oPeopleCodeProgram_.UpdateDefn(); /* Update PeopleCode Program Definition */
+&sPCMText_ = &oPeopleCodeProgram_.GetProgram();
+rem WinMessage(&oPeopleCodeProgram_.GetProgram(), 64);
+&recPP_GEN1_WRK_.DESCRLONG4.Value = &sPCMText_; /* Assign to page field */
+If Not (&bDefnUpdated_) Then /* Throw an exception if definition could be updated */
+   throw CreateException(0, 0, "Definition could not be updated");
+End-If;
+*>
