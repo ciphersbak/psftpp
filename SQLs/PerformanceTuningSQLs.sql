@@ -1,4 +1,5 @@
-ALTER System flush buffer_cache; -- flush this to see some physical reads
+-- flush this to see some physical reads
+ALTER System flush buffer_cache;
 ALTER system flush shared_pool;
 ALTER SESSION SET optimizer_mode = all_rows;
 --Set this to FALSE on Oracle 12cR1 (Doc ID - 1100831.1)
