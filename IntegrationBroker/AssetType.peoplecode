@@ -1,0 +1,135 @@
+import AM_IOT:JsonService;
+import AM_IOT:Constants;
+
+class AssetType
+   method AssetType();
+   method fetchAssetTypes(&sIoTOrgID_ As string) Returns boolean;
+   method fetchAssetTypeDetails(&sIoTOrgID_ As string, &sIoTAssetTypeName_ As string) Returns boolean;
+   
+private
+   instance AM_IOT:JsonService &oJsonService_;
+   instance AM_IOT:Constants &oConstantService_;
+   instance string &sIoTResponse_;
+   Constant &mongoDBQuerySyntax_ = "?q={"":{"" : ""}}";
+   REM ?q={"serialNumber":{"$like" : "serial%"}};
+   REM serialNumber is the name of the parameter. Operator prefixed with $. Search Value is suffixed with %;
+   
+end-class;
+
+method AssetType
+   
+   &oJsonService_ = create AM_IOT:JsonService();
+   &oConstantService_ = create AM_IOT:Constants();
+end-method;
+
+method fetchAssetTypes
+   /+ &sIoTOrgID_ as String +/
+   /+ Returns Boolean +/
+   
+   Local integer &i, &j, &m_doccount_, &m_doc_, &nItemsChildCnt_, &nArrLen_, &nArrCount_;
+   Local JsonObject &oJObjAssetTypeFetch_;
+   Local Record &recPSIoTAssetType_;
+   Local string &sFetchAssetTypeURI_, &sModFetchAssetTypeURI_, &sMethodName_;
+   Local boolean &bUpdate_;
+   
+   &sFetchAssetTypeURI_ = "";
+   &sModFetchAssetTypeURI_ = "";
+   &sMethodName_ = "AssetType:fetchAssetTypes";
+   
+   try
+      rem &sFetchAssetTypeURI_ = &oJsonService_.fetchEndpoint(&sIoTInstanceName_, "FETCH_ASSETTYPES");
+      &sFetchAssetTypeURI_ = &oJsonService_.fetchEndpoint("FETCH_ASSETTYPES");
+      If &sFetchAssetTypeURI_ <> "" Then
+         &sModFetchAssetTypeURI_ = &oJsonService_.SubstituteURI(&sFetchAssetTypeURI_, &sIoTOrgID_); /* Replace <orgId> */
+         rem &sIoTResponse_ = &oJsonService_.sendRequest(&sIoTInstanceName_, &sFetchAssetTypeURI_, "GET", "", False); /* Send the request to IoT */
+         &sIoTResponse_ = &oJsonService_.sendRequest(&sModFetchAssetTypeURI_, "GET", "", False); /* Send the request to IoT */
+      Else
+         rem cannot fetch asset types;
+         &oJsonService_.LogRequest(&sMethodName_ | " FETCH ASSET TYPES Failed! ", "");
+         Return False;
+      End-If;
+   catch Exception &e
+      Local Exception &ib_exception = &e;
+      
+      If &ib_exception.MessageSetNumber <> &oConstantService_.MsgSetNbr#_ And
+            &ib_exception.MessageNumber <> &oConstantService_.MsgNbr#_ Then
+         throw &ib_exception;
+      End-If;
+      Return False;
+   end-try;
+   
+   &oJObjAssetTypeFetch_ = &oJsonService_.objJsonParser(&sIoTResponse_);
+   If &oJObjAssetTypeFetch_.IsJsonArray(&oConstantService_.IoTResponseArray_) Then
+      &oJsonService_.LogRequest("Fetching IoT Asset Type : ", "");
+      Local JsonArray &jArray_ = &oJObjAssetTypeFetch_.GetJsonArray(&oConstantService_.IoTResponseArray_);
+      If &jArray_.Size > 0 Then /* Read Array */
+         &m_doccount_ = &jArray_.Length();
+         For &i = 1 To &m_doccount_
+            Local JsonObject &jObject_ = &jArray_.GetJsonObject(&i);
+            If &jObject_.IsExist("id") Then
+               &oJsonService_.LogRequest(&oConstantService_.IoTAssetTypeID_, String(&jObject_.GetProperty("id")));
+            End-If;
+            If &jObject_.IsExist("name") Then
+               &oJsonService_.LogRequest(&oConstantService_.IoTAssetTypeName_, String(&jObject_.GetProperty("name")));
+            End-If;
+            /* 
+            If &jObject_.IsExist("type") Then
+               &oJsonService_.LogRequest(&oConstantService_.IoTPlaceType_, String(&jObject_.GetProperty("type")));
+            End-If;
+            */
+            If &jObject_.IsExist("organizationId") Then
+               &oJsonService_.LogRequest(&oConstantService_.IoTAssetTypeOrganisation_, String(&jObject_.GetProperty("organizationId")));
+            End-If;
+            Local boolean &bDescription_ = False;
+            If &jObject_.IsExist("description") Then
+               &oJsonService_.LogRequest(&oConstantService_.IoTAssetTypeDescription_, String(&jObject_.GetProperty("description")));
+               &bDescription_ = True;
+            End-If;
+            
+            If &jObject_.IsExist("links") Then
+               Local JsonArray &ojObjLinksArray_ = &jObject_.GetJsonArray("links");
+               If &ojObjLinksArray_.Size > 0 Then /* Read Array */
+                  &m_doc_ = &ojObjLinksArray_.Length();
+                  For &j = 1 To &m_doc_
+                     Local JsonObject &jObjLinks_ = &ojObjLinksArray_.GetJsonObject(&j);
+                     If &jObjLinks_.GetProperty("rel") = "self" Then
+                        &oJsonService_.LogRequest(&oConstantService_.IoTAssetTypeSelfLink_, String(&jObjLinks_.GetProperty("href")));
+                     End-If;
+                  End-For;
+               End-If;
+            End-If;
+            REM Insert into New Asset Type Table;
+            &recPSIoTAssetType_ = CreateRecord(Record.AM_IOT_ASSETYPE);
+            &recPSIoTAssetType_.AM_IOT_ASSETYPE_ID.Value = &jObject_.GetProperty("id");
+            &recPSIoTAssetType_.AM_IOT_ASSET_TYPE.Value = &jObject_.GetProperty("name");
+            If &bDescription_ Then
+               &recPSIoTAssetType_.AM_IOT_ASSETYP_DSC.Value = &jObject_.GetProperty("description");
+            Else
+               &recPSIoTAssetType_.AM_IOT_ASSETYP_DSC.Value = "";
+            End-If;
+            &recPSIoTAssetType_.AM_IOT_ASSETYP_URL.Value = &jObjLinks_.GetProperty("href");
+            &recPSIoTAssetType_.AM_LASTUPDT_DTTM.Value = %Datetime;
+            &recPSIoTAssetType_.AM_LASTUPDT_OPRID.Value = %OperatorId;
+            &bUpdate_ = &recPSIoTAssetType_.Update(&recPSIoTAssetType_);
+            If Not &bUpdate_ Then
+               &recPSIoTAssetType_.Insert();
+            End-If;
+            
+         End-For;
+      End-If;
+      Return True;
+   Else
+      rem It is not an array;
+      &oJsonService_.LogRequest("IoT Asset Types Response is NOT AN ARRAY : ", "");
+      Return False;
+   End-If;
+   
+end-method;
+
+method fetchAssetTypeDetails
+   /+ &sIoTOrgID_ as String, +/
+   /+ &sIoTAssetTypeName_ as String +/
+   /+ Returns Boolean +/
+   
+   Return True;
+end-method;
