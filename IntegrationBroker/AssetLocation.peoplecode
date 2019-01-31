@@ -1,0 +1,122 @@
+import AM_IOT:JsonService;
+import AM_IOT:Constants;
+
+class AssetLocation
+   method AssetLocation();
+   method fetchLocations(&sIoTOrgID_ As string) Returns boolean;
+   
+private
+   instance AM_IOT:JsonService &oJsonService_;
+   instance AM_IOT:Constants &oConstantService_;
+   instance string &sIoTResponse_;
+   
+end-class;
+
+method AssetLocation
+   
+   &oJsonService_ = create AM_IOT:JsonService();
+   &oConstantService_ = create AM_IOT:Constants();
+end-method;
+
+method fetchLocations
+   /+ &sIoTOrgID_ as String +/
+   /+ Returns Boolean +/
+   
+   Local integer &i, &j, &m_doccount_, &m_doc_, &nItemsChildCnt_, &nArrLen_, &nArrCount_;
+   Local JsonObject &oJObjAssetLocFetch_;
+   Local Record &recPSIoTAssetLocations_;
+   Local string &sFetchIoTPlacesURI_, &sModFetchIoTPlacesURI_, &sMethodName_;
+   Local boolean &bUpdate_;
+   
+   &sFetchIoTPlacesURI_ = "";
+   &sModFetchIoTPlacesURI_ = "";
+   &sMethodName_ = "AssetLocation:fetchLocations";
+   
+   try
+      rem &sFetchIoTPlacesURI_ = &oJsonService_.fetchEndpoint(&sIoTInstanceName_, "FETCH_PLACES");
+      &sFetchIoTPlacesURI_ = &oJsonService_.fetchEndpoint("FETCH_PLACES");
+      If &sFetchIoTPlacesURI_ <> "" Then
+         &sModFetchIoTPlacesURI_ = &oJsonService_.SubstituteURI(&sFetchIoTPlacesURI_, &sIoTOrgID_); /* Replace <orgId> */
+         rem &sIoTResponse_ = &oJsonService_.sendRequest(&sIoTInstanceName_, &sFetchIoTPlacesURI_, "GET", "", False); /* Send the request to IoT */
+         &sIoTResponse_ = &oJsonService_.sendRequest(&sModFetchIoTPlacesURI_, "GET", "", False); /* Send the request to IoT */
+      Else
+         rem cannot fetch IoT Places;
+         &oJsonService_.LogRequest(&sMethodName_ | " FETCH IoT PLACES FAILED! ", "");
+         Return False;
+      End-If;
+   catch Exception &e
+      Local Exception &ib_exception = &e;
+      
+      If &ib_exception.MessageSetNumber <> &oConstantService_.MsgSetNbr#_ And
+            &ib_exception.MessageNumber <> &oConstantService_.MsgNbr#_ Then
+         throw &ib_exception;
+      End-If;
+      Return False;
+   end-try;
+   
+   &oJObjAssetLocFetch_ = &oJsonService_.objJsonParser(&sIoTResponse_);
+   If &oJObjAssetLocFetch_.IsJsonArray(&oConstantService_.IoTResponseArray_) Then
+      &oJsonService_.LogRequest("Fetching IoT Places : ", "");
+      Local JsonArray &jArray_ = &oJObjAssetLocFetch_.GetJsonArray(&oConstantService_.IoTResponseArray_);
+      If &jArray_.Size > 0 Then /* Read Array */
+         &m_doccount_ = &jArray_.Length();
+         For &i = 1 To &m_doccount_
+            Local JsonObject &jObject_ = &jArray_.GetJsonObject(&i);
+            If &jObject_.IsExist("id") Then
+               &oJsonService_.LogRequest(&oConstantService_.IoTPlaceID_, String(&jObject_.GetProperty("id")));
+            End-If;
+            If &jObject_.IsExist("name") Then
+               &oJsonService_.LogRequest(&oConstantService_.IoTPlaceName_, String(&jObject_.GetProperty("name")));
+            End-If;
+            If &jObject_.IsExist("type") Then
+               &oJsonService_.LogRequest(&oConstantService_.IoTPlaceType_, String(&jObject_.GetProperty("type")));
+            End-If;
+            If &jObject_.IsExist("organizationId") Then
+               &oJsonService_.LogRequest(&oConstantService_.IoTPlaceOrganisation_, String(&jObject_.GetProperty("organizationId")));
+            End-If;
+            Local boolean &bDescription_ = False;
+            If &jObject_.IsExist("description") Then
+               &oJsonService_.LogRequest(&oConstantService_.IoTPlaceDescription_, String(&jObject_.GetProperty("description")));
+               &bDescription_ = True;
+            End-If;
+            
+            If &jObject_.IsExist("links") Then
+               Local JsonArray &ojObjLinksArray_ = &jObject_.GetJsonArray("links");
+               If &ojObjLinksArray_.Size > 0 Then /* Read Array */
+                  &m_doc_ = &ojObjLinksArray_.Length();
+                  For &j = 1 To &m_doc_
+                     Local JsonObject &jObjLinks_ = &ojObjLinksArray_.GetJsonObject(&j);
+                     If &jObjLinks_.GetProperty("rel") = "self" Then
+                        &oJsonService_.LogRequest(&oConstantService_.IoTPlaceSelfLink_, String(&jObjLinks_.GetProperty("href")));
+                     End-If;
+                  End-For;
+               End-If;
+            End-If;
+            REM Insert into New Asset Location Table;
+            &recPSIoTAssetLocations_ = CreateRecord(Record.AM_IOT_PLACES);
+            &recPSIoTAssetLocations_.AM_IOT_PLACE_ID.Value = &jObject_.GetProperty("id");
+            &recPSIoTAssetLocations_.AM_IOT_PLACE_NAME.Value = &jObject_.GetProperty("name");
+            &recPSIoTAssetLocations_.AM_IOT_PLACE_TYPE.Value = &jObject_.GetProperty("type");
+            If &bDescription_ Then
+               &recPSIoTAssetLocations_.AM_IOT_PLACE_DESCR.Value = &jObject_.GetProperty("description");
+            Else
+               &recPSIoTAssetLocations_.AM_IOT_PLACE_DESCR.Value = "";
+            End-If;
+            &recPSIoTAssetLocations_.AM_IOT_PLACE_URL.Value = &jObjLinks_.GetProperty("href");
+            &recPSIoTAssetLocations_.AM_LASTUPDT_DTTM.Value = %Datetime;
+            &recPSIoTAssetLocations_.AM_LASTUPDT_OPRID.Value = %OperatorId;
+            &bUpdate_ = &recPSIoTAssetLocations_.Update(&recPSIoTAssetLocations_);
+            If Not &bUpdate_ Then
+               &recPSIoTAssetLocations_.Insert();
+            End-If;
+            
+         End-For;
+      End-If;
+      Return True;
+   Else
+      rem It is not an array;
+      &oJsonService_.LogRequest("IoT Places Response is NOT AN ARRAY : ", "");
+      Return False;
+   End-If;
+   
+end-method;
