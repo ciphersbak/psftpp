@@ -26,9 +26,9 @@ method fetchIncidents
    
    Local integer &i, &j, &m_doccount_, &m_doc_, &nItemsChildCnt_, &nArrLen_, &nArrCount_, &jc, &mc_doc_, &tc, &tc_doc_, &pc, &pc_doc_;
    Local JsonObject &oJObjAssetIncidentFetch_;
-   Local Record &recPSIoTAssetIncidents_;
+   Local Record &recPSIoTAssetIncidents_, &recPSIoTAssetIncidentsDTL_;
    Local string &sOrigFetchAssetIncidentsURI_, &sMethodName_, &sModFetchAssetIncidentsURI_;
-   Local boolean &bUpdate_;
+   Local boolean &bUpdate_, &bDTLUpdate_;
    
    &sOrigFetchAssetIncidentsURI_ = "";
    &sModFetchAssetIncidentsURI_ = "";
@@ -44,7 +44,6 @@ method fetchIncidents
          &sModFetchAssetIncidentsURI_ = &oJsonService_.SubstituteURI(%This.sFetchAssetIncidentsURI_, &sIoTOrgID_); /* Replace <orgId> */
          rem %This.sFetchAssetIncidentsURI_ = %This.sFetchAssetIncidentsURI_ | %This.sFetchIncidentsURIQueryParams_; /* Add OrderBy */
          %This.sFetchAssetIncidentsURI_ = &sModFetchAssetIncidentsURI_ | %This.sFetchIncidentsURIQueryParams_; /* Add OrderBy */
-         rem &sIoTResponse_ = &oJsonService_.sendRequest(&sIoTInstanceName_, %This.sFetchAssetIncidentsURI_, "GET", "", False); /* Send the request to IoT */
          &sIoTResponse_ = &oJsonService_.sendRequest(%This.sFetchAssetIncidentsURI_, "GET", "", False); /* Send the request to IoT */
       Else
          rem cannot fetch asset incidents;
@@ -66,47 +65,51 @@ method fetchIncidents
    
    &oJObjAssetIncidentFetch_ = &oJsonService_.objJsonParser(&sIoTResponse_);
    If &oJObjAssetIncidentFetch_.IsJsonArray(&oConstantService_.IoTResponseArray_) Then
-      &oJsonService_.LogRequest("Fetching IoT Incidents : ", "");
+      &oJsonService_.LogRequest("Fetching IoT Incidents : ", %This.sFetchAssetIncidentsURI_);
+      
+      &recPSIoTAssetIncidents_ = CreateRecord(Record.AM_IOT_INCIDENT); /* IoT Incident Parent Table */
+      &recPSIoTAssetIncidentsDTL_ = CreateRecord(Record.AM_IOT_INCD_DTL); /* IoT Incident Detail Table */
+      
       Local JsonArray &jArray_ = &oJObjAssetIncidentFetch_.GetJsonArray(&oConstantService_.IoTResponseArray_);
       If &jArray_.Size > 0 Then /* Read Array */
          &m_doccount_ = &jArray_.Length();
          For &i = 1 To &m_doccount_
             Local JsonObject &jObject_ = &jArray_.GetJsonObject(&i);
             If &jObject_.IsExist("id") Then
-               &oJsonService_.LogRequest(&oConstantService_.IoTIncidentID_, String(&jObject_.GetProperty("id")));
+               rem &oJsonService_.LogRequest(&oConstantService_.IoTIncidentID_, String(&jObject_.GetProperty("id")));
             End-If;
             If &jObject_.IsExist("type") Then
-               &oJsonService_.LogRequest(&oConstantService_.IoTIncidentType_, String(&jObject_.GetProperty("type")));
+               rem &oJsonService_.LogRequest(&oConstantService_.IoTIncidentType_, String(&jObject_.GetProperty("type")));
             End-If;
             If &jObject_.IsExist("state") Then
-               &oJsonService_.LogRequest(&oConstantService_.IoTIncidentState_, String(&jObject_.GetProperty("state")));
+               rem &oJsonService_.LogRequest(&oConstantService_.IoTIncidentState_, String(&jObject_.GetProperty("state")));
             End-If;
             If &jObject_.IsExist("summary") Then
-               &oJsonService_.LogRequest(&oConstantService_.IoTIncidentSummary_, String(&jObject_.GetProperty("summary")));
+               rem &oJsonService_.LogRequest(&oConstantService_.IoTIncidentSummary_, String(&jObject_.GetProperty("summary")));
             End-If;
             If &jObject_.IsExist("rule") Then
-               &oJsonService_.LogRequest(&oConstantService_.IoTIncidentRule_, String(&jObject_.GetProperty("rule")));
+               rem &oJsonService_.LogRequest(&oConstantService_.IoTIncidentRule_, String(&jObject_.GetProperty("rule")));
             End-If;
             If &jObject_.IsExist("priority") Then
-               &oJsonService_.LogRequest(&oConstantService_.IoTIncidentPriority_, String(&jObject_.GetProperty("priority")));
+               rem &oJsonService_.LogRequest(&oConstantService_.IoTIncidentPriority_, String(&jObject_.GetProperty("priority")));
             End-If;
             If &jObject_.IsExist("geoLocation") Then
-               &oJsonService_.LogRequest(&oConstantService_.IoTIncidentAssetGeoLocation_, String(&jObject_.GetProperty("geoLocation")));
+               rem &oJsonService_.LogRequest(&oConstantService_.IoTIncidentAssetGeoLocation_, String(&jObject_.GetProperty("geoLocation")));
             End-If;
             If &jObject_.IsExist("createdBy") Then
-               &oJsonService_.LogRequest(&oConstantService_.IoTIncidentCreatedBy_, String(&jObject_.GetProperty("createdBy")));
+               rem &oJsonService_.LogRequest(&oConstantService_.IoTIncidentCreatedBy_, String(&jObject_.GetProperty("createdBy")));
             End-If;
             If &jObject_.IsExist("createdTimeAsString") Then
-               &oJsonService_.LogRequest(&oConstantService_.IoTIncidentCreatedTimeAsString_, String(&jObject_.GetProperty("createdTimeAsString")));
+               rem &oJsonService_.LogRequest(&oConstantService_.IoTIncidentCreatedTimeAsString_, String(&jObject_.GetProperty("createdTimeAsString")));
             End-If;
             If &jObject_.IsExist("lastModifiedTimeAsString") Then
-               &oJsonService_.LogRequest(&oConstantService_.IoTIncidentLastModifiedTimeAsString_, String(&jObject_.GetProperty("lastModifiedTimeAsString")));
+               rem &oJsonService_.LogRequest(&oConstantService_.IoTIncidentLastModifiedTimeAsString_, String(&jObject_.GetProperty("lastModifiedTimeAsString")));
             End-If;
             If &jObject_.IsExist("incidentTimeAsString") Then
-               &oJsonService_.LogRequest(&oConstantService_.IoTIncidentTimeAsString_, String(&jObject_.GetProperty("incidentTimeAsString")));
+               rem &oJsonService_.LogRequest(&oConstantService_.IoTIncidentTimeAsString_, String(&jObject_.GetProperty("incidentTimeAsString")));
             End-If;
             If &jObject_.IsExist("organizationId") Then
-               &oJsonService_.LogRequest(&oConstantService_.IoTIncidentOrganisationID_, String(&jObject_.GetProperty("organizationId")));
+               rem &oJsonService_.LogRequest(&oConstantService_.IoTIncidentOrganisationID_, String(&jObject_.GetProperty("organizationId")));
             End-If;
             Local boolean &bDescription_ = False;
             If &jObject_.IsExist("description") Then
@@ -121,8 +124,8 @@ method fetchIncidents
                   &mc_doc_ = &ojObjContextArray_.Length();
                   For &jc = 1 To &mc_doc_
                      Local JsonObject &jObjContext_ = &ojObjContextArray_.GetJsonObject(&jc);
-                     &oJsonService_.LogRequest(&oConstantService_.IoTAssetID_, String(&jObjContext_.GetProperty("id")));
-                     &oJsonService_.LogRequest(&oConstantService_.IoTAssetName_, String(&jObjContext_.GetProperty("name")));
+                     rem &oJsonService_.LogRequest(&oConstantService_.IoTAssetID_, String(&jObjContext_.GetProperty("id")));
+                     rem &oJsonService_.LogRequest(&oConstantService_.IoTAssetName_, String(&jObjContext_.GetProperty("name")));
                   End-For;
                End-If; /* affectedObjects END */
                Local JsonArray &ojObjOccurrencesArray_ = &oJsonContext_.GetJsonArray("occurrences");
@@ -130,30 +133,59 @@ method fetchIncidents
                   &tc_doc_ = &ojObjOccurrencesArray_.Length();
                   For &tc = 1 To &tc_doc_
                      Local JsonObject &jObjOccurrences_ = &ojObjOccurrencesArray_.GetJsonObject(&tc);
-                     &oJsonService_.LogRequest(&oConstantService_.IoTAssetID_, String(&jObjOccurrences_.GetProperty("id")));
-                     &oJsonService_.LogRequest(&oConstantService_.IoTIncidentID_, String(&jObjOccurrences_.GetProperty("incidentId")));
+                     rem &oJsonService_.LogRequest(&oConstantService_.IoTAssetID_, String(&jObjOccurrences_.GetProperty("id")));
+                     rem &oJsonService_.LogRequest(&oConstantService_.IoTIncidentID_, String(&jObjOccurrences_.GetProperty("incidentId")));
                      Local JsonArray &ojObjSatisfiedPredicatesArray_ = &jObjOccurrences_.GetJsonArray("satisfiedPredicates");
                      If &ojObjSatisfiedPredicatesArray_.Size > 0 Then /* Read satisfiedPredicates Array */
                         &pc_doc_ = &ojObjSatisfiedPredicatesArray_.Length();
                         For &pc = 1 To &pc_doc_
                            Local JsonObject &jObjSatisfiedPredicates_ = &ojObjSatisfiedPredicatesArray_.GetJsonObject(&pc);
-                           &oJsonService_.LogRequest(&oConstantService_.IoTAssetID_, String(&jObjSatisfiedPredicates_.GetProperty("type")));
+                           rem &oJsonService_.LogRequest("Occurrence Type : ", String(&jObjSatisfiedPredicates_.GetProperty("type")));
                            If &jObjSatisfiedPredicates_.IsExist("information") Then
                               Local JsonObject &jSatisfiedPredicatesInfo_ = &jObjSatisfiedPredicates_.GetJsonObject("information");
+                              Local boolean &bObservedVal_ = False;
                               If &jSatisfiedPredicatesInfo_.IsExist("observedValue") Then
-                                 &oJsonService_.LogRequest(&oConstantService_.IoTIncidentObservedValue_, String(&jSatisfiedPredicatesInfo_.GetProperty("observedValue")));
+                                 rem &oJsonService_.LogRequest(&oConstantService_.IoTIncidentObservedValue_, String(&jSatisfiedPredicatesInfo_.GetProperty("observedValue")));
+                                 &bObservedVal_ = True;
                               End-If;
+                              Local boolean &bAttrName_ = False;
                               If &jSatisfiedPredicatesInfo_.IsExist("attributeName") Then
-                                 &oJsonService_.LogRequest(&oConstantService_.IoTIncidentAttributeName_, String(&jSatisfiedPredicatesInfo_.GetProperty("attributeName")));
+                                 rem &oJsonService_.LogRequest(&oConstantService_.IoTIncidentAttributeName_, String(&jSatisfiedPredicatesInfo_.GetProperty("attributeName")));
+                                 &bAttrName_ = True;
                               End-If;
+                              Local boolean &bThresholdVal_ = False;
                               If &jSatisfiedPredicatesInfo_.IsExist("thresholdValue") Then
-                                 &oJsonService_.LogRequest(&oConstantService_.IoTIncidentThresholdValue_, String(&jSatisfiedPredicatesInfo_.GetProperty("thresholdValue")));
+                                 rem &oJsonService_.LogRequest(&oConstantService_.IoTIncidentThresholdValue_, String(&jSatisfiedPredicatesInfo_.GetProperty("thresholdValue")));
+                                 &bThresholdVal_ = True;
                               End-If;
+                              Local boolean &bOperator_ = False;
                               If &jSatisfiedPredicatesInfo_.IsExist("operator") Then
-                                 &oJsonService_.LogRequest(&oConstantService_.IoTIncidentOperator_, String(&jSatisfiedPredicatesInfo_.GetProperty("operator")));
+                                 rem &oJsonService_.LogRequest(&oConstantService_.IoTIncidentOperator_, String(&jSatisfiedPredicatesInfo_.GetProperty("operator")));
+                                 &bOperator_ = True;
                               End-If;
                            End-If;
                            rem &oJsonService_.LogRequest(&oConstantService_.IoTIncidentID_, String(&jObjOccurrences_.GetProperty("incidentId")));
+                           REM Now Insert into Detail Table;
+                           If &bObservedVal_ Then
+                              &recPSIoTAssetIncidentsDTL_.AM_IOT_INCIDENT_ID.Value = &jObject_.GetProperty("id");
+                              &recPSIoTAssetIncidentsDTL_.AM_IOT_ASSET_ID.Value = &jObjContext_.GetProperty("id");
+                              &recPSIoTAssetIncidentsDTL_.AM_IOT_ASSET_NAME.Value = &jObjContext_.GetProperty("name");
+                              &recPSIoTAssetIncidentsDTL_.AM_IOT_INCD_OCCTYP.Value = &jObjSatisfiedPredicates_.GetProperty("type");
+                              &recPSIoTAssetIncidentsDTL_.AM_IOT_INCD_OBSVAL.Value = &jSatisfiedPredicatesInfo_.GetProperty("observedValue");
+                              &recPSIoTAssetIncidentsDTL_.AM_IOT_INCD_ATTRNM.Value = &jSatisfiedPredicatesInfo_.GetProperty("attributeName");
+                              &recPSIoTAssetIncidentsDTL_.AM_IOT_INCD_THSVAL.Value = &jSatisfiedPredicatesInfo_.GetProperty("thresholdValue");
+                              &recPSIoTAssetIncidentsDTL_.AM_IOT_INCIDN_OPER.Value = &jSatisfiedPredicatesInfo_.GetProperty("operator");
+                              &recPSIoTAssetIncidentsDTL_.AM_LASTUPDT_DTTM.Value = %Datetime;
+                              &recPSIoTAssetIncidentsDTL_.AM_LASTUPDT_OPRID.Value = %OperatorId;
+                              
+                              &bDTLUpdate_ = &recPSIoTAssetIncidentsDTL_.Update(&recPSIoTAssetIncidentsDTL_);
+                              If Not &bDTLUpdate_ Then
+                                 &recPSIoTAssetIncidentsDTL_.Insert();
+                              End-If;
+                           Else
+                              REM It most likely is an Anomaly which is being triggered for the Incident;
+                              &oJsonService_.LogRequest("Anomaly triggered for Incident : ", String(&jObjSatisfiedPredicates_.GetProperty("type")));
+                           End-If; /* Insert only if you see observedValue */
                         End-For;
                      End-If; /* satisfiedPredicates END */
                   End-For;
@@ -168,29 +200,40 @@ method fetchIncidents
                   For &j = 1 To &m_doc_
                      Local JsonObject &jObjLinks_ = &ojObjLinksArray_.GetJsonObject(&j);
                      If &jObjLinks_.GetProperty("rel") = "self" Then
-                        &oJsonService_.LogRequest(&oConstantService_.IoTPlaceSelfLink_, String(&jObjLinks_.GetProperty("href")));
+                        rem &oJsonService_.LogRequest(&oConstantService_.IoTPlaceSelfLink_, String(&jObjLinks_.GetProperty("href")));
                      End-If;
                   End-For;
                End-If;
             End-If; /* links END */
             REM Insert into New Asset Incident Table;
-            /* 
-            &recPSIoTAssetIncidents_ = CreateRecord(Record.AM_IOT_INCIDENT);
-            &recPSIoTAssetIncidents_.AM_IOT_ASSET_ID.Value = &jObject_.GetProperty("id");
-            &recPSIoTAssetIncidents_.AM_IOT_ASSET_NAME.Value = &jObject_.GetProperty("name");
-            &recPSIoTAssetIncidents_.AM_IOT_ASSET_TYPE.Value = &jObject_.GetProperty("type");
+            
+            &recPSIoTAssetIncidents_.AM_IOT_INCIDENT_ID.Value = &jObject_.GetProperty("id");
+            &recPSIoTAssetIncidents_.AM_IOT_INCIDNT_TYP.Value = &jObject_.GetProperty("type");
+            &recPSIoTAssetIncidents_.AM_IOT_INCIDNT_STS.Value = &jObject_.GetProperty("state");
+            &recPSIoTAssetIncidents_.AM_IOT_INCDNT_SUMM.Value = &jObject_.GetProperty("summary");
+            &recPSIoTAssetIncidents_.AM_IOT_INCDNT_RULE.Value = &jObject_.GetProperty("rule");
+            &recPSIoTAssetIncidents_.AM_IOT_INCDT_PRIOR.Value = &jObject_.GetProperty("priority");
+            &recPSIoTAssetIncidents_.AM_IOT_ASSETGEOLOC.Value = &jObject_.GetProperty("geoLocation");
+            &recPSIoTAssetIncidents_.AM_IOT_INCDNT_TIME.Value = &jObject_.GetProperty("incidentTimeAsString");
+            &recPSIoTAssetIncidents_.AM_IOT_ORG_ID.Value = &jObject_.GetProperty("organizationId");
             If &bDescription_ Then
-               &recPSIoTAssetIncidents_.ASSET_DESCR.Value = &jObject_.GetProperty("description");
+               &recPSIoTAssetIncidents_.AM_IOT_INCDNT_DESC.Value = &jObject_.GetProperty("description");
             Else
-               &recPSIoTAssetIncidents_.ASSET_DESCR.Value = "";
+               &recPSIoTAssetIncidents_.AM_IOT_INCDNT_DESC.Value = "";
             End-If;
-            &recPSIoTAssetIncidents_.AM_IOT_ASSET_URL.Value = &jObjLinks_.GetProperty("href");
+            &recPSIoTAssetIncidents_.AM_IOT_INCIDNT_URL.Value = &jObjLinks_.GetProperty("href");
+            &recPSIoTAssetIncidents_.AM_IOT_INCDN_CRTBY.Value = &jObject_.GetProperty("createdBy");
+            &recPSIoTAssetIncidents_.AM_IOT_INCD_CRTIME.Value = &jObject_.GetProperty("createdTimeAsString");
+            &recPSIoTAssetIncidents_.AM_IOT_INCD_LMODBY.Value = &jObject_.GetProperty("lastModifiedBy");
+            &recPSIoTAssetIncidents_.AM_IOT_INCD_LMTIME.Value = &jObject_.GetProperty("lastModifiedTimeAsString");
             &recPSIoTAssetIncidents_.AM_LASTUPDT_DTTM.Value = %Datetime;
+            &recPSIoTAssetIncidents_.AM_LASTUPDT_OPRID.Value = %OperatorId;
+            
             &bUpdate_ = &recPSIoTAssetIncidents_.Update(&recPSIoTAssetIncidents_);
             If Not &bUpdate_ Then
                &recPSIoTAssetIncidents_.Insert();
             End-If;
-            */
+            
          End-For;
       End-If;
       Return True;
@@ -201,6 +244,11 @@ method fetchIncidents
    End-If;
    
 end-method;
+
+/*
+ * Call this method only after you have ensured that status for that Incident can be changed to Resolved
+ * IoT enforces business logic and the flow of status is NEW --> OPEN --> WORK IN PROGRESS --> RESOLVED
+ */
 
 method updateIncident
    /+ &sIoTOrgID_ as String, +/
@@ -217,21 +265,21 @@ method updateIncident
    try
       Local JsonBuilder &oJsonBldrUpd_ = CreateJsonBuilder(); /* Create Payload */
       If &oJsonBldrUpd_.StartObjectReturnsTrue("") Then
-         &oJsonBldrUpd_.AddProperty("id", &sIoTIncidentID_);
+         rem &oJsonBldrUpd_.AddProperty("id", &sIoTIncidentID_);
+         REM Incident State cannot be changed from NEW to RESOLVED;
          &oJsonBldrUpd_.AddProperty("state", &oConstantService_.IoTIncidentStatusRESOLVED_);
          &oJsonBldrUpd_.EndObject("");
       End-If;
       &sRequestJSONUpd_ = &oJsonBldrUpd_.ToString();
-      rem &sUpdateIncidentURI_ = &oJsonService_.fetchEndpoint(&sIoTInstanceName_, "UPDATE_INCIDENT");
+      rem &oJsonService_.LogRequest(&sMethodName_ | " UPDATE INCIDENT Payload : ", &sRequestJSONUpd_);
       &sUpdateIncidentURI_ = &oJsonService_.fetchEndpoint("UPDATE_INCIDENT");
       If &sUpdateIncidentURI_ <> "" Then
          &sModUpdateIncidentURI_ = &oJsonService_.SubstituteURI(&sUpdateIncidentURI_, &sIoTOrgID_); /* Replace <orgId> */
          rem &sUpdateIncidentURI_ = &sUpdateIncidentURI_ | &sIoTIncidentID_;
          &sModUpdateIncidentURI_ = &sModUpdateIncidentURI_ | "/" | &sIoTIncidentID_;
-         rem &sIoTResponse_ = &oJsonService_.sendRequest(&sIoTInstanceName_, &sUpdateIncidentURI_, "POST", &sRequestJSONUpd_, True); /* Send the request to IoT */
          &sIoTResponse_ = &oJsonService_.sendRequest(&sModUpdateIncidentURI_, "POST", &sRequestJSONUpd_, True); /* Send the request to IoT */
          REM Now update AM IoT Incident Table;
-         SQLExec("UPDATE PS_SOMETHING SET AM_IOT_INCIDENT_STATUS = 'RESOLVED' WHERE AM_IOT_INCIDENT_ID = :1", &sIoTIncidentID_);
+         SQLExec("UPDATE PS_" | Record.AM_IOT_INCIDENT | " SET AM_IOT_INCIDNT_STS = 'RESOLVED' WHERE 1 = 1 AND AM_IOT_ORG_ID = :1 AND AM_IOT_INCIDENT_ID = :2", &sIoTOrgID_, &sIoTIncidentID_);
       Else
          rem cannot update incident;
          &oJsonService_.LogRequest(&sMethodName_ | " UPDATE INCIDENT Failed! ", "");
