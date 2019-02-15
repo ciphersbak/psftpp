@@ -1,4 +1,5 @@
 import AM_IOT:Constants;
+import AM_IOT:Exceptions:failPing;
 
 class JsonService
    method JsonService();
@@ -7,9 +8,9 @@ class JsonService
    method Ping() Returns string;
    /* Retrieve IoT URIs */
    method fetchEndpoint(&sTask_ As string) Returns string;
-   method cleanURI(&sInputURI_ As string) Returns string;
    /* JSON Parser */
    method objJsonParser(&content As string) Returns JsonObject;
+   /* Authorisation */
    method hmacAuthenticationHeader(&url As string, &admnuser As string, &admnpass As string, &proxyuser As string, &proxypass As string, &serverurl As string) Returns string;
    method Base64AuthenticationHeader() Returns string;
    /* Replace <orgId> */
@@ -17,6 +18,13 @@ class JsonService
    /* Send request to IoT */
    rem method sendRequest(&sIoTInstanceName_ As string, &sUrl_ As string, &sAction_ As string, &sRequest_ As string, &bPatch_ As boolean) Returns string;
    method sendRequest(&sUrl_ As string, &sAction_ As string, &sRequest_ As string, &bPatch_ As boolean) Returns string;
+   method parseErrorResponse(&sJsonErrorPayload_ As string);
+   /* Wait and Pause Processing */
+   method WaitForNSeconds(&nSeconds_ As number);
+   /* Substitute MongoDB Query Syntax */
+   method substituteMongoDBQry(&sAppClassMethodName_ As string, &sParameter_ As string, &sSearchVal_ As string) Returns string;
+   /* Count IoT Artifacts */
+   method countIoTArtifacts(&sAppClassMethodName_ As string, &oJSArtifact_ As JsonObject) Returns number;
    /* Logging and debugging methods */
    method LogRequest(&function As string, &request As string);
    method logPollSpanTime(&sMethodName_ As string, &startTime_ As time, &endTime_ As time);
@@ -29,12 +37,18 @@ protected
    method decodePassword(&password As string) Returns string;
    
 private
+   /* Clean URIs */
+   method appendStoredURLTrailingSlash_(&url As string) Returns string;
+   method cleanURI(&sInputURI_ As string) Returns string;
    instance object &oPSCipher_;
    instance object &oString_;
    instance object &oHeader_;
    instance object &oEncoder_;
-   Constant &bDebug = False;
    instance AM_IOT:Constants &oConstantService_;
+   Constant &mongoDBQuerySyntax_ = "?q={"":1"":{""$like"" : "":2%""}}";
+   REM ?q={"serialNumber":{"$like" : "serial%"}};
+   REM :1 is the name of the parameter. Operator prefixed with $. Search Value :2 is suffixed with %;
+   Constant &bDebug_ = False; /* Change this to True for debugging */
    
 end-class;
 
@@ -78,10 +92,11 @@ method Ping
    Else
       rem cannot ping IoT;
       &sRet_ = "";
-      %This.LogRequest(&sMethodName_ | " Availability status for the Oracle IoT Clouse Service Instance UNKNOWN ! ", "");
+      %This.LogRequest(&sMethodName_ | " Availability status for the Oracle IoT Cloud Service Instance UNKNOWN ! ", "");
    End-If;
    If &sRet_ = "" Then
-      throw CreateException(0, 0, "Availability status for the Oracle IoT Clouse Service Instance UNKNOWN");
+      rem throw CreateException(0, 0, "Availability status for the Oracle IoT Cloud Service Instance UNKNOWN");
+      throw create AM_IOT:Exceptions:failPing("Availability status for the Oracle IoT Cloud Service Instance UNKNOWN");
    End-If;
    
    Return &sRet_;
@@ -94,39 +109,62 @@ method fetchEndpoint
    /+ &sTask_ as String +/
    /+ Returns String +/
    
-   Local string &sServerHost_, &sTaskURI_, &sPrivateTaskURI_, &sEndpointURL_, &sMethodName_;
+   Local string &sIoTInstanceName_, &sServerHost_, &sTaskURI_, &sPrivateTaskURI_, &sEndpointURL_, &sMethodName_, &xlatTask_;
    Local number &nServerPort_;
    &sMethodName_ = "JsonService:fetchEndpoint";
-   Local SQL &sqlIoTDefInst_ = CreateSQL("%SelectAll(:1) WHERE AM_IOT_DFLT_INST = 'Y'", Record.PSOPRDEFN);
-   Local Record &recIoTConfig_ = CreateRecord(Record.PSOPRDEFN);
+   Local SQL &sqlIoTDefInst_ = CreateSQL("%SelectAll(:1) WHERE DEFAULT_INSTANCE = 'Y'", Record.AM_IOT_INSTANCE);
+   Local Record &recIoTConfig_ = CreateRecord(Record.AM_IOT_INSTANCE);
    
    While &sqlIoTDefInst_.Fetch(&recIoTConfig_)
-      &sServerHost_ = &recIoTConfig_.AM_IOT_HOST_NAME.Value;
-      &nServerPort_ = &recIoTConfig_.AM_IOT_PORT.Value;
-      &sTaskURI_ = &recIoTConfig_.AM_IOT_TASK_URI.Value;
-      &sPrivateTaskURI_ = &recIoTConfig_.AM_IOT_PVT_TASK_URI.Value;
+      &sIoTInstanceName_ = &recIoTConfig_.INSTANCE_NAME.Value;
+      &sServerHost_ = &recIoTConfig_.HOSTNAME.Value;
+      &nServerPort_ = &recIoTConfig_.PORT_NUM.Value;
+      rem &sTaskURI_ = &recIoTConfig_.TASK_URI.Value;
+      rem &sPrivateTaskURI_ = &recIoTConfig_.PRIVATE_URI.Value;
    End-While;
+   &sqlIoTDefInst_.Close();
    rem SQLExec("SELECT SERVER_HOST, SERVER_PORT, TASK_URI, PVT_TASK_URI FROM PS_SOMETHING WHERE AM_IOT_INST_ID = :1 AND AM_IOT_TASK = :2", &sIoTInstanceName_, &sTask_, &sServerHost_, &nServerPort_, &sTaskURI_, &sPrivateTaskURI_);
    rem SQLExec("SELECT SERVER_HOST, SERVER_PORT, TASK_URI, PVT_TASK_URI FROM PS_SOMETHING WHERE AM_IOT_TASK = :1 AND AM_IOT_DFLT_INST = 'Y'", &sTask_, &sServerHost_, &nServerPort_, &sTaskURI_, &sPrivateTaskURI_); /* Always select default instance */
-   If All(&sServerHost_) Then
-      If All(&sPrivateTaskURI_) Then
-         &sEndpointURL_ = &oConstantService_.sHTTPS_ | &sServerHost_ | ":" | &nServerPort_ | &sPrivateTaskURI_;
-         %This.debug("");
-         %This.debug("Endpoint URL : " | &sEndpointURL_);
-         Return &sEndpointURL_;
+   %This.debug("&sTask_ : " | &sTask_);
+   If (&sTask_ <> "") Then
+      REM Retrieve the Field Value for the Task Name;
+      SQLExec("SELECT FIELDVALUE FROM PS_" | Record.FSFB_XLAT_VW | " WHERE FIELDNAME = 'AM_IOT_TASK' AND XLATLONGNAME = :1", &sTask_, &xlatTask_);
+      If (&xlatTask_ <> "") Then
+         %This.debug("&xlatTask_ : " | &xlatTask_);
+         REM Retrieve Private URI for the Task;
+         SQLExec("SELECT TASK_URI, PRIVATE_URI FROM PS_" | Record.IOT_TASKDETAILS | " WHERE INSTANCE_NAME = :1 AND AM_IOT_TASK = :2", &sIoTInstanceName_, &xlatTask_, &sTaskURI_, &sPrivateTaskURI_);
+         If All(&sServerHost_) Then
+            If All(&sPrivateTaskURI_) Then
+               &sEndpointURL_ = &oConstantService_.sHTTPS_ | &sServerHost_ | ":" | &nServerPort_ | &sPrivateTaskURI_;
+               %This.debug("");
+               %This.debug("Endpoint URL : " | &sEndpointURL_);
+               Return &sEndpointURL_;
+            Else
+               rem TASK not supported;
+               %This.LogRequest(&sMethodName_ | " PeopleSoft DOES NOT support TASK.", "");
+               Return "";
+            End-If;
+         Else
+            rem IoT instance NOT defined;
+            %This.LogRequest(&sMethodName_ | " No default IoT instance defined.", "");
+            %This.debug("");
+            %This.debug("No default IoT instance defined!");
+            Return "";
+         End-If;
       Else
-         rem TASK not supported;
-         %This.LogRequest(&sMethodName_ | " PeopleSoft DOES NOT support TASK.", "");
+         rem No XLAT for the Task;
+         %This.LogRequest(&sMethodName_ | " No XLAT for the Task.", "");
+         %This.debug("");
+         %This.debug("No XLAT for the Task!");
          Return "";
       End-If;
    Else
-      rem IoT instance NOT defined;
-      %This.LogRequest(&sMethodName_ | " No default IoT instance defined.", "");
+      rem TASK is blank;
+      %This.LogRequest(&sMethodName_ | " Task is BLANK.", "");
       %This.debug("");
-      %This.debug("No default IoT instance defined!");
+      %This.debug("Task is BLANK!");
       Return "";
    End-If;
-   
 end-method;
 
 /* 
@@ -167,14 +205,23 @@ method SubstituteURI
    /+ &sIoTOrgID_ as String +/
    /+ Returns String +/
    
-   Local string &sSubstitutedURI_;
+   Local string &sSubstitutedURI_, &sMethodName_;
+   &sMethodName_ = "JsonService:SubstituteURI";
+   
+   rem %This.LogRequest(&sMethodName_ | " URI before substitution : ", &sInputURI_);
+   rem %This.LogRequest(&sMethodName_ | " ORG ID : ", &sIoTOrgID_);
+   <* 
    If DBPatternMatch(&sInputURI_, &oConstantService_.IoTOrgPattern_, False) Then /* Case-insensitive pattern match */
       &sInputURI_ = Substitute(&sInputURI_, &oConstantService_.IoTOrgPattern_, &sIoTOrgID_);
       &sSubstitutedURI_ = &sInputURI_;
+      %This.LogRequest(&sMethodName_ | " DBPatternMatch TRUE : ", &sSubstitutedURI_);
    Else
       &sSubstitutedURI_ = "";
+      %This.LogRequest(&sMethodName_ | " DBPatternMatch FALSE : ", &sSubstitutedURI_);
    End-If;
-   
+   *>
+   &sSubstitutedURI_ = Substitute(&sInputURI_, &oConstantService_.IoTOrgPattern_, &sIoTOrgID_);
+   %This.LogRequest(&sMethodName_ | " Substituted URI : ", &sSubstitutedURI_);
    Return &sSubstitutedURI_;
 end-method;
 
@@ -190,7 +237,9 @@ method sendRequest
    
    Local string &sAuthInfo_, &sAuthHeader_, &sAuthEnc_, &sMethodName_;
    Local Message &oGenRspnsRESTMsg_, &oGenRqstRESTMsg_;
+   Local XmlDoc &oIBResponseXmlDoc_;
    &sMethodName_ = "JsonService:sendRequest";
+   
    &oGenRqstRESTMsg_ = CreateMessage(Operation.IB_GENERIC_REST_POST); /* Use the delivered IB REST POST SvOp */
    
    Local IBInfo &IBInfo_ = &oGenRqstRESTMsg_.IBInfo;
@@ -200,10 +249,10 @@ method sendRequest
    &IBInfo_.IBConnectorInfo.ConnectorName = "HTTPTARGET";
    
    REM Fetch UserID/Password from new config page. Password SHOULD have been encrypted with PSCipher;
-   REM Password would need to be decrypted;
    Local string &sUserID_, &sDecodedPassword_, &sPassword_;
-   SQLExec("SELECT USERID, password from " | Record.PSOPRDEFN | "WHERE 1 = 1", &sUserID_, &sPassword_);
-   &sDecodedPassword_ = %This.decodePassword(&sPassword_);
+   SQLExec("SELECT USERNAME, PASSWORD FROM PS_" | Record.AM_IOT_INSTANCE | " WHERE 1 = 1 AND DEFAULT_INSTANCE = 'Y'", &sUserID_, &sPassword_);
+   %This.PSCipher();
+   &sDecodedPassword_ = %This.decodePassword(&sPassword_); /* Decrypt the Password */
    %This.debug("");
    %This.debug("Decoded Password : " | &sDecodedPassword_);
    &sAuthInfo_ = &sUserID_ | ":" | &sDecodedPassword_; /* This should ideally be hidden */
@@ -259,12 +308,23 @@ method sendRequest
    try
       &oGenRspnsRESTMsg_ = %IntBroker.ConnectorRequest(&oGenRqstRESTMsg_, True); /* Response received from IoT */
       If &oGenRspnsRESTMsg_.ResponseStatus <> %IB_Status_Success Then
+         <* 
+         If &oGenRspnsRESTMsg_ <> Null Then
+            %This.parseErrorResponse(&oGenRspnsRESTMsg_.GetContentString());
+         End-If;
+         *>
          throw &oGenRspnsRESTMsg_.IBException;
       End-If;
    catch Exception &eIoT_
       %This.printConsole("ERROR: " | &eIoT_.ToString());
       %This.printConsole("");
+      <* 
+      &oIBResponseXmlDoc_ = &oGenRspnsRESTMsg_.GetXmlDoc();
+      %This.LogRequest(&sMethodName_ | " Exception: ", &oIBResponseXmlDoc_.GenFormattedXmlString());
+      %This.LogRequest(&sMethodName_ | " Node Value : ", &oIBResponseXmlDoc_.DocumentElement.GetElementsByTagName("StatusCode")[1].NodeValue);
+      *>
       %This.LogRequest(&sMethodName_ | " Exception Response: ", &oGenRspnsRESTMsg_.GetContentString());
+      %This.LogRequest(&sMethodName_ | " ERROR: ", &eIoT_.ToString());
       throw &eIoT_;
    end-try;
    
@@ -275,7 +335,12 @@ method sendRequest
    End-If;
    
    Local string &sMsgContent_ = &oGenRspnsRESTMsg_.GetContentString();
-   %This.LogRequest(&sMethodName_ | " Response: ", &sMsgContent_);
+   rem %This.LogRequest(&sMethodName_ | " Response: ", &sMsgContent_);
+   
+   &oPSCipher_ = Null;
+   &oString_ = Null;
+   &oHeader_ = Null;
+   &oEncoder_ = Null;
    
    If Len(&sMsgContent_) < 0 Then
       Return "";
@@ -366,7 +431,7 @@ method logPollSpanTime
    /+ &startTime_ as Time, +/
    /+ &endTime_ as Time +/
    
-   %This.LogRequest("JsonService.logPollSpanTime : Method : " | &sMethodName_ | " Poll Time (ms)  ", NumberToString("%6.3", Value(&endTime_ - &startTime_)));
+   %This.LogRequest("Method : " | &sMethodName_ | " Poll Time (ms)  ", NumberToString("%6.3", Value(&endTime_ - &startTime_)));
 end-method;
 
 method printConsole
@@ -381,7 +446,7 @@ end-method;
 method debug
    /+ &sText as String +/
    
-   If &bDebug Then
+   If &bDebug_ Then
       WriteToLog(%ApplicationLogFence_Error, &sText);
    End-If;
    
@@ -390,7 +455,79 @@ end-method;
 method cleanURI
    /+ &sInputURI_ as String +/
    /+ Returns String +/
+   
    Local string &sModURI_;
    
    Return &sModURI_;
+end-method;
+
+method appendStoredURLTrailingSlash_
+   /+ &url as String +/
+   /+ Returns String +/
+   
+   If Substring(&url, Len(&url), 1) <> "/" Then
+      &url = &url | "/";
+   End-If;
+   Return &url;
+end-method;
+
+method WaitForNSeconds
+   /+ &nSeconds_ as Number +/
+   
+   Local time &tCurTime_;
+   While AddToTime(&tCurTime_, 0, 0, &nSeconds_) > %Time
+      /* stay in loop */
+   End-While;
+   
+end-method;
+
+method parseErrorResponse
+   /+ &sJsonErrorPayload_ as String +/
+   
+   Local JsonObject &oJsonErr_;
+   Local string &sMethodName_;
+   &sMethodName_ = "JsonService:parseErrorResponse";
+   
+   &oJsonErr_ = %This.objJsonParser(&sJsonErrorPayload_);
+   If &oJsonErr_.IsExist("o:errorCode") Then
+      %This.LogRequest(&sMethodName_ | " IoT Error Code : ", String(&oJsonErr_.GetProperty("o:errorCode")));
+      %This.LogRequest(&sMethodName_ | " HTTP Status : ", String(&oJsonErr_.GetProperty("status")));
+      %This.LogRequest(&sMethodName_ | " Error Title : ", String(&oJsonErr_.GetProperty("title")));
+      %This.LogRequest(&sMethodName_ | " Error Detail : ", String(&oJsonErr_.GetProperty("detail")));
+   End-If;
+   
+end-method;
+
+method substituteMongoDBQry
+   /+ &sAppClassMethodName_ as String, +/
+   /+ &sParameter_ as String, +/
+   /+ &sSearchVal_ as String +/
+   /+ Returns String +/
+   
+   Local string &sModQueryString1_, &sModQueryString2_;
+   
+   &sModQueryString1_ = Substitute(&mongoDBQuerySyntax_, ":1", &sParameter_);
+   &sModQueryString2_ = Substitute(&sModQueryString1_, ":2", &sSearchVal_);
+   %This.LogRequest(&sAppClassMethodName_ | " MongoDB Syntax ", &sModQueryString2_);
+   
+   Return &sModQueryString2_;
+   
+end-method;
+
+method countIoTArtifacts
+   /+ &sAppClassMethodName_ as String, +/
+   /+ &oJSArtifact_ as JsonObject +/
+   /+ Returns Number +/
+   
+   Local number &nIoTArtifactCount_;
+   
+   If &oJSArtifact_.IsExist("count") Then
+      %This.LogRequest(&sAppClassMethodName_ | " IoT Artifact Count : ", String(&oJSArtifact_.GetProperty("count")));
+      &nIoTArtifactCount_ = &oJSArtifact_.GetProperty("count");
+      Return &nIoTArtifactCount_;
+   Else
+      Return 0;
+   End-If;
+   
+   Return 0;
 end-method;
