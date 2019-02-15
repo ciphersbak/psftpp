@@ -42,7 +42,7 @@ method fetchOrgs
       %This.sFetchAMOrgURI_ = &oJsonService_.fetchEndpoint("FETCH_ORG");
       If %This.sFetchAMOrgURI_ <> "" Then
          &sOrigFetchAMOrgURI_ = %This.sFetchAMOrgURI_;
-         %This.sFetchAMOrgURI_ = %This.sFetchAMOrgURI_ | %This.sFetchAMOrgURIQueryParams_; /* Add OrderBy */
+         %This.sFetchAMOrgURI_ = %This.sFetchAMOrgURI_ | %This.sFetchAMOrgURIQueryParams_; /* Add limit and offset */
          rem &sIoTResponse_ = &oJsonService_.sendRequest(&sIoTInstanceName_, %This.sFetchAMOrgURI_, "GET", "", False); /* Send the request to IoT */
          &sIoTResponse_ = &oJsonService_.sendRequest(%This.sFetchAMOrgURI_, "GET", "", False); /* Send the request to IoT */
       Else
@@ -65,24 +65,24 @@ method fetchOrgs
    
    &oJObjAMOrgFetch_ = &oJsonService_.objJsonParser(&sIoTResponse_);
    If &oJObjAMOrgFetch_.IsJsonArray(&oConstantService_.IoTResponseArray_) Then
-      &oJsonService_.LogRequest("Fetching IoT AM Orgs : ", "");
+      rem &oJsonService_.LogRequest("Fetching IoT AM Orgs : ", "");
       Local JsonArray &jArray_ = &oJObjAMOrgFetch_.GetJsonArray(&oConstantService_.IoTResponseArray_);
       If &jArray_.Size > 0 Then /* Read Array */
          &m_doccount_ = &jArray_.Length();
          For &i = 1 To &m_doccount_
             Local JsonObject &jObject_ = &jArray_.GetJsonObject(&i);
             If &jObject_.IsExist("id") Then
-               &oJsonService_.LogRequest(&oConstantService_.IoTOrgID_, String(&jObject_.GetProperty("id")));
+               rem &oJsonService_.LogRequest(&oConstantService_.IoTOrgID_, String(&jObject_.GetProperty("id")));
             End-If;
             If &jObject_.IsExist("name") Then
-               &oJsonService_.LogRequest(&oConstantService_.IoTOrgName_, String(&jObject_.GetProperty("name")));
+               rem &oJsonService_.LogRequest(&oConstantService_.IoTOrgName_, String(&jObject_.GetProperty("name")));
             End-If;
             If &jObject_.IsExist("system") Then
                rem &oJsonService_.LogRequest(&oConstantService_.IoTIncidentOrganisationID_, String(&jObject_.GetProperty("system")));
             End-If;
             Local boolean &bDescription_ = False;
             If &jObject_.IsExist("description") Then
-               &oJsonService_.LogRequest(&oConstantService_.IoTOrgDescription_, String(&jObject_.GetProperty("description")));
+               rem &oJsonService_.LogRequest(&oConstantService_.IoTOrgDescription_, String(&jObject_.GetProperty("description")));
                &bDescription_ = True;
             End-If;
             
@@ -93,7 +93,7 @@ method fetchOrgs
                   For &j = 1 To &m_doc_
                      Local JsonObject &jObjLinks_ = &ojObjLinksArray_.GetJsonObject(&j);
                      If &jObjLinks_.GetProperty("rel") = "self" Then
-                        &oJsonService_.LogRequest(&oConstantService_.IoTPlaceSelfLink_, String(&jObjLinks_.GetProperty("href")));
+                        rem &oJsonService_.LogRequest(&oConstantService_.IoTPlaceSelfLink_, String(&jObjLinks_.GetProperty("href")));
                      End-If;
                   End-For;
                End-If;
@@ -146,8 +146,7 @@ method fetchOrgByID
       %This.sFetchAMOrgURI_ = &oJsonService_.fetchEndpoint("FETCH_ORG");
       If %This.sFetchAMOrgURI_ <> "" Then
          &sOrigFetchAMOrgURI_ = %This.sFetchAMOrgURI_;
-         %This.sFetchAMOrgURI_ = %This.sFetchAMOrgURI_ | &sIoTOrganisationID_;
-         rem &sIoTResponse_ = &oJsonService_.sendRequest(&sIoTInstanceName_, %This.sFetchAMOrgURI_, "GET", "", False); /* Send the request to IoT */
+         %This.sFetchAMOrgURI_ = %This.sFetchAMOrgURI_ | "/" | &sIoTOrganisationID_;
          &sIoTResponse_ = &oJsonService_.sendRequest(%This.sFetchAMOrgURI_, "GET", "", False); /* Send the request to IoT */
       Else
          rem cannot fetch IoT Org By ID;
@@ -170,9 +169,9 @@ method fetchOrgByID
    &oJObjAMOrgFetch_ = &oJsonService_.objJsonParser(&sIoTResponse_);
    If &oJObjAMOrgFetch_.IsExist("id") Then
       &oJsonService_.LogRequest("Fetching IoT AM Org By ID : ", &sIoTOrganisationID_);
-      &oJsonService_.LogRequest(&oConstantService_.IoTOrgID_, String(&oJObjAMOrgFetch_.GetProperty("id")));
-      &oJsonService_.LogRequest(&oConstantService_.IoTOrgName_, String(&oJObjAMOrgFetch_.GetProperty("name")));
-      &oJsonService_.LogRequest(&oConstantService_.IoTOrgDescription_, String(&oJObjAMOrgFetch_.GetProperty("description")));
+      rem &oJsonService_.LogRequest(&oConstantService_.IoTOrgID_, String(&oJObjAMOrgFetch_.GetProperty("id")));
+      rem &oJsonService_.LogRequest(&oConstantService_.IoTOrgName_, String(&oJObjAMOrgFetch_.GetProperty("name")));
+      rem &oJsonService_.LogRequest(&oConstantService_.IoTOrgDescription_, String(&oJObjAMOrgFetch_.GetProperty("description")));
       
       If &oJObjAMOrgFetch_.IsExist("links") Then
          Local JsonArray &ojObjLinksArray_ = &oJObjAMOrgFetch_.GetJsonArray("links");
@@ -181,7 +180,7 @@ method fetchOrgByID
             For &j = 1 To &m_doc_
                Local JsonObject &jObjLinks_ = &ojObjLinksArray_.GetJsonObject(&j);
                If &jObjLinks_.GetProperty("rel") = "self" Then
-                  &oJsonService_.LogRequest(&oConstantService_.IoTPlaceSelfLink_, String(&jObjLinks_.GetProperty("href")));
+                  rem &oJsonService_.LogRequest(&oConstantService_.IoTPlaceSelfLink_, String(&jObjLinks_.GetProperty("href")));
                End-If;
             End-For;
          End-If;
