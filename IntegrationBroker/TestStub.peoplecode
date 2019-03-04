@@ -1,0 +1,142 @@
+import AM_IOT:*;
+import AM_IOT:JsonService;
+import AM_IOT:AMOrg;
+import AM_IOT:IntegrateAsset;
+import AM_IOT:AssetLocation;
+import AM_IOT:AssetType;
+import AM_IOT:AssetIncidents;
+import AM_IOT:AssetGroup;
+
+Local AM_IOT:JsonService &oJsonService_;
+Local AM_IOT:AMOrg &oIoTService_;
+Local AM_IOT:IntegrateAsset &oIoTAsset_;
+Local AM_IOT:AssetLocation &oIoTAssetPlaces_;
+Local AM_IOT:AssetType &oIoTAssetTypes_;
+Local AM_IOT:AssetIncidents &oIoTAssetIncidents_;
+Local AM_IOT:AssetGroup &oIoTAssetGroup_;
+
+Local boolean &bFetchOrg_, &bAsset_, &bPlaces_, &bAssetTypes_, &bIncidents_, &oIoTAssetDelete_, &bIncidentUpd_, &bIoTAssetGroup_;
+Local boolean &bAssetUpdate_;
+Local string &strPing_, &sIoTOrgID_, &sIoTIncidentID_;
+Local number &nAssetCount_, &nIoTPlacesCount_, &nIoTAssetGroupCount_, &nIoTAssetTypeCount_;
+
+&sIoTOrgID_ = "98602F93-E886-4427-80D5-89B94F360BC0";
+&sIoTIncidentID_ = "AE";
+
+If (None(&oJsonService_)) Then
+   &oJsonService_ = create AM_IOT:JsonService();
+End-If;
+
+If (None(&oIoTService_)) Then
+   &oIoTService_ = create AM_IOT:AMOrg();
+End-If;
+
+If (None(&oIoTAsset_)) Then
+   &oIoTAsset_ = create AM_IOT:IntegrateAsset();
+End-If;
+
+If (None(&oIoTAssetPlaces_)) Then
+   &oIoTAssetPlaces_ = create AM_IOT:AssetLocation();
+End-If;
+
+If (None(&oIoTAssetTypes_)) Then
+   &oIoTAssetTypes_ = create AM_IOT:AssetType();
+End-If;
+
+If (None(&oIoTAssetIncidents_)) Then
+   &oIoTAssetIncidents_ = create AM_IOT:AssetIncidents();
+End-If;
+
+If (None(&oIoTAssetGroup_)) Then
+   &oIoTAssetGroup_ = create AM_IOT:AssetGroup();
+End-If;
+
+&strPing_ = &oJsonService_.Ping();
+If (&strPing_ = "Up") Then
+   &bFetchOrg_ = &oIoTService_.fetchOrgs();
+   If Not &bFetchOrg_ Then
+      MessageBox(0, "", 0, 0, "Org Fetch failed");
+   Else
+      MessageBox(0, "", 0, 0, "Fetched Orgs");
+   End-If;
+   &bAsset_ = &oIoTAsset_.fetchAssets(&sIoTOrgID_);
+   If Not &bAsset_ Then
+      MessageBox(0, "", 0, 0, "Asset Fetch failed");
+   Else
+      MessageBox(0, "", 0, 0, "Fetched Assets");
+   End-If;
+   &bPlaces_ = &oIoTAssetPlaces_.fetchLocations(&sIoTOrgID_);
+   If Not &bPlaces_ Then
+      MessageBox(0, "", 0, 0, "Places Fetch failed");
+   Else
+      MessageBox(0, "", 0, 0, "Fetched Places");
+   End-If;
+   &bAssetTypes_ = &oIoTAssetTypes_.fetchAssetTypes(&sIoTOrgID_);
+   If Not &bAssetTypes_ Then
+      MessageBox(0, "", 0, 0, "Asset Types Fetch failed");
+   Else
+      MessageBox(0, "", 0, 0, "Fetched Asset Types");
+   End-If;
+   &bIoTAssetGroup_ = &oIoTAssetGroup_.fetchAssetGroups(&sIoTOrgID_);
+   If Not &bIoTAssetGroup_ Then
+      MessageBox(0, "", 0, 0, "Asset Group Fetch failed");
+   Else
+      MessageBox(0, "", 0, 0, "Fetched Asset Groups");
+   End-If;
+   &bIncidents_ = &oIoTAssetIncidents_.fetchIncidents(&sIoTOrgID_);
+   If Not &bIncidents_ Then
+      MessageBox(0, "", 0, 0, "Incidents Fetch failed");
+   Else
+      MessageBox(0, "", 0, 0, "Fetched Incidents");
+   End-If;
+   If Not &oIoTAsset_.createAsset(&sIoTOrgID_, "PSUS001PPASSET002", "RunwaySweepingAssetType", "PPs Asset", "ACMEInternationalAirport") Then
+      MessageBox(0, "", 0, 0, "Asset Create failed");
+   Else
+      MessageBox(0, "", 0, 0, "Asset Created successfully");
+   End-If;
+   &bAssetUpdate_ = &oIoTAsset_.updateAsset(&sIoTOrgID_, "PSUS001PPASSET002", "ACMEInternationalAirport");
+   If Not &bAssetUpdate_ Then
+      MessageBox(0, "", 0, 0, "Asset Update failed");
+   Else
+      MessageBox(0, "", 0, 0, "Asset Updated Successfully");
+   End-If;
+   /* 
+   If Not &oIoTAsset_.deleteAsset(&sIoTOrgID_, "PSUS001PPASSET001") Then
+      MessageBox(0, "", 0, 0, "Asset DELETE failed");
+   Else
+      MessageBox(0, "", 0, 0, "Asset DELETED successfully");
+   End-If;
+   */
+   &bIncidentUpd_ = &oIoTAssetIncidents_.updateIncident(&sIoTOrgID_, &sIoTIncidentID_);
+   If Not &bIncidentUpd_ Then
+      MessageBox(0, "", 0, 0, "Incident Update failed ");
+   Else
+      MessageBox(0, "", 0, 0, "Incident Updated Successfully ");
+   End-If;
+   &nAssetCount_ = &oIoTAsset_.countPSAssets(&sIoTOrgID_, "", "");
+   If &nAssetCount_ = 0 Then
+      MessageBox(0, "", 0, 0, "NO PS Assets Exist ");
+   Else
+      MessageBox(0, "", 0, 0, "PS Asset Count : " | Int(&nAssetCount_));
+   End-If;
+   &nIoTPlacesCount_ = &oIoTAssetPlaces_.countLocations(&sIoTOrgID_, "", "");
+   If &nIoTPlacesCount_ = 0 Then
+      MessageBox(0, "", 0, 0, "NO IoT Places Exist ");
+   Else
+      MessageBox(0, "", 0, 0, "IoT Places Count : " | Int(&nIoTPlacesCount_));
+   End-If;
+   &nIoTAssetGroupCount_ = &oIoTAssetGroup_.countAssetGroups(&sIoTOrgID_, "", "");
+   If &nIoTAssetGroupCount_ = 0 Then
+      MessageBox(0, "", 0, 0, "NO IoT Asset Groups Exist ");
+   Else
+      MessageBox(0, "", 0, 0, "IoT Asset Group Count : " | Int(&nIoTAssetGroupCount_));
+   End-If;
+   &nIoTAssetTypeCount_ = &oIoTAssetTypes_.countIoTAssetTypes(&sIoTOrgID_, "", "");
+   If &nIoTAssetTypeCount_ = 0 Then
+      MessageBox(0, "", 0, 0, "NO IoT Asset Types Exist ");
+   Else
+      MessageBox(0, "", 0, 0, "IoT Asset Type Count : " | Int(&nIoTAssetTypeCount_));
+   End-If;
+Else
+   MessageBox(0, "", 0, 0, "IoT Instance is DOWN!");
+End-If;
