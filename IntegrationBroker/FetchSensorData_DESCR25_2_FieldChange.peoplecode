@@ -1,0 +1,58 @@
+REM Enable IoT Push for Runway Sweeping Asset Type;
+REM Refresh Sensor Table;
+Local Rowset &RS_LEVEL0_, &l_Rowset_, &RS_Level1_;
+Local Row &RowLevel0_;
+Local Record &recWrk_, &Rec_Level1_, &recPP_DR_REC_;
+Local integer &pp, &recCnt_;
+Local string &sIoTDeviceID_, &sDeviceID_;
+Local SQL &sqlCursor_;
+
+&RS_LEVEL0_ = GetLevel0();
+&RowLevel0_ = &RS_LEVEL0_.GetRow(1);
+&recPP_DR_REC_ = &RS_LEVEL0_.GetRow(1).GetRecord(Record.X_PP_DEV_WRK_X);
+&RS_Level1_ = &RowLevel0_.GetRowset(Scroll.PP_AMIOT_MSGTBL);
+&Rec_Level1_ = &RS_Level1_.GetRow(1).GetRecord(Record.PP_AMIOT_MSGTBL);
+&RS_Level1_.Flush();
+<* 
+&sqlCursor_ = CreateSQL("SELECT DISTINCT DESCR254_1 FROM %Table(PP_AMIOT_MSGTBL)");
+Evaluate &sqlCursor_.Status
+When = %SQLStatus_OK
+   While (&sqlCursor_.Fetch(&sIoTDeviceID_))
+      &RANGE_SEQ.AddDropDownItem(1, &sIoTDeviceID_);
+   End-While;
+   Break;
+When = %SQLStatus_NotFound
+   Error ("Not Found");
+   Break;
+When = %SQLStatus_Duplicate
+   Error ("Duplicate");
+   Break;
+End-Evaluate;
+*>
+&l_Rowset_ = CreateRowset(Record.PP_AMIOT_MSGTBL);
+&l_Rowset_.Flush();
+If All(&sDeviceID_) Then
+   &l_Rowset_.Fill("WHERE 1 = 1 AND DESCR254 = :1 ", &sDeviceID_);
+Else
+   &l_Rowset_.Fill("WHERE 1 = 1");
+   &l_Rowset_.Sort(PP_AMIOT_MSGTBL.DESCR254_1, "A");
+End-If;
+
+&recCnt_ = 1;
+For &pp = 1 To &l_Rowset_.ActiveRowCount
+   If &recCnt_ <> 1 Then
+      &RS_Level1_.InsertRow(&recCnt_ - 1);
+   End-If;
+   &recWrk_ = &l_Rowset_.GetRow(&pp).GetRecord(Record.PP_AMIOT_MSGTBL);
+   &Rec_Level1_ = &RS_Level1_.GetRow(&recCnt_).GetRecord(Record.PP_AMIOT_MSGTBL);
+   &Rec_Level1_.DESCR200.Value = &recWrk_.DESCR200.Value;
+   &Rec_Level1_.DESCR254.Value = &recWrk_.DESCR254.Value;
+   &Rec_Level1_.DESCR254_1.Value = &recWrk_.DESCR254_1.Value;
+   &Rec_Level1_.DESCR254B.Value = &recWrk_.DESCR254B.Value;
+   &Rec_Level1_.DESCR254_FROM.Value = &recWrk_.DESCR254_FROM.Value;
+   &Rec_Level1_.DESCR254_IN.Value = &recWrk_.DESCR254_IN.Value;
+   &Rec_Level1_.DESCR254_MIXED.Value = &recWrk_.DESCR254_MIXED.Value;
+   &Rec_Level1_.DESCR254_MIXED2.Value = &recWrk_.DESCR254_MIXED2.Value;
+   &Rec_Level1_.DESCR254_TO.Value = &recWrk_.DESCR254_TO.Value;
+   &recCnt_ = &recCnt_ + 1
+End-For;
