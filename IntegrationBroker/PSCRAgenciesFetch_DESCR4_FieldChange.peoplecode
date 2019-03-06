@@ -1,0 +1,145 @@
+REM Fetch Assets from IoT and store in PS;
+import PPIOTSERVICE:PPIoTService;
+
+Local string &sIOTAssetEndPoint_, &sAssetURI_, &sAssetURIFields_, &sAuthInfo_, &sAuthEnc_, &sAuthHeader_, &sFilePath_, &sFileString_, &sFileColHeading_;
+Local File &oLogFile_;
+Local Message &oGenRqstRESTMsg_, &oGenRspnsRESTMsg_;
+Local IBInfo &IBInfo_;
+Local boolean &bRet;
+Local object &oString_, &oEncoder_;
+Local Rowset &RS_LEVEL0_, &RS_Level1_, &RS_Level1;
+Local Record &recPP_DR_REC_, &Rec_Level1, &Rec_Level11;
+Local Row &RowLevel0;
+Local Grid &GRID_;
+Local GridColumn &GRIDCOL_;
+Local number &rec;
+
+&sFilePath_ = "C:\Temp\PSCRAgencies1_" | %PerfTime | ".csv";
+If FileExists(&sFilePath_, %FilePath_Absolute) Then
+   &oLogFile_ = GetFile(&sFilePath_, "A", "", %FilePath_Absolute);
+   rem &sFileString_ = &sFileString_;
+Else
+   &oLogFile_ = GetFile(&sFilePath_, "W", %FilePath_Absolute);
+   rem &sFileString_ = "";
+End-If;
+
+If None(&oLogObj_) Then
+   &oLogObj_ = create PPIOTSERVICE:PPIoTService();
+End-If;
+
+rem &sIOTAssetEndPoint_ = "https://slc16lnq.us.oracle.com/assetMonitoring/clientapi/v2/assets"; /* REST endpoint for fetching assets */
+&sIOTAssetEndPoint_ = "https://fuscdrmsmc255-fa-ext.us.oracle.com:443/fscmRestApi/resources/11.13.18.05/publicSectorAgencies"; /* REST endpoint for fetching assets */
+&sAssetURIFields_ = "?fields=id,name,type,description,geoLocation,assignedPlace,attributes,lastReportedTimeAsString&limit=1000&orderBy='lastReportedTimeAsString' desc";
+rem &sAssetURI_ = &sIOTAssetEndPoint_ | &sAssetURIFields_;
+&sAssetURI_ = &sIOTAssetEndPoint_;
+&oGenRqstRESTMsg_ = CreateMessage(Operation.IB_GENERIC_REST_POST); /* Use the delivered IB REST POST SvOp */
+
+&IBInfo_ = &oGenRqstRESTMsg_.IBInfo;
+&bRet = &IBInfo_.LoadConnectorProp("HTTPTARGET");
+&IBInfo_.ConnectorOverride = True;
+&IBInfo_.IBConnectorInfo.ConnectorClassName = "HttpTargetConnector";
+&IBInfo_.IBConnectorInfo.ConnectorName = "HTTPTARGET";
+&sAuthInfo_ = "SYSTEM_ADMIN:Welcome1"; /* This should ideally be hidden */
+&oString_ = CreateJavaObject("java.lang.String", &sAuthInfo_);
+&oEncoder_ = CreateJavaObject("sun.misc.BASE64Encoder");
+&sAuthEnc_ = &oEncoder_.encodeBuffer(&oString_.getBytes());
+&sAuthHeader_ = &sAuthEnc_;
+&bRet = &IBInfo_.IBConnectorInfo.AddConnectorProperties("Authorization", "Basic " | &sAuthHeader_, %HttpHeader); /* V IMP */
+&bRet = &IBInfo_.IBConnectorInfo.AddConnectorProperties("Content-Type", "application/json; encoding=""UTF-8""", %HttpHeader);
+&bRet = &IBInfo_.IBConnectorInfo.DeleteConnectorProperties("URL");
+&bRet = &IBInfo_.IBConnectorInfo.AddConnectorProperties("URL", &sAssetURI_, %HttpProperty);
+&bRet = &IBInfo_.IBConnectorInfo.DeleteConnectorProperties("Method");
+&bRet = &IBInfo_.IBConnectorInfo.AddConnectorProperties("Method", "GET", %HttpProperty); /* Change this based on HTTP Verbs */
+
+
+try
+   &startTime_ = %PerfTime;
+   &oGenRspnsRESTMsg_ = %IntBroker.ConnectorRequest(&oGenRqstRESTMsg_, True); /* Response received from IoT */
+   If &oGenRspnsRESTMsg_.ResponseStatus <> %IB_Status_Success Then
+      MessageBox(0, "", 0, 0, "GET Failed");
+   Else
+      &endTime_ = %PerfTime;
+      &timeDiff_ = NumberToString("%6.3", Value(&endTime_ - &startTime_));
+      Local string &content_ = &oGenRspnsRESTMsg_.GetContentString();
+      Local JsonParser &parser_ = CreateJsonParser(); /* Parse the reponse */
+      Local boolean &status_ = &parser_.Parse(&content_);
+      Local JsonObject &jObj_ = &parser_.GetRootObject();
+      Local number &bbbnbr_ = &jObj_.GetChildCount();
+      Local integer &i, &j, &m_doccount_, &m_doc_;
+      
+      rem MessageBox(0, "", 0, 0, "Parse JSON and store asset information");
+      &sFileColHeading_ = "IOT_ASSET_ID" | "," | "ASSET_NAME" | "," | "ASSET_TYPE" | "," | "ASSET_DESCRIPTION" | "," | "ASSET_GEOLOCATION" | "," | "ASSET_LASTRPTDDTTM" | "," | "ASSET_ASSIGNED_PLACE" | "," | "ASSET_DEVICE_ID" | "," | "ASSET_SELF_LINK";
+      &oLogObj_.LogRequest("START", "");
+      &oLogFile_.WriteLine(&sFileColHeading_);
+      <* For 1 Agency ONLY
+      If &jObj_.IsExist("AgencyId") Then
+         &oLogObj_.LogRequest("AgencyId ", String(&jObj_.GetProperty("AgencyId")));
+         &oLogObj_.LogRequest("AgencyName ", String(&jObj_.GetProperty("AgencyName")));
+         If &jObj_.IsExist("links") Then
+            Local JsonArray &ojObjLinksArray1_ = &jObj_.GetJsonArray("links");
+            If &ojObjLinksArray1_.Size > 0 Then /* Read Array */
+               &m_doc_ = &ojObjLinksArray1_.Length();
+               For &j = 1 To &m_doc_
+                  Local JsonObject &jObjLinks1_ = &ojObjLinksArray1_.GetJsonObject(&j);
+                  If &jObjLinks1_.GetProperty("rel") = "canonical" Then
+                     &oLogObj_.LogRequest("Agency Self Link : ", String(&jObjLinks1_.GetProperty("href")));
+                     rem &sFileString_ = &sFileString_ | "," | &jObjLinks_.GetProperty("href");
+                  End-If;
+               End-For;
+            End-If;
+         End-If;
+      End-If;
+      *>
+      REM For Multiple Agencies ONLY;
+      If &jObj_.IsExist("items") Then
+         If &jObj_.IsJsonArray("items") Then
+            Local JsonArray &jArray_ = &jObj_.GetJsonArray("items");
+            If &jArray_.Size > 0 Then /* Read Array */
+               &m_doccount_ = &jArray_.Length();
+               For &i = 1 To &m_doccount_
+                  Local JsonObject &jObject_ = &jArray_.GetJsonObject(&i);
+                  rem &oLogObj_.LogRequest("Agency ID : ", String(&jObject_.GetProperty("AgencyId")));
+                  rem &oLogObj_.LogRequest("Agency Name : ", String(&jObject_.GetProperty("AgencyName")));
+                  rem MessageBox(0, "", 0, 0, "ChildCount ITEMS " | &jObject_.ChildCount);
+                  For &nItemsChiildCnt_ = 1 To &jObject_.ChildCount
+                     &oLogObj_.LogRequest("Item Child : ", "Property (Key : Value) (" | &jObject_.GetPropertyNameAt(&nItemsChiildCnt_) | " : " | &jObject_.GetProperty(&jObject_.GetPropertyNameAt(&nItemsChiildCnt_)) | ")");
+                     If &jObject_.IsJsonArray(&jObject_.GetPropertyNameAt(&nItemsChiildCnt_)) Then
+                        Local JsonArray &ojObjPayloadArray_ = &jObject_.GetJsonArray(&jObject_.GetPropertyNameAt(&nItemsChiildCnt_));
+                        If &ojObjPayloadArray_.Size > 0 Then
+                           &nArrLen_ = &ojObjPayloadArray_.Length();
+                           For &nArrCount_ = 1 To &nArrLen_
+                              rem Local JsonObject &jObjPayloadArrObj_ = &ojObjPayloadArray_.GetJsonObject(&nArrCount_);
+                              rem &oLogObj_.LogRequest("Link Child : ", "Property (Key : Value) (" | &jObjPayloadArrObj_.GetPropertyNameAt(&nArrCount_) | " : " | &jObjPayloadArrObj_.GetProperty(&jObject_.GetPropertyNameAt(&nArrCount_)) | ")");
+                              &oLogObj_.LogRequest("Inside Some JsonArray(s) : ", String(&ojObjPayloadArray_.GetElement(&nArrCount_)));
+                           End-For;
+                        End-If;
+                     End-If;
+                  End-For;
+                  
+                  If &jObject_.IsExist("links") Then
+                     Local JsonArray &ojObjLinksArray1_ = &jObject_.GetJsonArray("links");
+                     If &ojObjLinksArray1_.Size > 0 Then /* Read Array */
+                        &m_doc_ = &ojObjLinksArray1_.Length();
+                        For &j = 1 To &m_doc_
+                           Local JsonObject &jObjLinks1_ = &ojObjLinksArray1_.GetJsonObject(&j);
+                           If &jObjLinks1_.GetProperty("rel") = "canonical" Then
+                              &oLogObj_.LogRequest("Agency Self Link : ", String(&jObjLinks1_.GetProperty("href")));
+                              &oLogObj_.LogRequest("Name : ", String(&jObjLinks1_.GetProperty("name")));
+                              rem &sFileString_ = &sFileString_ | "," | &jObjLinks_.GetProperty("href");
+                           End-If;
+                        End-For;
+                     End-If;
+                  End-If;
+               End-For;
+            End-If;
+            rem &oLogFile_.WriteLine(&sFileString_);
+         End-If;
+      End-If;
+   End-If;
+   
+catch Exception &e
+   &fileListXmlDoc_ = &oGenRspnsRESTMsg_.GetXmlDoc();
+   MessageBox(0, "", 0, 0, "Exception: " | &fileListXmlDoc_.GenFormattedXmlString());
+   MessageBox(0, "", 0, 0, "Node Value : " | &fileListXmlDoc_.DocumentElement.GetElementsByTagName("data")[1].GetCDataValue());
+   throw &e;
+end-try;
