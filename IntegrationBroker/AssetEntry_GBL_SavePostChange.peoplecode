@@ -1,0 +1,263 @@
+REM PP START;
+Local string &iotAssetName_ = GetLevel0().GetRow(1).ASSET.BUSINESS_UNIT.Value | GetLevel0().GetRow(1).ASSET.ASSET_ID.Value;
+Local string &filePath_ = "C:\Temp\PSIoTLog_" | %Datetime | ".out";
+Local File &logFile_ = GetFile(&filePath_, "W", %FilePath_Absolute);
+rem Local string &svcURL_ = "https://slc16lnq.us.oracle.com/assetMonitoring/clientapi/v2/assets"; /* REST endpoint for creating assets */
+Local string &svcURL_ = "https://slc15dmc.us.oracle.com/assetMonitoring/clientapi/v2/assets"; /* REST endpoint for creating assets */
+
+Local string &sDeviceModel_ = "urn:oracle:runway:sweeper:machine:data";
+Local string &sDeviceID_ = "93B14F7D-9505-478E-8876-0B7A0B50B1CD";
+Local string &sFormat_ = "urn:oracle:runway:sweeper:machine:data:attributes";
+Local string &sDefaultOrg_ = "ORA_DEFAULT_ORG";
+
+If %Mode = "A" Then /* Create new ASSET in IoT */
+   <* 
+   REM This is for basic/generic Asset;
+   Local JsonBuilder &jsonbldr_ = CreateJsonBuilder(); /* Create Payload */
+   If &jsonbldr_.StartObjectReturnsTrue("") Then
+      &jsonbldr_.AddProperty("name", &iotAssetName_);
+      &jsonbldr_.AddProperty("type", "RunwaySweepingAssetType"); /* Asset Type predefined in IoT */
+      &effdtm_ = %Datetime;
+      &date_ = DateTimeToISO(&effdtm_);
+      &jsonbldr_.AddProperty("description", "Vanguard Runway Sweeping Machine");
+      &jsonbldr_.AddProperty("geoLocation", "13.196859665896742, 77.70419643159327"); /* Hardcoded to make it work with DS example */
+      &jsonbldr_.AddProperty("assignedPlaceName", "ACMEInternationalAirport"); /* Assigned Place predefined as part of imported project in DS */
+      &jsonbldr_.AddProperty("eamId", &iotAssetName_); /* eamId is the External Asset ID */
+      If &jsonbldr_.StartArrayReturnsTrue("tags") Then
+         &assetTag_ = "Vanguard TAG";
+         &jsonbldr_.AddElement(&assetTag_);
+         &jsonbldr_.EndArray("tags");
+      End-If;
+      REM Asset Location predefined in IoT;
+      /* 
+      If &jsonbldr_.StartArrayReturnsTrue("storagePlaces") Then
+         &assetLocation_ = "Bangalore 1";
+         &jsonbldr_.AddElement(&assetLocation_);
+         &jsonbldr_.EndArray("storagePlaces");
+      End-If;
+      */
+      If &jsonbldr_.StartArrayReturnsTrue("groupNames") Then
+         REM Asset Group predefined in IoT;
+         &assetGroup_ = "Movable Assets";
+         &jsonbldr_.AddElement(&assetGroup_);
+         &jsonbldr_.EndArray("groupNames");
+      End-If;
+      &jsonbldr_.AddProperty("organizationId", &sDefaultOrg_);
+      &jsonbldr_.EndObject("");
+   End-If;
+   *>
+   /************** 
+    PP Commented on 16Nov2018 for 18.4.1 as the Device model association now happens at Asset level, 
+    so you can create an Asset Type with Sensor Attributes, then create an Asset, 
+    where you map Device model attribute to each sensor attribute.
+   ***************/
+   Local JsonBuilder &jsonbldr_ = CreateJsonBuilder(); /* Create Payload. This is for Device Simulator */
+   If &jsonbldr_.StartObjectReturnsTrue("") Then
+      &jsonbldr_.AddProperty("name", &iotAssetName_);
+      &jsonbldr_.AddProperty("type", "RunwaySweepingAssetType"); /* Asset Type predefined in IoT */
+      &effdtm_ = %Datetime;
+      &date_ = DateTimeToISO(&effdtm_);
+      &jsonbldr_.AddProperty("description", "Vanguard Runway Sweeping Machine");
+      &jsonbldr_.AddProperty("geoLocation", "13.196859665896742, 77.70419643159327"); /* Hardcoded to make it work with DS example */
+      &jsonbldr_.AddProperty("assignedPlaceName", "ACMEInternationalAirport"); /* Assigned Place predefined as part of imported project in DS */
+      &jsonbldr_.AddProperty("eamId", &iotAssetName_); /* eamId is the External Asset ID */
+      If &jsonbldr_.StartArrayReturnsTrue("tags") Then
+         &assetTag_ = "Vanguard TAG";
+         &jsonbldr_.AddElement(&assetTag_);
+         &jsonbldr_.EndArray("tags");
+      End-If;
+      REM This works for IoT 18.3.x;
+      /* 
+      If &jsonbldr_.StartArrayReturnsTrue("attributes") Then REM Device ID should be unique and should not be tagged to an existing asset;
+         &jsonbldr_.StartObject("attributes");
+         rem &jsonbldr_.AddElement("RunwaySweepingAssetTypeDM");
+         rem &jsonbldr_.AddElement("11DD08B2-7367-4E22-BE00-05F915660A23");
+         &jsonbldr_.AddProperty("name", "RunwaySweepingAssetTypeDM");
+         rem &jsonbldr_.AddProperty("value", "11DD08B2-7367-4E22-BE00-05F915660A23");
+         rem &jsonbldr_.AddProperty("value", "5EDED56C-33FC-4CF2-AC1C-2B24F052805C");
+         rem &jsonbldr_.AddProperty("value", "1852BDA9-59C5-4953-886A-F0A51F55F116");
+         rem &jsonbldr_.AddProperty("value", "856C9DAE-D6EB-4AFB-8D81-29DA7E3D35BE");
+         &jsonbldr_.AddProperty("value", "3E67902D-0EA5-42CF-812C-A752FA77F8DA");
+         &jsonbldr_.EndObject("attributes");
+         &jsonbldr_.EndArray("attributes");
+      End-If;
+      */
+      
+      REM For Device ID (GET) https://slc15dmc.us.oracle.com/iot/api/v2/devices/93B14F7D-9505-478E-8876-0B7A0B50B1CD;
+      REM Read name, type, enabled (true), state (ACTIVATED);
+      REM deviceModels[array];
+      REM urn, name, description, attributes[array];
+      REM Loop through attributes[array] for alias, description, name, type;
+      REM For JSON Request, attributes[array] consists of name, value;
+      REM Set name = attributes[array].alias;
+      REM Set value - device = real, deviceId = 93B14F7D-9505-478E-8876-0B7A0B50B1CD, deviceModel = urn, field = attributes[array].name;
+      
+      REM PP Added 15Nov2018 for supporting IoT 18.4.1 START;
+      If &jsonbldr_.StartArrayReturnsTrue("attributes") Then
+         &jsonbldr_.StartObject("attributes");
+         
+         REM For each attribute of the Device;
+         &jsonbldr_.AddProperty("name", "engineTemperature");
+         &jsonbldr_.StartObject("value");
+         &jsonbldr_.AddProperty("device", "real");
+         &jsonbldr_.AddProperty("deviceId", &sDeviceID_);
+         &jsonbldr_.AddProperty("deviceModel", &sDeviceModel_);
+         rem &jsonbldr_.AddProperty("format", &sFormat_);
+         &jsonbldr_.AddProperty("field", "engineTemp");
+         &jsonbldr_.EndObject("value");
+         &jsonbldr_.EndObject("attributes");
+         
+         &jsonbldr_.StartObject("attributes");
+         &jsonbldr_.AddProperty("name", "engineVibrations");
+         &jsonbldr_.StartObject("value");
+         &jsonbldr_.AddProperty("device", "real");
+         &jsonbldr_.AddProperty("deviceId", &sDeviceID_);
+         &jsonbldr_.AddProperty("deviceModel", &sDeviceModel_);
+         rem &jsonbldr_.AddProperty("format", &sFormat_);
+         &jsonbldr_.AddProperty("field", "engineVibration");
+         &jsonbldr_.EndObject("value");
+         &jsonbldr_.EndObject("attributes");
+         
+         &jsonbldr_.StartObject("attributes");
+         &jsonbldr_.AddProperty("name", "fuelLevels");
+         &jsonbldr_.StartObject("value");
+         &jsonbldr_.AddProperty("device", "real");
+         &jsonbldr_.AddProperty("deviceId", &sDeviceID_);
+         &jsonbldr_.AddProperty("deviceModel", &sDeviceModel_);
+         rem &jsonbldr_.AddProperty("format", &sFormat_);
+         &jsonbldr_.AddProperty("field", "fuelLevel");
+         &jsonbldr_.EndObject("value");
+         &jsonbldr_.EndObject("attributes");
+         
+         &jsonbldr_.StartObject("attributes");
+         &jsonbldr_.AddProperty("name", "engineOilPressure");
+         &jsonbldr_.StartObject("value");
+         &jsonbldr_.AddProperty("device", "real");
+         &jsonbldr_.AddProperty("deviceId", &sDeviceID_);
+         &jsonbldr_.AddProperty("deviceModel", &sDeviceModel_);
+         rem &jsonbldr_.AddProperty("format", &sFormat_);
+         &jsonbldr_.AddProperty("field", "engineOilPressure");
+         &jsonbldr_.EndObject("value");
+         &jsonbldr_.EndObject("attributes");
+         
+         &jsonbldr_.StartObject("attributes");
+         &jsonbldr_.AddProperty("name", "speed");
+         &jsonbldr_.StartObject("value");
+         &jsonbldr_.AddProperty("device", "real");
+         &jsonbldr_.AddProperty("deviceId", &sDeviceID_);
+         &jsonbldr_.AddProperty("deviceModel", &sDeviceModel_);
+         rem &jsonbldr_.AddProperty("format", &sFormat_);
+         &jsonbldr_.AddProperty("field", "speed");
+         &jsonbldr_.EndObject("value");
+         &jsonbldr_.EndObject("attributes");
+         
+         &jsonbldr_.StartObject("attributes");
+         &jsonbldr_.AddProperty("name", "hydraulicPressure");
+         &jsonbldr_.StartObject("value");
+         &jsonbldr_.AddProperty("device", "real");
+         &jsonbldr_.AddProperty("deviceId", &sDeviceID_);
+         &jsonbldr_.AddProperty("deviceModel", &sDeviceModel_);
+         rem &jsonbldr_.AddProperty("format", &sFormat_);
+         &jsonbldr_.AddProperty("field", "hydraulicPressure");
+         &jsonbldr_.EndObject("value");
+         &jsonbldr_.EndObject("attributes");
+         
+         rem &jsonbldr_.EndObject("attributes");
+         &jsonbldr_.EndArray("attributes");
+      End-If;
+      
+      &jsonbldr_.AddProperty("organizationId", &sDefaultOrg_);
+      REM Add Default Org;
+      REM PP Addedd 15Nov2018 for supporting IoT 18.4.1 END;
+      &jsonbldr_.EndObject("");
+   End-If;
+   
+   &SomeJSONStr_ = &jsonbldr_.ToString();
+   rem MessageBox(0, "", 0, 0, "" | &SomeJSONStr_);
+   If &logFile_.IsOpen Then
+      &logFile_.WriteLine("---------" | "Request : " | %Datetime | "---------");
+      &logFile_.WriteLine(&SomeJSONStr_);
+      &logFile_.WriteLine("---------" | "---------");
+   End-If;
+   
+   Local Message &MSG = CreateMessage(Operation.IB_GENERIC_REST_POST); /* Use the delivered IB REST POST SvOp */
+   Local boolean &bRet_ = &MSG.SetContentString(&jsonbldr_.ToString()); /* Assign the JSON String to the Request Message */
+   Local IBInfo &info = &MSG.IBInfo;
+   Local boolean &bRet;
+   &bRet = &info.LoadConnectorProp("HTTPTARGET");
+   &info.ConnectorOverride = True;
+   &info.IBConnectorInfo.ConnectorClassName = "HttpTargetConnector";
+   &info.IBConnectorInfo.ConnectorName = "HTTPTARGET";
+   Local string &authinfo = "iot:welcome1"; /* This should ideally be hidden */
+   Local object &oString = CreateJavaObject("java.lang.String", &authinfo);
+   Local object &oEncoder = CreateJavaObject("sun.misc.BASE64Encoder");
+   Local string &authenc = &oEncoder.encodeBuffer(&oString.getBytes());
+   Local string &authheader = &authenc;
+   rem Local object &header = CreateJavaObject("java.lang.String", &authinfo);
+   rem Local object &oEncoder = CreateJavaObject("com.peoplesoft.tools.util.Base64");
+   rem Local string &authenc = &oEncoder.encode(&header.getBytes("UTF8"));
+   rem &authenc = "Basic " | &authenc;
+   &bRet = &info.IBConnectorInfo.AddConnectorProperties("Authorization", "Basic " | &authheader, %HttpHeader); /* V IMP */
+   rem &bRet = &info.IBConnectorInfo.AddConnectorProperties("SearchUser", %UserId, %HttpHeader);
+   &bRet = &info.IBConnectorInfo.AddConnectorProperties("Content-Type", "application/json; encoding=""UTF-8""", %HttpHeader);
+   &bRet = &info.IBConnectorInfo.DeleteConnectorProperties("URL");
+   &bRet = &info.IBConnectorInfo.AddConnectorProperties("URL", &svcURL_, %HttpProperty);
+   &bRet = &info.IBConnectorInfo.DeleteConnectorProperties("Method");
+   &bRet = &info.IBConnectorInfo.AddConnectorProperties("Method", "POST", %HttpProperty); /* Change this based on HTTP Verbs */
+   
+   try
+      Local Message &reponse_message = %IntBroker.ConnectorRequest(&MSG, True); /* Response received from IoT */
+      If &reponse_message.ResponseStatus <> %IB_Status_Success Then
+         If &logFile_.IsOpen Then
+            REM write to file;
+            &logFile_.WriteLine("---------" | "Error : " | %Datetime | "---------");
+            &logFile_.WriteLine(&reponse_message.GetContentString());
+            &logFile_.WriteLine("---------" | "---------");
+         End-If;
+         throw &reponse_message.IBException;
+      Else
+         
+         Local string &content_ = &reponse_message.GetContentString();
+         If &logFile_.IsOpen Then
+            &logFile_.WriteLine("---------" | "Response : " | %Datetime | "---------");
+            &logFile_.WriteLine(&content_);
+            &logFile_.WriteLine("---------" | "---------");
+         End-If;
+         rem MessageBox(0, "", 0, 0, "JSON received : " | &content_);
+         WinMessage(&content_, 0);
+         
+         Local JsonParser &parser_ = CreateJsonParser(); /* Parse the reponse and retrieve Canonical URL for the asset */
+         Local boolean &status_ = &parser_.Parse(&content_);
+         Local JsonObject &jObj_ = &parser_.GetRootObject();
+         Local number &bbbnbr_ = &jObj_.GetChildCount();
+         Local integer &i;
+         
+         If &jObj_.IsExist("name") Then
+            &logFile_.WriteLine("---------" | "Parsing Response JSON" | "---------");
+            rem &logFile_.WriteLine("Inside NAME");
+            Local JsonObject &messages_ = &jObj_.GetJsonObject("name");
+            rem Local number &somenbr = &messages_.GetChildCount();
+            rem Local JsonObject &jLinks_ = &jObj_.GetJsonObject("links");
+            Local JsonArray &jArray_ = &jObj_.GetJsonArray("links");
+            If &jArray_.Size > 0 Then /* Read Array */
+               &m_doccount_ = &jArray_.Length();
+               rem &logFile_.WriteLine("Array Length : " | &m_doccount_);
+               For &i = 1 To &m_doccount_
+                  Local JsonObject &jObject_ = &jArray_.GetJsonObject(&i);
+                  If &jObject_.GetProperty("rel") = "canonical" Then
+                     &logFile_.WriteLine("URL : " | &jObject_.GetProperty("href"));
+                  End-If;
+               End-For;
+            End-If;
+         End-If;
+         
+      End-If;
+   catch Exception &e
+      throw &e;
+   end-try;
+   &logFile_.Close();
+   Local string &content = &reponse_message.GetContentString();
+   rem MessageBox(0, "", 0, 0, "&content " | &content);
+   
+End-If;
+REM PP END;
