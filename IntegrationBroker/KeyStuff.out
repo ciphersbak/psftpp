@@ -1,0 +1,165 @@
+Fetch Asset > retrieve deviceModel
+
+--Fetch Device Models
+
+--https://slc15dmc.us.oracle.com/iot/api/v2/deviceModels?limit=100
+
+Pick up the URN
+
+Fetch Device Model details
+
+https://slc15dmc.us.oracle.com/iot/api/v2/deviceModels/urn:oracle:runway:sweeper:machine:data
+
+https://slc15dmc.us.oracle.com/iot/api/v2/deviceModels/urn:com:oracle:iotapps:assettype:B8A993D0
+
+-4CF7-49E1-8715-4E20C08BC234
+
+
+From the occurrences, fetch the asset id and name
+
+Using this, get the asset type
+https://slc15dmc.us.oracle.com/assetMonitoring/privateclientapi/v2/orgs/ORA_DEFAULT_ORG/assets/26
+
+4E0A82-FC6E-4E50-9F07-B565D04D17FA
+
+
+For the asset type, fetch its attributes
+https://slc15dmc.us.oracle.com/assetMonitoring/privateclientapi/v2/orgs/ORA_DEFAULT_ORG/assetType
+
+s/B8A993D0-4CF7-49E1-8715-4E20C08BC234
+
+
+
+Check IoT Availability - https://slc15dmc.us.oracle.com/iot/api/v2/monitoring/availability
+Ping Test - add to config page
+
+read status "Up"
+
+
+https://slc15dmc.us.oracle.com/assetMonitoring/privateclientapi/v2/orgs/ORA_DEFAULT_ORG/assetType
+
+s?offset=0&limit=10&q=%7B%20%22organizationId%22%20:%20%20%22ORA_DEFAULT_ORG%22%20%7D
+
+
+
+Fetch Org
+https://slc15dmc.us.oracle.com/iotapps/privateclientapi/v2/orgs?limit=100&offset=0
+
+
+You can Fetch Assets with this link as well
+https://slc15dmc.us.oracle.com/iotapps/privateclientapi/v2/orgs/ORA_DEFAULT_ORG/assets
+
+
+On the online page, add DBPatternMatch to make sure the URI contains <orgId>
+
+If DBPatternMatch(EOBF_ODBC.EOBF_ODBC_CONN_STR.Value, "%\%PASSWORD\%%", True) = False Then
+   SetCursorPos(%Page, EOBF_ODBC.EOBF_ODBC_CONN_STR, CurrentRowNumber());
+   Error MsgGet(18111, 33, "Please type PWD=%PASSWORD% for the password");
+End-If;
+
+
+
+If DBPatternMatch(&sCreateAssetURI_, &oConstantService_.IoTOrgPattern_, False) Then /* Case-
+
+insensitive pattern match */
+         &sCreateAssetURI_ = Substitute(&sCreateAssetURI_, &oConstantService_.IoTOrgPattern_, 
+
+&sIoTOrgID_);
+         If &sCreateAssetURI_ <> "" Then
+            &sIoTResponse_ = &oJsonService_.sendRequest(&sIoTInstanceName_, &sCreateAssetURI_, 
+
+"POST", &sRequestJSON_, False); /* Send the request to IoT */
+         Else
+            rem cannot create asset;
+            &oJsonService_.LogRequest("IntegrateAsset.createAsset CREATE ASSET Failed! ", "");
+            Return False;
+         End-If; /* URI is not blank */
+      Else
+         Return False;
+      End-If; /* Pattern Match */
+
+&sModCreateAssetURI_ = &oJsonService_.SubstituteURI(&sFetchIoTPlacesURI_, &sIoTOrgID_); /* 
+
+Replace <orgId> */
+
+--New VM - slc16jgp.us.oracle.com
+
+Ping IoT
+
+https://slc16jgp.us.oracle.com/iot/api/v2/monitoring/availability
+
+Fetch Orgs
+
+https://slc16jgp.us.oracle.com/iotapps/privateclientapi/v2/orgs
+
+PeopleSoft Organisation - 98602F93-E886-4427-80D5-89B94F360BC0
+
+Fetch Incidents
+
+https://slc16jgp.us.oracle.com/assetMonitoring/privateclientapi/v2/orgs/98602F93-E886-4427-80D5-
+
+89B94F360BC0/incidents?orderBy=lastModifiedTime:dsc
+
+Fetch Assets
+https://slc16jgp.us.oracle.com:443/assetMonitoring/privateclientapi/v2/orgs/98602F93-E886-4427-
+
+80D5-89B94F360BC0/assets
+
+---------
+Use cURL
+---------
+
+Click on Import > Select RAW Option > Paste the below command > Hit Import
+
+curl -X GET -k -H 'Accept: application/json' -u 'iot:welcome1' 
+
+https://slc16jgp.us.oracle.com:443/iot/api/v2/monitoring/availability
+
+
+--Add timing parameters
+
+curl -X GET -k -H 'Accept: application/json' -u 'iot:welcome1' https://slc16jgp.us.oracle.c
+om/iot/api/v2/monitoring/availability -w 'EstConn: %{time_connect}s\nTimeNameLookup: 
+
+%{time_namelookup}s\nTimeAppConnect
+: %{time_appconnect}s\nTimePreTransfer: %{time_pretransfer}s\nTimeStartTransfer: 
+
+%{time_starttransfer}s\nTotalTime: %{time_total}s\n' -s -o /dev/null
+
+--Use this
+
+curl -X GET -k -H 'Accept: application/json' -u 'iot:welcome1' https://slc16jgp.us.oracle.c
+om/iot/api/v2/monitoring/availability -w '\n\n==== cURL measurement stats ==== \nEstConn: 
+
+%{time_connect}s\nTimeNameLook
+up: %{time_namelookup}s\nTimeAppConnect: %{time_appconnect}s\nTimePreTransfer: 
+
+%{time_pretransfer}s\nTimeStartTransfer:
+%{time_starttransfer}s\nTotalTime: %{time_total}s\n' -s -o /dev/null
+
+--Try this
+curl -X GET -k -H 'Accept: application/json' -u 'iot:welcome1' https://slc16jgp.us.oracle.c
+om/iot/api/v2/monitoring/availability --trace-time -v -s -o /dev/null
+
+--BASH
+
+for i in {1..10}; do curl -X GET -k -H 'Accept: application/json' -u 'iot:welcome1' 
+
+https://slc16jgp.us.oracle.com/iot/api/v2/monitoring/availability -s -o /dev/null -w '\n==== cURL 
+
+measurement stats ====\nEstConn: %{time_connect}s\nTimeNameLookup: %{time_namelookup}s
+
+\nTimeAppConnect: %{time_appconnect}s\nTimePreTransfer: %{time_pretransfer}s\nTimeStartTransfer: 
+
+%{time_starttransfer}s\nTotalTime: %{time_total}s\n'; done
+
+--Use this
+for i in {1..10}; do curl -X GET -k -H 'Accept: application/json' -u 'iot:welcome1' 
+
+https://slc16jgp.us.oracle.com/iot/api/v2/monitoring/availability -s -o /dev/null -w '\n==== cURL 
+
+measurement stats ====\nIteration: '$i'\nEstConn: %{time_connect}s\nTimeNameLookup: 
+
+%{time_namelookup}s\nTimeAppConnect: %{time_appconnect}s\nTimePreTransfer: %{time_pretransfer}s
+
+\nTimeStartTransfer: %{time_starttransfer}s\nTotalTime: %{time_total}s\n'; done
