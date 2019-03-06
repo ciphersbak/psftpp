@@ -1,0 +1,383 @@
+REM Fetch Assets from IoT and store in PS;
+import PPIOTSERVICE:PPIoTService;
+
+Local string &sIOTAssetEndPoint_, &sAssetURI_, &sAssetURIFields_, &sAuthInfo_, &sAuthEnc_, &sAuthHeader_, &sFilePath_, &sFileString_, &sFileColHeading_;
+Local File &oLogFile_;
+Local Message &oGenRqstRESTMsg_, &oGenRspnsRESTMsg_;
+Local IBInfo &IBInfo_;
+Local boolean &bRet;
+Local object &oString_, &oEncoder_;
+Local Rowset &RS_LEVEL0_, &RS_Level1_, &RS_Level1;
+Local Record &recPP_DR_REC_, &Rec_Level1, &Rec_Level11;
+Local Row &RowLevel0;
+Local Grid &GRID_;
+Local GridColumn &GRIDCOL_;
+Local number &rec;
+
+&GRID_ = GetGrid(Page.X_PP_AM_IOT_PG_X, "PP_IOTASSET_DTL");
+&GRIDCOL_ = &GRID_.GetColumn("IOT_DEVICE_ID");
+rem &GRIDCOL_.Label = "IoT Device ID";
+rem &GRIDCOL_.Enabled = False;
+&GRIDCOL_ = &GRID_.GetColumn("SELF_LINK");
+rem &GRIDCOL_.Label = "Self Link";
+rem &GRIDCOL_.Enabled = False;
+
+REM *** Retrieve Comp Buffer ***;
+&RS_LEVEL0_ = GetLevel0();
+&recPP_DR_REC_ = &RS_LEVEL0_.GetRow(1).GetRecord(Record.X_PP_DEV_WRK_X);
+&RowLevel0 = &RS_LEVEL0_.GetRow(1);
+&RS_Level1 = &RowLevel0.GetRowset(Scroll.PP_IOTASSET_DTL);
+
+&sFilePath_ = "C:\Temp\IoT_PS_AssetUpload_" | %PerfTime | ".csv";
+If FileExists(&sFilePath_, %FilePath_Absolute) Then
+   &oLogFile_ = GetFile(&sFilePath_, "A", "", %FilePath_Absolute);
+   rem &sFileString_ = &sFileString_;
+Else
+   &oLogFile_ = GetFile(&sFilePath_, "W", %FilePath_Absolute);
+   rem &sFileString_ = "";
+End-If;
+
+If None(&oLogObj_) Then
+   &oLogObj_ = create PPIOTSERVICE:PPIoTService();
+End-If;
+
+rem &sIOTAssetEndPoint_ = "https://slc16lnq.us.oracle.com/assetMonitoring/clientapi/v2/assets"; /* REST endpoint for fetching assets */
+rem &sIOTAssetEndPoint_ = "https://sca00kcy.us.oracle.com/assetMonitoring/clientapi/v2/assets"; /* REST endpoint for fetching assets */
+rem &sIOTAssetEndPoint_ = "https://slc15dmc.us.oracle.com/assetMonitoring/clientapi/v2/assets"; /* REST endpoint for fetching assets */
+&sIOTAssetEndPoint_ = "https://slc16jgp.us.oracle.com/assetMonitoring/clientapi/v2/assets"; /* REST endpoint for fetching assets */
+rem &sAssetURIFields_ = "?fields=id,name,type,description,geoLocation,assignedPlace,attributes,lastReportedTimeAsString&limit=1000&orderBy='lastReportedTimeAsString' desc";
+&sAssetURIFields_ = "?fields=id,name,type,description,geoLocation,assignedPlace,attributes,lastReportedTimeAsString&limit=1000";
+&sAssetURI_ = &sIOTAssetEndPoint_ | &sAssetURIFields_;
+&oGenRqstRESTMsg_ = CreateMessage(Operation.IB_GENERIC_REST_POST); /* Use the delivered IB REST POST SvOp */
+
+&IBInfo_ = &oGenRqstRESTMsg_.IBInfo;
+&bRet = &IBInfo_.LoadConnectorProp("HTTPTARGET");
+&IBInfo_.ConnectorOverride = True;
+&IBInfo_.IBConnectorInfo.ConnectorClassName = "HttpTargetConnector";
+&IBInfo_.IBConnectorInfo.ConnectorName = "HTTPTARGET";
+&sAuthInfo_ = "iot:welcome1"; /* This should ideally be hidden */
+&oString_ = CreateJavaObject("java.lang.String", &sAuthInfo_);
+&oEncoder_ = CreateJavaObject("sun.misc.BASE64Encoder");
+&sAuthEnc_ = &oEncoder_.encodeBuffer(&oString_.getBytes());
+&sAuthHeader_ = &sAuthEnc_;
+&bRet = &IBInfo_.IBConnectorInfo.AddConnectorProperties("Authorization", "Basic " | &sAuthHeader_, %HttpHeader); /* V IMP */
+&bRet = &IBInfo_.IBConnectorInfo.AddConnectorProperties("Content-Type", "application/json; encoding=""UTF-8""", %HttpHeader);
+&bRet = &IBInfo_.IBConnectorInfo.DeleteConnectorProperties("URL");
+&bRet = &IBInfo_.IBConnectorInfo.AddConnectorProperties("URL", &sAssetURI_, %HttpProperty);
+&bRet = &IBInfo_.IBConnectorInfo.DeleteConnectorProperties("Method");
+&bRet = &IBInfo_.IBConnectorInfo.AddConnectorProperties("Method", "GET", %HttpProperty); /* Change this based on HTTP Verbs */
+
+
+try
+   &startTime_ = %PerfTime;
+   &oGenRspnsRESTMsg_ = %IntBroker.ConnectorRequest(&oGenRqstRESTMsg_, True); /* Response received from IoT */
+   If &oGenRspnsRESTMsg_.ResponseStatus <> %IB_Status_Success Then
+      MessageBox(0, "", 0, 0, "GET Failed: " | &oGenRspnsRESTMsg_.HTTPResponseCode);
+   Else
+      rem MessageBox(0, "", 0, 0, "GET successful: " | &oGenRspnsRESTMsg_.HTTPResponseCode);
+      &endTime_ = %PerfTime;
+      &timeDiff_ = NumberToString("%6.3", Value(&endTime_ - &startTime_));
+      Local string &content_ = &oGenRspnsRESTMsg_.GetContentString();
+      Local JsonParser &parser_ = CreateJsonParser(); /* Parse the reponse */
+      Local boolean &status_ = &parser_.Parse(&content_);
+      Local JsonObject &jObj_ = &parser_.GetRootObject();
+      Local number &bbbnbr_ = &jObj_.GetChildCount();
+      Local integer &i, &j, &m_doccount_, &m_doc_;
+      
+      &RS_Level1_ = &RowLevel0.GetRowset(Scroll.PP_IOTASSET_DTL);
+      ScrollFlush(Record.PP_IOTASSET_DTL);
+      REM *** Set the counter to 1. Please be aware that aware that at this point there is an additional blank row which needs to be deleted later ***;
+      &rec = 1;
+      rem MessageBox(0, "", 0, 0, "Parse JSON and store asset information");
+      &sFileColHeading_ = "IOT_ASSET_ID" | "," | "ASSET_NAME" | "," | "ASSET_TYPE" | "," | "ASSET_DESCRIPTION" | "," | "ASSET_GEOLOCATION" | "," | "ASSET_LASTRPTDDTTM" | "," | "ASSET_ASSIGNED_PLACE" | "," | "ASSET_DEVICE_ID" | "," | "ASSET_SELF_LINK";
+      &oLogFile_.WriteLine(&sFileColHeading_);
+      If &jObj_.IsExist("hasMore") Then
+         rem MessageBox(0, "", 0, 0, "hasMore " | &jObj_.GetProperty("hasMore"));
+      End-If;
+      If &jObj_.IsJsonArray("items") Then
+         &oLogObj_.LogRequest("+++++++Parsing JSON Response+++++++", "");
+         rem Local JsonObject &messages_ = &jObj_.GetJsonObject("id");
+         &sFileString_ = &sFileString_;
+         Local JsonArray &jArray_ = &jObj_.GetJsonArray("items");
+         If &jArray_.Size > 0 Then /* Read Array */
+            &m_doccount_ = &jArray_.Length();
+            For &i = 1 To &m_doccount_
+               Local JsonObject &jObject_ = &jArray_.GetJsonObject(&i);
+               &oLogObj_.LogRequest("IoT Asset ID : ", String(&jObject_.GetProperty("id")));
+               &oLogObj_.LogRequest("Asset Name : ", String(&jObject_.GetProperty("name")));
+               &oLogObj_.LogRequest("Asset Type : ", String(&jObject_.GetProperty("type")));
+               Local boolean &bDescription_ = False;
+               If &jObject_.IsExist("description") Then
+                  &oLogObj_.LogRequest("Asset Description : ", String(&jObject_.GetProperty("description")));
+                  &sFileString_ = &jObject_.GetProperty("id") | "," | &jObject_.GetProperty("name") | "," | &jObject_.GetProperty("type") | "," | &jObject_.GetProperty("description");
+                  &bDescription_ = True;
+               End-If;
+               &sFileString_ = &jObject_.GetProperty("id") | "," | &jObject_.GetProperty("name") | "," | &jObject_.GetProperty("type");
+               rem &oLogFile_.WriteLine(&sFileString_);
+               
+               REM Try and make it dynamic;
+               For &nItemsChiildCnt_ = 1 To &jObject_.ChildCount
+                  &oLogObj_.LogRequest("Item Child : ", "Property (Key : Value) (" | &jObject_.GetPropertyNameAt(&nItemsChiildCnt_) | " : " | &jObject_.GetProperty(&jObject_.GetPropertyNameAt(&nItemsChiildCnt_)) | ")");
+                  If &jObject_.IsJsonArray(&jObject_.GetPropertyNameAt(&nItemsChiildCnt_)) Then
+                     Local JsonArray &ojObjDynamicArray_ = &jObject_.GetJsonArray(&jObject_.GetPropertyNameAt(&nItemsChiildCnt_));
+                     If &ojObjDynamicArray_.Size > 0 Then
+                        &nArrLen_ = &ojObjDynamicArray_.Length();
+                        For &nArrCount_ = 1 To &nArrLen_
+                           rem Local JsonObject &ojObjDynamicArrayObj_ = &ojObjDynamicArray_.GetJsonObject(&nArrCount_);
+                           rem &oLogObj_.LogRequest("Link Child : ", "Property (Key : Value) (" | &ojObjDynamicArrayObj_.GetPropertyNameAt(&nArrCount_) | " : " | &ojObjDynamicArrayObj_.GetProperty(&jObject_.GetPropertyNameAt(&nArrCount_)) | ")");
+                           &oLogObj_.LogRequest("Inside Some JsonArray(s) : ", String(&ojObjDynamicArray_.GetElement(&nArrCount_)));
+                        End-For;
+                     End-If;
+                  End-If;
+               End-For;
+               
+               Local boolean &bCoordinates_ = False;
+               If &jObject_.IsExist("geoLocation") Then
+                  &oLogObj_.LogRequest("Asset geoLocation : ", String(&jObject_.GetProperty("geoLocation")));
+                  &sFileString_ = &sFileString_ | "," | &jObject_.GetProperty("geoLocation");
+                  &bCoordinates_ = True;
+               Else
+                  &sFileString_ = &sFileString_ | "," | "_";
+               End-If;
+               If &jObject_.IsExist("lastReportedTimeAsString") Then
+                  &oLogObj_.LogRequest("lastReportedTimeAsString : ", String(&jObject_.GetProperty("lastReportedTimeAsString")));
+                  &sFileString_ = &sFileString_ | "," | &jObject_.GetProperty("lastReportedTimeAsString");
+               Else
+                  &sFileString_ = &sFileString_ | "," | "_" | "," | "_";
+               End-If;
+               Local boolean &bPlace_ = False;
+               If &jObject_.IsExist("assignedPlace") Then
+                  Local JsonObject &ojObjPayload_ = &jObject_.GetJsonObject("assignedPlace");
+                  &oLogObj_.LogRequest("Asset Assigned Location : ", String(&ojObjPayload_.GetProperty("name")));
+                  &sFileString_ = &sFileString_ | "," | &ojObjPayload_.GetProperty("name");
+                  &bPlace_ = True;
+                  rem &oLogObj_.LogRequest("Assigned Place Property Names : ", String(&ojObjPayload_.GetPropertyNames()));
+                  rem &oJsonArr_ = CreateArrayRept("", 0);
+                  rem Local array of string &oJsonArr_ = &ojObjPayload_.GetPropertyNames();
+                  rem MessageBox(0, "", 0, 0, " &oJsonArr_ " | &oJsonArr_.Len);
+                  rem MessageBox(0, "", 0, 0, "&ojObjPayload_ ChildCount: " | &ojObjPayload_.ChildCount);
+                  rem MessageBox(0, "", 0, 0, "Property Name : " | &ojObjPayload_.GetPropertyNameAt(4) | " : Property Value : " | &ojObjPayload_.GetProperty(&ojObjPayload_.GetPropertyNameAt(4)));
+                  Local number &nAssignedPlaceChldCnt_;
+                  For &nAssignedPlaceChldCnt_ = 1 To &ojObjPayload_.ChildCount
+                     &oLogObj_.LogRequest("assignedPlace Child : ", "Property (Key : Value) (" | &ojObjPayload_.GetPropertyNameAt(&nAssignedPlaceChldCnt_) | " : " | &ojObjPayload_.GetProperty(&ojObjPayload_.GetPropertyNameAt(&nAssignedPlaceChldCnt_)) | ")");
+                     If &ojObjPayload_.IsJsonArray(&ojObjPayload_.GetPropertyNameAt(&nAssignedPlaceChldCnt_)) Then
+                        Local JsonArray &ojObjPayloadArray_ = &ojObjPayload_.GetJsonArray(&ojObjPayload_.GetPropertyNameAt(&nAssignedPlaceChldCnt_));
+                        If &ojObjPayloadArray_.Size > 0 Then
+                           &nArrLen_ = &ojObjPayloadArray_.Length();
+                           For &nArrCount_ = 1 To &nArrLen_
+                              rem Local JsonObject &jObjPayloadArrObj_ = &ojObjPayloadArray_.GetJsonObject(&nArrCount_);
+                              &oLogObj_.LogRequest("Inside assignedPlace JsonArray(s) : ", String(&ojObjPayloadArray_.GetElement(&nArrCount_)));
+                           End-For;
+                        End-If;
+                     End-If;
+                  End-For;
+               Else
+                  &sFileString_ = &sFileString_ | "," | "_" | "," | "_" | "," | "_";
+               End-If;
+               
+               Local boolean &bDeviceID_ = False;
+               If &jObject_.IsExist("attributes") Then
+                  Local JsonObject &ojObjAttrib_ = &jObject_.GetJsonObject("attributes");
+                  Local number &nAttributesChildCnt_;
+                  For &nAttributesChildCnt_ = 1 To &ojObjAttrib_.ChildCount
+                     &oLogObj_.LogRequest("READ ALL ATTRIBUTES : ", "Property (Key : Value) (" | &ojObjAttrib_.GetPropertyNameAt(&nAttributesChildCnt_) | " : " | &ojObjAttrib_.GetProperty(&ojObjAttrib_.GetPropertyNameAt(&nAttributesChildCnt_)) | ")");
+                     rem Local JsonObject &ojAttributesDrill_ = &ojObjAttrib_.GetJsonObject(&ojObjAttrib_.GetPropertyNameAt(&nAttributesChildCnt_));
+                     If &ojObjAttrib_.IsJsonObject(&ojObjAttrib_.GetPropertyNameAt(&nAttributesChildCnt_)) Then
+                        Local JsonObject &ojAttributesDrill_ = &ojObjAttrib_.GetJsonObject(&ojObjAttrib_.GetPropertyNameAt(&nAttributesChildCnt_));
+                        For &pp = 1 To &ojAttributesDrill_.ChildCount
+                           &oLogObj_.LogRequest("DRILL ALL ATTRIBUTES : ", "(" | &ojAttributesDrill_.GetPropertyNameAt(&pp) | " : " | &ojAttributesDrill_.GetProperty(&ojAttributesDrill_.GetPropertyNameAt(&pp)) | ")");
+                        End-For;
+                     End-If;
+                  End-For;
+                  /* 
+                  If &ojObjAttrib_.IsExist("speed") Then
+                     Local JsonObject &ojInsideAttributes_ = &ojObjAttrib_.GetJsonObject("speed");
+                     &oLogObj_.LogRequest("Inside ATTRIBUTES : ", "Property (Key : Value) (" | &ojInsideAttributes_.GetPropertyNameAt(1) | " : " | &ojInsideAttributes_.GetProperty(&ojInsideAttributes_.GetPropertyNameAt(1)) | ")");
+                  End-If;
+                  */
+                  rem &oLogObj_.LogRequest("Attribute Property Count : ", String(&ojObjAttrib_.GetChildCount()));
+                  rem &oLogObj_.LogRequest("Attribute Property Count : ", String(&ojObjAttrib_.GetPropertyNameAt(1)));
+                  &oLogObj_.LogRequest("Asset Device ID : ", String(&ojObjAttrib_.GetProperty(&ojObjAttrib_.GetPropertyNameAt(1))));
+                  &sFileString_ = &sFileString_ | "," | String(&ojObjAttrib_.GetProperty(&ojObjAttrib_.GetPropertyNameAt(1)));
+                  &bDeviceID_ = True
+               Else
+                  &sFileString_ = &sFileString_ | "," | "_" | "," | "_" | "," | "_" | "," | "_";
+               End-If;
+               If &jObject_.IsExist("links") Then
+                  Local JsonArray &ojObjLinksArray_ = &jObject_.GetJsonArray("links");
+                  If &ojObjLinksArray_.Size > 0 Then /* Read Array */
+                     &m_doc_ = &ojObjLinksArray_.Length();
+                     For &j = 1 To &m_doc_
+                        Local JsonObject &jObjLinks_ = &ojObjLinksArray_.GetJsonObject(&j);
+                        If &jObjLinks_.GetProperty("rel") = "self" Then
+                           &oLogObj_.LogRequest("Asset Self Link : ", String(&jObjLinks_.GetProperty("href")));
+                           &sFileString_ = &sFileString_ | "," | &jObjLinks_.GetProperty("href");
+                        End-If;
+                     End-For;
+                  End-If;
+               End-If;
+               &oLogFile_.WriteLine(&sFileString_);
+               
+               If &rec <> 1 Then
+                  REM *** This ensures that the additional blank row is not there ***;
+                  &RS_Level1.InsertRow(&rec - 1);
+               End-If;
+               &Rec_Level1 = &RS_Level1.GetRow(&rec).GetRecord(Record.PP_IOTASSET_DTL);
+               &Rec_Level11 = &RS_Level1.GetRow(&rec).GetRecord(Record.X_PP_DEV_WRK_X);
+               &Rec_Level1.DESCR100.Value = &jObject_.GetProperty("id");
+               &Rec_Level1.DESCR100A.Value = &jObject_.GetProperty("name");
+               &Rec_Level1.DESCR100B.Value = &jObject_.GetProperty("type");
+               If &bDescription_ Then
+                  &Rec_Level1.DESCR100C.Value = &jObject_.GetProperty("description");
+               End-If;
+               If &bPlace_ Then
+                  &Rec_Level1.DESCR100D.Value = &ojObjPayload_.GetProperty("name");
+               Else
+                  &Rec_Level1.DESCR100D.Value = "";
+               End-If;
+               If &bCoordinates_ Then
+                  &Rec_Level1.DESCR100F.Value = &jObject_.GetProperty("geoLocation");
+               Else
+                  &Rec_Level1.DESCR100F.Value = "";
+               End-If;
+               If &bDeviceID_ Then
+                  &Rec_Level1.DESCR100E.Value = &ojObjAttrib_.GetProperty(&ojObjAttrib_.GetPropertyNameAt(1));
+                  &GRIDCOL_ = &GRID_.GetColumn("IOT_DEVICE_ID");
+                  &GRIDCOL_.Visible = True;
+                  &GRIDCOL_.Enabled = True;
+                  rem &recPP_DR_REC_.DESCR100J.Enabled = True;
+                  &Rec_Level11.DESCR100J.Label = String(&Rec_Level1.DESCR100E.Value);
+               Else
+                  &Rec_Level1.DESCR100E.Value = "";
+                  &Rec_Level11.DESCR100J.Label = &Rec_Level1.DESCR100E.Value;
+               End-If;
+               &Rec_Level1.URLS.Value = &jObjLinks_.GetProperty("href");
+               &Rec_Level1.ACTIONDTTM.Value = %Datetime;
+               &GRIDCOL_ = &GRID_.GetColumn("SELF_LINK");
+               &GRIDCOL_.Visible = True;
+               &GRIDCOL_.Enabled = True;
+               rem &Rec_Level11.DESCR254_TO.Label = String(&Rec_Level1.URLS.Value);
+               &rec = &rec + 1;
+               REM PP ADDED 19SEPT2018;
+               If Not &Rec_Level1.Update(&Rec_Level1) Then
+                  &Rec_Level1.Insert();
+               End-If;
+            End-For;
+         End-If;
+      End-If;
+      rem MessageBox(0, "", 0, 0, "Total Assets Read : " | &i);
+      rem &oLogFile_.WriteLine(&sFileString_);
+      &recPP_DR_REC_.DESCR20.Value = &i;
+      &recPP_DR_REC_.DESCR2000.Value = &sFilePath_;
+      &recPP_DR_REC_.ADDITIONAL_DATA.Value = "--URI Query Parameters-- " | Char(13) | "?fields=id,name,type,description,geoLocation,assignedPlace,attributes,lastReportedTimeAsString" | Char(13) | "&limit=1000" | Char(13) | "&orderBy='lastReportedTimeAsString' desc";
+      &recPP_DR_REC_.DESCR_AC.Value = &timeDiff_;
+      
+   End-If;
+   <* 
+   If &bbbnbr_ > 0 Then
+      For &i = 1 To &bbbnbr_
+         &propName = &jObj_.GetPropertyNameAt(&i);
+         &jo = &jObj_.GetJsonObject(&propName);
+         MessageBox(0, "", 0, 0, "GetPropertyNameAt: " | &i | " : " | &propName);
+         &joArr_ = &jObj_.GetJsonArray("items");
+         /* 
+         &nAliases = &joArr_.GetChildCount();
+         If &nAliases > 0 Then
+            For &j = 1 To &nAliases
+               &sCat = &jo.GetPropertyNameAt(&j);
+            End-For;
+         End-If; */
+         For &t = 1 To &joArr_.Length()
+            Local JsonObject &jObject11_ = &joArr_.GetJsonObject(&t);
+            &propName = &jObject11_.GetPropertyNameAt(&t);
+            MessageBox(0, "", 0, 0, "GetPropertyNameAt: " | &t | " : " | &propName | " : Value : " | &jObject11_.GetProperty(&jObject11_.GetPropertyNameAt(&t)));
+         End-For;
+      End-For;
+   End-If;
+   *>
+   <* Test Ping
+   &oGenRqstRESTMsg_ = CreateMessage(Operation.IB_GENERIC_REST_POST); /* Use the delivered IB REST POST SvOp */
+   &sPingURI_ = "https://slc16jgp.us.oracle.com/iot/api/v2/monitoring/availability";
+   &IBInfo_ = &oGenRqstRESTMsg_.IBInfo;
+   &bRet = &IBInfo_.LoadConnectorProp("HTTPTARGET");
+   &IBInfo_.ConnectorOverride = True;
+   &IBInfo_.IBConnectorInfo.ConnectorClassName = "HttpTargetConnector";
+   &IBInfo_.IBConnectorInfo.ConnectorName = "HTTPTARGET";
+   &sAuthInfo_ = "iot:welcome1"; /* This should ideally be hidden */
+   &oString_ = CreateJavaObject("java.lang.String", &sAuthInfo_);
+   &oEncoder_ = CreateJavaObject("sun.misc.BASE64Encoder");
+   &sAuthEnc_ = &oEncoder_.encodeBuffer(&oString_.getBytes());
+   &sAuthHeader_ = &sAuthEnc_;
+   &bRet = &IBInfo_.IBConnectorInfo.AddConnectorProperties("Authorization", "Basic " | &sAuthHeader_, %HttpHeader); /* V IMP */
+   &bRet = &IBInfo_.IBConnectorInfo.AddConnectorProperties("Content-Type", "application/json; encoding=""UTF-8""", %HttpHeader);
+   &bRet = &IBInfo_.IBConnectorInfo.DeleteConnectorProperties("URL");
+   &bRet = &IBInfo_.IBConnectorInfo.AddConnectorProperties("URL", &sPingURI_, %HttpProperty);
+   &bRet = &IBInfo_.IBConnectorInfo.DeleteConnectorProperties("Method");
+   &bRet = &IBInfo_.IBConnectorInfo.AddConnectorProperties("Method", "GET", %HttpProperty); /* Change this based on HTTP Verbs */
+   
+   &oGenRspnsRESTMsg_ = %IntBroker.ConnectorRequest(&oGenRqstRESTMsg_, True); /* Response received from IoT */
+   &sPingContent_ = &oGenRspnsRESTMsg_.GetContentString();
+   Local JsonParser &oJsonPingParser_ = CreateJsonParser(); /* Parse the reponse */
+   Local boolean &bstatus_ = &oJsonPingParser_.Parse(&sPingContent_);
+   Local JsonObject &oJSPing_ = &oJsonPingParser_.GetRootObject();
+   
+   If &oJSPing_.IsExist("status") Then
+      If (&oJSPing_.GetProperty("status") = "Up") Then
+         MessageBox(0, "", 0, 0, "Ping Status : " | &oJSPing_.GetProperty("status"));
+         MessageBox(0, "", 0, 0, "Response Time " | NumberToString("%6.3", Value(&oJSPing_.GetProperty("responseTime"))));
+      End-If;
+   End-If;
+   *>
+   
+   <* Test ORG Fetch by ID *>
+   &oGenRqstRESTMsg_ = CreateMessage(Operation.IB_GENERIC_REST_POST); /* Use the delivered IB REST POST SvOp */
+   &sPingURI_ = "https://slc16jgp.us.oracle.com/iotapps/privateclientapi/v2/orgs/AB1C08BF-D49D-4FE1-AD3D-808A5B239073";
+   &IBInfo_ = &oGenRqstRESTMsg_.IBInfo;
+   &bRet = &IBInfo_.LoadConnectorProp("HTTPTARGET");
+   &IBInfo_.ConnectorOverride = True;
+   &IBInfo_.IBConnectorInfo.ConnectorClassName = "HttpTargetConnector";
+   &IBInfo_.IBConnectorInfo.ConnectorName = "HTTPTARGET";
+   &sAuthInfo_ = "iot:welcome1"; /* This should ideally be hidden */
+   &oString_ = CreateJavaObject("java.lang.String", &sAuthInfo_);
+   &oEncoder_ = CreateJavaObject("sun.misc.BASE64Encoder");
+   &sAuthEnc_ = &oEncoder_.encodeBuffer(&oString_.getBytes());
+   &sAuthHeader_ = &sAuthEnc_;
+   &bRet = &IBInfo_.IBConnectorInfo.AddConnectorProperties("Authorization", "Basic " | &sAuthHeader_, %HttpHeader); /* V IMP */
+   &bRet = &IBInfo_.IBConnectorInfo.AddConnectorProperties("Content-Type", "application/json; encoding=""UTF-8""", %HttpHeader);
+   &bRet = &IBInfo_.IBConnectorInfo.DeleteConnectorProperties("URL");
+   &bRet = &IBInfo_.IBConnectorInfo.AddConnectorProperties("URL", &sPingURI_, %HttpProperty);
+   &bRet = &IBInfo_.IBConnectorInfo.DeleteConnectorProperties("Method");
+   &bRet = &IBInfo_.IBConnectorInfo.AddConnectorProperties("Method", "GET", %HttpProperty); /* Change this based on HTTP Verbs */
+   
+   &oGenRspnsRESTMsg_ = %IntBroker.ConnectorRequest(&oGenRqstRESTMsg_, True); /* Response received from IoT */
+   &sOrgContent_ = &oGenRspnsRESTMsg_.GetContentString();
+   Local JsonParser &oJsonOrgParser_ = CreateJsonParser(); /* Parse the reponse */
+   Local boolean &bstatus_ = &oJsonOrgParser_.Parse(&sOrgContent_);
+   Local JsonObject &oJObjAMOrgFetch_ = &oJsonOrgParser_.GetRootObject();
+   
+   If &oJObjAMOrgFetch_.IsExist("id") Then
+      MessageBox(0, "", 0, 0, "Org ID " | &oJObjAMOrgFetch_.GetProperty("id"));
+      MessageBox(0, "", 0, 0, "Org Name " | &oJObjAMOrgFetch_.GetProperty("name"));
+      MessageBox(0, "", 0, 0, "Org System " | &oJObjAMOrgFetch_.GetProperty("system"));
+      MessageBox(0, "", 0, 0, "Org Descr " | &oJObjAMOrgFetch_.GetProperty("description"));
+      
+      If &oJObjAMOrgFetch_.IsExist("links") Then
+         Local JsonArray &ojObjLinksArray1_ = &oJObjAMOrgFetch_.GetJsonArray("links");
+         If &ojObjLinksArray1_.Size > 0 Then /* Read links Array */
+            &m_doc_ = &ojObjLinksArray1_.Length();
+            For &j = 1 To &m_doc_
+               Local JsonObject &jObjLinks1_ = &ojObjLinksArray1_.GetJsonObject(&j);
+               If &jObjLinks1_.GetProperty("rel") = "self" Then
+                  MessageBox(0, "", 0, 0, "Self URL " | &jObjLinks1_.GetProperty("href"));
+               End-If;
+            End-For;
+         End-If;
+      End-If;
+   End-If;
+   
+catch Exception &e
+   &fileListXmlDoc_ = &oGenRspnsRESTMsg_.GetXmlDoc();
+   MessageBox(0, "", 0, 0, "Exception: " | &fileListXmlDoc_.GenFormattedXmlString());
+   MessageBox(0, "", 0, 0, "Node Value : " | &fileListXmlDoc_.DocumentElement.GetElementsByTagName("data")[1].GetCDataValue());
+   throw &e;
+end-try;
