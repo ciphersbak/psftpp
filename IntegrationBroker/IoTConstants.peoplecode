@@ -1,0 +1,154 @@
+/**
+	Name        : 	Constants
+	Package     :	AM_IOT:Constants
+	Description :   This class serves as the central repository of 
+   					constants used in AM IoT Integration module
+ 
+**/
+
+class Constants
+   method Constants();
+   REM Strings;
+   property string sHTTP_ readonly;
+   property string sHTTPS_ readonly;
+   property string IoTOrgPattern_ readonly;
+   property string IoTDefaultOrg_ readonly;
+   property string IoTResponseArray_ readonly;
+   REM IoT Organisation;
+   property string IoTOrgID_ readonly;
+   property string IoTOrgName_ readonly;
+   property string IoTOrgDescription_ readonly;
+   REM IoT Assets;
+   property string IoTAssetID_ readonly;
+   property string IoTAssetName_ readonly;
+   property string IoTAssetType_ readonly;
+   property string PSAsset_ readonly;
+   property string NonPSAsset_ readonly;
+   property string IoTAssetOrganisation_ readonly;
+   property string IoTAssetDescription_ readonly;
+   property string IoTAssetGeolocation_ readonly;
+   property string IoTAssetLastReportedTimeAsString_ readonly;
+   property string IoTAssetAssignedLocation_ readonly;
+   property string IoTAssetSelfLink_ readonly;
+   property string IoTAssetsLoaded_ readonly;
+   REM IoT Places;
+   property string IoTPlaceID_ readonly;
+   property string IoTPlaceName_ readonly;
+   property string IoTPlaceType_ readonly;
+   property string IoTPlaceDescription_ readonly;
+   property string IoTPlaceOrganisation_ readonly;
+   property string IoTPlaceSelfLink_ readonly;
+   REM IoT AssetTypes;
+   property string IoTAssetTypeID_ readonly;
+   property string IoTAssetTypeName_ readonly;
+   property string IoTAssetTypeOrganisation_ readonly;
+   property string IoTAssetTypeDescription_ readonly;
+   property string IoTAssetTypeSelfLink_ readonly;
+   REM IoT Incidents;
+   property string IoTIncidentStatusNEW_ readonly;
+   property string IoTIncidentStatusOPEN_ readonly;
+   property string IoTIncidentStatusWORK_IN_PROGRESS_ readonly;
+   property string IoTIncidentStatusRESOLVED_ readonly;
+   property string IoTIncidentStatusWITHDRAWN_ readonly;
+   property string IoTIncidentID_ readonly;
+   property string IoTIncidentType_ readonly;
+   property string IoTIncidentState_ readonly;
+   property string IoTIncidentSummary_ readonly;
+   property string IoTIncidentDescription_ readonly;
+   property string IoTIncidentRule_ readonly;
+   property string IoTIncidentPriority_ readonly;
+   property string IoTIncidentAssetGeoLocation_ readonly;
+   property string IoTIncidentCreatedBy_ readonly;
+   property string IoTIncidentCreatedTimeAsString_ readonly;
+   property string IoTIncidentLastModifiedTimeAsString_ readonly;
+   property string IoTIncidentTimeAsString_ readonly;
+   property string IoTIncidentOrganisationID_ readonly;
+   property string IoTIncidentObservedValue_ readonly;
+   property string IoTIncidentAttributeName_ readonly;
+   property string IoTIncidentThresholdValue_ readonly;
+   property string IoTIncidentOperator_ readonly;
+   
+   REM Numbers;
+   property number MsgSetNbr#_ readonly;
+   property number MsgNbr#_ readonly;
+   
+   REM Response Payload;
+   property string IoToffset_ readonly;
+   property string IoTlimit_ readonly;
+   property string IoTcount_ readonly;
+   property string IoThasMore_ readonly;
+   
+end-class;
+
+method Constants
+   
+   REM Strings;
+   &sHTTP_ = "http://";
+   &sHTTPS_ = "https://";
+   &IoTOrgPattern_ = "<orgId>";
+   &IoTDefaultOrg_ = "ORA_DEFAULT_ORG";
+   &IoTResponseArray_ = "items";
+   
+   &IoTOrgID_ = "IoT Org ID : ";
+   &IoTOrgName_ = "IoT Org Name : ";
+   &IoTOrgDescription_ = "IoT Org Description : ";
+   
+   &IoTAssetID_ = "IoT Asset ID : ";
+   &IoTAssetName_ = "IoT Asset Name : ";
+   &IoTAssetType_ = "IoT Asset Type : ";
+   &PSAsset_ = "PS Asset : ";
+   &NonPSAsset_ = "*** Non PS Asset : ";
+   &IoTAssetOrganisation_ = "IoT Asset Org : ";
+   &IoTAssetDescription_ = "IoT Asset Description : ";
+   &IoTAssetGeolocation_ = "IoT Asset Geolocation : ";
+   &IoTAssetLastReportedTimeAsString_ = "IoT Asset LastReportedTimeAsString : ";
+   &IoTAssetAssignedLocation_ = "IoT Asset Assigned Location : ";
+   &IoTAssetSelfLink_ = "IoT Asset Self Link : ";
+   &IoTAssetsLoaded_ = "Total IoT Assets Loaded : ";
+   
+   &IoTPlaceID_ = "IoT Place ID : ";
+   &IoTPlaceName_ = "IoT Place Name : ";
+   &IoTPlaceType_ = "IoT Place Type : ";
+   &IoTPlaceDescription_ = "IoT Place Description : ";
+   &IoTPlaceOrganisation_ = "IoT Place Organisation : ";
+   &IoTPlaceSelfLink_ = "IoT Place Self Link : ";
+   
+   &IoTAssetTypeID_ = "IoT Asset Type ID : ";
+   &IoTAssetTypeName_ = "IoT Asset Type Name : ";
+   &IoTAssetTypeOrganisation_ = "IoT Asset Type Organisation : ";
+   &IoTAssetTypeDescription_ = "IoT Asset Type Description : ";
+   &IoTAssetTypeSelfLink_ = "IoT Asset Type Self Link : ";
+   
+   &IoTIncidentStatusNEW_ = "NEW";
+   &IoTIncidentStatusOPEN_ = "OPEN";
+   &IoTIncidentStatusWORK_IN_PROGRESS_ = "WORK_IN_PROGRESS";
+   &IoTIncidentStatusRESOLVED_ = "RESOLVED";
+   &IoTIncidentStatusWITHDRAWN_ = "WITHDRAWN";
+   &IoTIncidentID_ = "IoT Incident ID : ";
+   &IoTIncidentType_ = "IoT Incident Type : ";
+   &IoTIncidentState_ = "IoT Incident State : ";
+   &IoTIncidentSummary_ = "IoT Incident Summary : ";
+   &IoTIncidentDescription_ = "IoT Incident Description : ";
+   &IoTIncidentRule_ = "IoT Incident Rule : ";
+   &IoTIncidentPriority_ = "IoT Incident Priority : ";
+   &IoTIncidentAssetGeoLocation_ = "IoT Incident Asset Geolocation : ";
+   &IoTIncidentCreatedBy_ = "IoT Incident CreatedBy : ";
+   &IoTIncidentCreatedTimeAsString_ = "IoT Incident Created Time : ";
+   &IoTIncidentLastModifiedTimeAsString_ = "IoT Incident Last Modified Time : ";
+   &IoTIncidentTimeAsString_ = "IoT Incident Time : ";
+   &IoTIncidentOrganisationID_ = "IoT Incident Organisation ID : ";
+   &IoTIncidentObservedValue_ = "IoT Incident Observed Value : ";
+   &IoTIncidentAttributeName_ = "IoT Incident Attribute Name : ";
+   &IoTIncidentThresholdValue_ = "IoT Incident Threshold Value : ";
+   &IoTIncidentOperator_ = "IoT Incident Operator : ";
+   
+   REM Numbers;
+   &MsgSetNbr#_ = 158;
+   &MsgNbr#_ = 10721;
+   
+   &IoToffset_ = "Response Payload Offset by : ";
+   &IoTlimit_ = "Response Payload Limited to : ";
+   &IoTcount_ = "Response Payload Contains : ";
+   &IoThasMore_ = "Response Payload Paginated : ";
+   
+end-method;
