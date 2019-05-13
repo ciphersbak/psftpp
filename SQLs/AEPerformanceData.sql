@@ -23,6 +23,8 @@ SELECT PROCESS_INSTANCE, OPRID, RUN_CNTL_ID, AE_APPLID "App Engine", AE_SECTION 
 --       END AS PRECISION_SECONDS,
        extract(day from (new_end - new_start))*24*60*60+extract(hour from (new_end - new_start))*60*60+extract(minute from (new_end - new_start))*60
                                                        +extract(second from (new_end - new_start)) "Precision Seconds",
+       numtodsinterval(extract(day from (new_end - new_start))*24*60*60+extract(hour from (new_end - new_start))*60*60+extract(minute from (new_end - new_start))*60
+                                                       +extract(second from (new_end - new_start)), 'second') "Precision Sec",       
        new_start "Actual START", new_end "Actual END", 
        trunc(real_end - real_start) days, trunc(24*mod(real_end - real_start,1)) as hrs, trunc(mod(mod(real_end - real_start,1)*24,1)*60 ) as mins, 
        trunc(mod(mod(mod(real_end - real_start,1)*24,1)*60, 1)*60) as seconds
