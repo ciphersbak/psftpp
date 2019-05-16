@@ -1,0 +1,2 @@
+--Use this
+curl -XGET "http://slc08vkx.us.oracle.com:8000/psp/e92pp858x/?cmd=login&languageCd=ENG&" -v -s -o /dev/null --user VP1:VP1
