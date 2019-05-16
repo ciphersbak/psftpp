@@ -1,0 +1,1 @@
+curl -X GET http://slc07kwc.us.oracle.com:8000/e92ppiotx/signon.html --trace-time -v -s -o /dev/null
