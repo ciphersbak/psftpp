@@ -1,0 +1,72 @@
+import PS_PT:Integration:IRequestHandler;
+
+class PPRestService implements PS_PT:Integration:IRequestHandler
+   method PPRestService();
+   method onRequest(&MSG As Message) Returns Message;
+   method onError(&MSG As Message) Returns string;
+end-class;
+
+method PPRestService
+end-method;
+
+method onRequest
+   /+ &MSG as Message +/
+   /+ Returns Message +/
+   /+ Extends/implements PS_PT:Integration:IRequestHandler.OnRequest +/
+   Local Message &response;
+   Local Document &Doc_Tmpl, &Doc1;
+   Local Compound &COM1;
+   Local Record &rec1;
+   Local ProcessRequest &RQST;
+   Local integer &PRCSSTATUS, &PRCSINSTANCE;
+   
+   /*****HTTP POST method************/
+   If &MSG.HTTPMethod = %IntBroker_HTTP_POST Then
+      /* Get the document message */
+      &Doc1 = &MSG.GetDocument();
+      &COM1 = &Doc1.DocumentElement;
+      rem URL - http://192.168.56.101:8000/PSIGW/RESTListeningConnector/PSFT_EP/PRCS_RQST.v1/update/PPJOB;
+      &rec1 = CreateRecord(Record.PSPRCSRQST);
+      &rec1.GetField(Field.PRCSJOBNAME).Value = &COM1.GetPropertyByName("JOB_NAME").Value;
+      &RQST = CreateProcessRequest();
+      &RQST.ProcessType = "PSJob";
+      rem &RQST.JobName = "";
+      &RQST.JobName = "PPJOB";
+      &RQST.RunControlID = "SAMPLEPP";
+      &RQST.RunLocation = "PSUNX";
+      &RQST.OutDestType = "6";
+      &RQST.OutDestFormat = "5";
+      &RQST.OutDest = "User : VP1";
+      &RQST.RunDateTime = %Datetime;
+      &RQST.TimeZone = %ServerTimeZone;
+      
+      &RQST.Schedule();
+      &PRCSSTATUS = &RQST.Status;
+      
+      If &PRCSSTATUS = 0 Then
+         /* Scheduling successful. */
+         &PRCSINSTANCE = &RQST.ProcessInstance;
+         rem MessageBox(0, "", 0, 0, "PPJOB PSJob scheduled under process instance: " | &PRCSINSTANCE);
+      Else
+         rem MessageBox(0, "", 0, 0, "ERROR: Did not schedule PPJOB PSJob.");
+      End-If;
+      /*Create the response message */
+      &response = CreateMessage(Operation.PRCS_RQST_POST, %IntBroker_Response);
+      
+   End-If;
+   
+   Return &response;
+   
+end-method;
+
+method onError
+   /+ &MSG as Message +/
+   /+ Returns String +/
+   /+ Extends/implements PS_PT:Integration:IRequestHandler.OnError +/
+   Local integer &nMsgNumber, &nMsgSetNumber;
+   Local string &str;
+   &nMsgNumber = &MSG.IBException.MessageNumber;
+   &nMsgSetNumber = &MSG.IBException.MessageSetNumber;
+   &str = &MSG.IBException.DefaultText;
+   Return &str;
+end-method;
