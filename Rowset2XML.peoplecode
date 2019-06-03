@@ -1,0 +1,25 @@
+import PSXP_ENGINE:*;
+import PSXP_RPTDEFNMANAGER:*;
+import PSXP_XMLGEN:RowSetDS:*;
+
+Local Rowset &RSLevel0_;
+Local XmlDoc &SomeXMLDoc_;
+
+&RSLevel0_ = GetLevel0();
+Local PSXP_XMLGEN:RowSetDS &oRowSetDS;
+
+&oRowSetDS = create PSXP_XMLGEN:RowSetDS();
+Local string &strXML = &oRowSetDS.getXMLData(&RSLevel0_, "");
+
+Local File &BCFile_ = GetFile("/tmp/testfile_" | %Datetime | ".txt", "W", %FilePath_Absolute);
+&SomeXMLDoc_ = CreateXmlDoc("");
+rem &BCFile_.WriteLine(&strXML);
+
+&boolval_ = &SomeXMLDoc_.ParseXmlString(&strXML);
+&newoutStr_ = &SomeXMLDoc_.GenFormattedXmlString();
+&BCFile_.WriteLine(&newoutStr_);
+
+rem &ret_ = &SomeXMLDoc_.CopyRowset(&RSLevel0_);
+rem &sXmlData = &nRptHandler_.GenerateXmlFromRowset();
+
+rem &SomeStr_ = &SomeXMLDoc_.GenXmlFile("/tmp/webprofdemo.xml");
