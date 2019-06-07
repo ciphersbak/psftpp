@@ -1,0 +1,27 @@
+import PP_UTIL_PKG:RowsetJS:*;
+import PSXP_ENGINE:*;
+import PSXP_RPTDEFNMANAGER:*;
+import PSXP_XMLGEN:RowSetDS:*;
+
+Local XmlDoc &SomeXMLDoc_;
+Local Rowset &rsLvl0_;
+Local Record &recPPWrk_;
+Local string &sJSONReply_;
+Local PSXP_XMLGEN:RowSetDS &oRowSetDS;
+Local PP_UTIL_PKG:RowsetJS &oRS2JSON_;
+
+&oRowSetDS = create PSXP_XMLGEN:RowSetDS();
+&oRS2JSON_ = create PP_UTIL_PKG:RowsetJS();
+
+&rsLvl0_ = GetLevel0();
+&recPPWrk_ = &rsLvl0_(1).GetRecord(Record.PP_DERIVED_WRK);
+&SomeXMLDoc_ = CreateXmlDoc("");
+
+Local string &strXML = &oRowSetDS.getXMLData(&rsLvl0_, "");
+Local boolean &boolval_ = &SomeXMLDoc_.ParseXmlString(&strXML);
+Local string &newoutStr_ = &SomeXMLDoc_.GenFormattedXmlString();
+&sJSONReply_ = &oRS2JSON_.getJSONData(&rsLvl0_, "");
+rem MessageBox(0, "", 0, 0, "&sJSONReply_ " | &sJSONReply_);
+&recPPWrk_.DESCRLONG.Value = "";
+&recPPWrk_.DESCRLONG.Value = &sJSONReply_;
+rem &recPPWrk_.DESCRLONG.Value = &newoutStr_;
