@@ -1,0 +1,275 @@
+import PSXP_XMLGEN:*;
+
+/* RowSet data source */
+class RowsetJS
+   /* Constructor */
+   method RowsetJS();
+   
+   /* Generates RowSet data in XML from the RowSet object passed in.
+		&rsResult - input RowSet object. Assume caller has generated the rowset.
+		&sXSDLocation (optional) - XSD Location for XML Schema Validation.
+		return    - Generated RowSet data in XML string.
+		*/
+   method getJSONData(&rsResult As Rowset, &sXSDLocation As string) Returns string;
+   
+   /* Gets RowSet name. */
+   method getRowSetName(&rsResult As Rowset) Returns string;
+   
+   method strEncode(&input As string) Returns string;
+   
+private
+   
+   method addJSONDataImpl(&parentNode As JsonBuilder, &rsResult As Rowset);
+   method init();
+   
+   instance string &UsedFieldTypes;
+   instance JavaObject &meta_chars_;
+   instance JavaObject &unsafe_chars_pattern_;
+   instance JavaObject &int_;
+   
+   Constant &Tag_Rowset = "rs_";
+   Constant &Tag_Row = "row_";
+   Constant &Tag_Field = "fld_";
+   
+   Constant &PSXP_MsgSet = 235;
+   Constant &Unknown_Rowset = "Unknown RowSet";
+   Constant &Exception_RowSetEmpty = "Rowset object can not be empty.";
+   Constant &Msg_NoColumn = "No column found.";
+   
+end-class;
+
+method RowsetJS
+   &UsedFieldTypes = "";
+end-method;
+
+method getRowSetName
+   /+ &rsResult as Rowset +/
+   /+ Returns String +/
+   Local string &sRowsetName;
+   
+   &sRowsetName = &rsResult.Name;
+   If &sRowsetName = "" Then
+      &sRowsetName = &rsResult.DBRecordName;
+      If &sRowsetName = "" Then
+         &sRowsetName = &Unknown_Rowset;
+      End-If;
+   End-If;
+   
+   Return &sRowsetName;
+end-method;
+
+method getJSONData
+   /+ &rsResult as Rowset, +/
+   /+ &sXSDLocation as String +/
+   /+ Returns String +/
+   Local XmlDoc &xmlDoc;
+   Local XmlNode &xmlDocNode;
+   Local string &sRowsetName, &sRowsetXsdName;
+   Local number &nActiveRowCount;
+   Local JsonBuilder &oJsonBldr_;
+   
+   If &rsResult = Null Then
+      throw CreateException(&PSXP_MsgSet, 3222, &Exception_RowSetEmpty);
+   End-If;
+   
+   rem MessageBox(0, "", 0, 0, "&sRowsetName " | %This.getRowSetName(&rsResult));
+   &sRowsetName = %This.getRowSetName(&rsResult);
+   &sRowsetXsdName = &Tag_Rowset | &sRowsetName;
+   rem MessageBox(0, "", 0, 0, "sRowsetXsdName " | &sRowsetXsdName);
+   
+   /* Create JSON : root */
+   &oJsonBldr_ = CreateJsonBuilder(); /* Create Payload */
+   Local integer &iBldMode = &oJsonBldr_.BuildMode;
+   Local JsonNode &jNode = &oJsonBldr_.GetRootNode();
+   rem MessageBox(0, "", 0, 0, "BuildMode " | &iBldMode);
+   If &oJsonBldr_.StartObjectReturnsTrue("") Then
+      &oJsonBldr_.AddProperty("rowsetname", &sRowsetName);
+      &nActiveRowCount = &rsResult.ActiveRowCount;
+      &oJsonBldr_.AddProperty("numrows", String(&nActiveRowCount));
+      %This.addJSONDataImpl(&oJsonBldr_, &rsResult);
+      &oJsonBldr_.EndObject("");
+   End-If;
+   
+   /* Add rowset data */
+   rem %This.addJSONDataImpl(&oJsonBldr_, &rsResult);
+   Return &oJsonBldr_.ToString();
+   
+end-method;
+
+method addJSONDataImpl
+   /+ &parentNode as JsonBuilder, +/
+   /+ &rsResult as Rowset +/
+   
+   Local Rowset &oRowset;
+   Local Row &oRow;
+   Local Record &oRec;
+   Local Field &oFld;
+   Local PSXP_XMLGEN:OutputField &oFieldTmp;
+   Local XmlNode &baseNode, &thisNode;
+   Local string &sRowsetName, &sRowXsdName;
+   Local string &sRecName, &sFldName, &sFldNames;
+   Local string &sSubRowsetName, &sSubRowsetXsdName;
+   Local string &sTmp;
+   Local number &nRowCount, &nRecCount, &nColCount, &nRowsetCount, &nRowCount2;
+   Local number &nActiveRow, &nActiveRowCount;
+   Local number &i, &j, &k;
+   
+   If &rsResult = Null Then
+      throw CreateException(&PSXP_MsgSet, 3222, &Exception_RowSetEmpty);
+   End-If;
+   
+   &oFieldTmp = create PSXP_XMLGEN:OutputField("temp");
+   &nActiveRowCount = &rsResult.ActiveRowCount;
+   
+   If &nActiveRowCount > 0 Then
+      
+      &sRowsetName = %This.getRowSetName(&rsResult);
+      &sRowXsdName = &Tag_Row | &sRowsetName;
+      
+      &nRowCount = &rsResult.RowCount;
+      &nActiveRow = 0;
+      
+      For &i = 1 To &nRowCount
+         /* Break if all active rows are read */
+         If &nActiveRow >= &nActiveRowCount Then
+            Break;
+         End-If;
+         &oRow = &rsResult(&i);
+         /* Skip deleted rows */
+         If &oRow.IsDeleted Then
+            Continue;
+         End-If;
+         &nActiveRow = &nActiveRow + 1;
+         If &parentNode.StartObjectReturnsTrue(&sRowXsdName) Then
+            &parentNode.AddProperty("rownumber", String(&nActiveRow));
+            
+            /* Create rowset row */
+            rem &baseNode = &parentNode.AddElement(&sRowXsdName);
+            rem &baseNode.AddAttribute("rownumber", String(&nActiveRow));
+            
+            &nRecCount = &oRow.RecordCount;
+            &sFldNames = "";
+            
+            /* Create field elements */
+            For &j = 1 To &nRecCount
+               &oRec = &oRow.GetRecord(&j);
+               &sRecName = &oRec.Name;
+               
+               &nColCount = &oRec.FieldCount;
+               For &k = 1 To &nColCount
+                  &oFld = &oRec.GetField(&k);
+                  
+                  &sFldName = &Tag_Field | &oFld.Name;
+                  If (Find(&sFldName | ",", &sFldNames) > 0) Then
+                     &sFldName = &Tag_Field | &sRecName | "_" | &sFldName;
+                  End-If;
+                  &sFldNames = &sFldNames | &sFldName | ",";
+                  
+                  rem &thisNode = &baseNode.AddElement(&sFldName);
+                  &sTmp = &oFieldTmp.GetFieldXSDValue(&oFld);
+                  &parentNode.AddProperty(&sFldName, %This.strEncode(&sTmp));
+                  rem &thisNode.NodeValue = &sTmp;
+               End-For;
+            End-For;
+            
+            /* Create sub-rowset elements */
+            &nRowsetCount = &oRow.ChildCount;
+            
+            For &j = 1 To &nRowsetCount
+               &oRowset = &oRow.GetRowset(&j);
+               &sSubRowsetName = %This.getRowSetName(&oRowset);
+               &sSubRowsetXsdName = &Tag_Rowset | &sSubRowsetName;
+               
+               rem &thisNode = &baseNode.AddElement(&sSubRowsetXsdName);
+               &parentNode.AddProperty("rowsetname", &sSubRowsetXsdName);
+               rem &thisNode.AddAttribute("rowsetname", &sSubRowsetName);
+               &nRowCount2 = &oRowset.RowCount;
+               rem &thisNode.AddAttribute("numrows", String(&nRowCount2));
+               rem %This.addXMLDataImpl(&parentNode, &oRowset);
+            End-For;
+            
+            &parentNode.EndObject(&sRowXsdName);
+         End-If;
+         
+      End-For;
+      
+   End-If;
+   
+end-method;
+
+method strEncode
+   /+ &input as String +/
+   /+ Returns String +/
+   
+   Local JavaObject &matcher;
+   Local string &output = &input;
+   Local string &replacement;
+   Local string &match;
+   Local number &offset = 1;
+   
+   REM ** Run lazy init if needed;
+   REM ** Protects against Stateless PeopleCode/Stateful JVM;
+   %This.init();
+   
+   &matcher = &unsafe_chars_pattern_.matcher(CreateJavaObject("java.lang.String", &input));
+   
+   While &matcher.find()
+      &match = &matcher.group();
+      
+      If (&meta_chars_.containsKey(&match)) Then
+         REM ** replace meta characters first;
+         &replacement = &meta_chars_.get(&match).toString();
+      Else
+         REM ** not meta, so convert to a unicode escape sequence;
+         &replacement = "\u" | Right("0000" | &int_.toHexString(Code(&match)), 4);
+      End-If;
+      &output = Replace(&output, &matcher.start() + &offset, (&matcher.end() - &matcher.start()), &replacement);
+      
+      REM ** move the starting position based on the size of the string after replacement;
+      &offset = &offset + Len(&replacement) - (&matcher.end() - &matcher.start());
+   End-While;
+   
+   Return &output;
+end-method;
+
+method init
+   REM ** None only works on local vars, so get a pointer;
+   Local JavaObject &int = &int_;
+   
+   REM ** if &int has no value, then initialize all JavaObject vars;
+   /*
+    * JavaObject vars will have no value in two scenarios:
+    *
+    *   1. First use, never initialized
+    *   2. Think time function, global variable, anything that causes state
+    *      serialization.
+    *
+    * The first case is obvious. The second case, however, is not. PeopleSoft
+    * allows you to make App Classes Global and Component scoped objects, but
+    * not JavaObject variables. By using JavaObject variables in Component and
+    * Global scope, you can get into a bit of trouble. Retesting these values
+    * on each use ensures they are always initialized. The same will happen if
+    * you use a think-time function like Prompt or a Yes/No/Cancel MessageBox.
+    */
+   If (None(&int)) Then
+      REM ** Lazy initialize Integer class;
+      &int_ = GetJavaClass("java.lang.Integer");
+      
+      REM ** Lazy initialize the regular expression;
+      REM ** List other unsafe characters;
+      &unsafe_chars_pattern_ = GetJavaClass("java.util.regex.Pattern").compile("[\\""\x00-\x1f\x7f-\x9f\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]");
+      
+      REM ** Lazy initialize the hashtable;
+      &meta_chars_ = CreateJavaObject("java.util.Hashtable");
+      
+      REM ** setup meta characters;
+      &meta_chars_.put(Char(8), "\b");
+      &meta_chars_.put(Char(9), "\t");
+      &meta_chars_.put(Char(10), "\n");
+      &meta_chars_.put(Char(12), "\f");
+      &meta_chars_.put(Char(13), "\r");
+      &meta_chars_.put("\", "\\");
+      &meta_chars_.put("""", "\""");
+   End-If;
+   
+end-method;
