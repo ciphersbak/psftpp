@@ -1,3 +1,4 @@
+rem Convert Rowset to JSON;
 import PP_UTIL_PKG:RowsetJS:*;
 import PSXP_ENGINE:*;
 import PSXP_RPTDEFNMANAGER:*;
@@ -20,7 +21,7 @@ Local PP_UTIL_PKG:RowsetJS &oRS2JSON_;
 Local string &strXML = &oRowSetDS.getXMLData(&rsLvl0_, "");
 Local boolean &boolval_ = &SomeXMLDoc_.ParseXmlString(&strXML);
 Local string &newoutStr_ = &SomeXMLDoc_.GenFormattedXmlString();
-&sJSONReply_ = &oRS2JSON_.getJSONData(&rsLvl0_, "");
+&sJSONReply_ = &oRS2JSON_.getJSONData(&rsLvl0_);
 rem MessageBox(0, "", 0, 0, "&sJSONReply_ " | &sJSONReply_);
 &recPPWrk_.DESCRLONG.Value = "";
 &recPPWrk_.DESCRLONG.Value = &sJSONReply_;
