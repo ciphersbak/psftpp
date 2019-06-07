@@ -5,12 +5,11 @@ class RowsetJS
    /* Constructor */
    method RowsetJS();
    
-   /* Generates RowSet data in XML from the RowSet object passed in.
-		&rsResult - input RowSet object. Assume caller has generated the rowset.
-		&sXSDLocation (optional) - XSD Location for XML Schema Validation.
+   /* Generates RowSet data in JSON from the RowSet object passed in.
+		&rsResult - input RowSet object. Assume caller has generated the rowset.		
 		return    - Generated RowSet data in XML string.
 		*/
-   method getJSONData(&rsResult As Rowset, &sXSDLocation As string) Returns string;
+   method getJSONData(&rsResult As Rowset) Returns string;
    
    /* Gets RowSet name. */
    method getRowSetName(&rsResult As Rowset) Returns string;
@@ -59,8 +58,7 @@ method getRowSetName
 end-method;
 
 method getJSONData
-   /+ &rsResult as Rowset, +/
-   /+ &sXSDLocation as String +/
+   /+ &rsResult as Rowset +/
    /+ Returns String +/
    Local XmlDoc &xmlDoc;
    Local XmlNode &xmlDocNode;
