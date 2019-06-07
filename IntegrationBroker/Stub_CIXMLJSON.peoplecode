@@ -1,0 +1,55 @@
+import X_PP_IB_HNDLR_X:*;
+
+Local Rowset &RS_LEVEL0_, &RS_Level1_;
+Local Row &RowLevel0_;
+Local Record &recPP_DEV_WRK_, &recPP_DEV_DVW_, &Rec1_;
+Local Message &ReqMSG_, &RespMSG_;
+Local string &handlername_, &strJSONString_, &error_string_, &strReq_;
+Local XmlDoc &ReqXML_, &RespXML_, &DummyXML_;
+Local boolean &bool_, &retBool_;
+Local number &nErrorMsgNumber#_, &nErrorMsgSetNumber#_, &GetKeyCount_;
+Local X_PP_IB_HNDLR_X:PPGetCIXMLJSON &PP_IB_OnRequest_;
+Local XmlNode &CINameNode_, &CINameText_;
+Local XmlNode &GetKeyNode_, &GetKeyText_;
+
+If (None(&PP_IB_OnRequest_)) Then
+   &PP_IB_OnRequest_ = create X_PP_IB_HNDLR_X:PPGetCIXMLJSON();
+End-If;
+
+REM Retrieve values from buffer;
+&RS_LEVEL0_ = GetLevel0();
+&RowLevel0_ = &RS_LEVEL0_.GetRow(1);
+&recPP_DEV_WRK_ = &RS_LEVEL0_.GetRow(1).GetRecord(Record.X_PP_DEV_WRK_X);
+&RS_Level1_ = &RowLevel0_.GetRowset(Scroll.X_PP_DEV_DVW_X);
+REM Use the dummy PP IB SVOP;
+&ReqMSG_ = CreateMessage(Operation.X_PP_IB_SVOP_X, %IntBroker_Request);
+&RespMSG_ = CreateMessage(Operation.X_PP_IB_SVOP_X, %IntBroker_Response);
+
+If All(&recPP_DEV_WRK_.DESCRLONG3.Value) Then
+   rem &ReqXML_ = CreateXmlDoc(&recPP_DEV_WRK_.DESCRLONG3.Value);
+End-If;
+&ReqXML_ = CreateXmlDoc("<?xml version='1.0' encoding='UTF-8'?><Request/>");
+/***** CI Name *****/
+&CINameNode_ = &ReqXML_.DocumentElement.AddElement("CI_NAME");
+&CINameText_ = &CINameNode_.AddText(&recPP_DEV_WRK_.DESCR100.Value);
+For &GetKeyCount_ = 1 To &RS_Level1_.RowCount
+   &Rec1_ = &RS_Level1_.GetRow(&GetKeyCount_).GetRecord(Record.X_PP_DEV_DVW_X);
+   &GetKeyNode_ = &ReqXML_.DocumentElement.AddElement(&Rec1_.GetField(1).Value);
+   &GetKeyText_ = &GetKeyNode_.AddText(&Rec1_.GetField(2).Value);
+End-For;
+&recPP_DEV_WRK_.DESCRLONG3.Value = &ReqXML_.GenFormattedXmlString();
+&ReqMSG_.SetXmlDoc(&ReqXML_); /* Load Unstructured Message */
+
+&RespMSG_ = %IntBroker.SyncRequest(&ReqMSG_); /* Ensure that a Local - Local routing is setup for the SvOp */
+If (&RespMSG_.ResponseStatus = %IB_Status_Success) Then
+   &RespXML_ = &RespMSG_.GetXmlDoc(); /* Get the XML Response */
+   rem Assign to page fields;
+   &recPP_DEV_WRK_.DESCRLONG.Value = &RespXML_.GenFormattedXmlString(); /* XML Response */
+Else
+   &error_string_ = &RespMSG_.IBException.ToString();
+   &nErrorMsgNumber#_ = &RespMSG_.IBException.MessageNumber;
+   &nErrorMsgSetNumber#_ = &RespMSG_.IBException.MessageSetNumber;
+End-If;
+REM Get JSON String;
+&strJSONString_ = &PP_IB_OnRequest_.getJSONFromXMLDoc(&RespXML_, &PP_IB_OnRequest_.emptyspaces_);
+&recPP_DEV_WRK_.DESCRLONG2.Value = &strJSONString_; /* JSON Response */
