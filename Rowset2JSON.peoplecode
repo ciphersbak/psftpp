@@ -111,6 +111,7 @@ method addJSONDataImpl
    Local number &nRowCount, &nRecCount, &nColCount, &nRowsetCount, &nRowCount2;
    Local number &nActiveRow, &nActiveRowCount;
    Local number &i, &j, &k;
+   Local File &logFile_ = GetFile("/tmp/LogFile_" | %Datetime | ".txt", "W", "A", %FilePath_Absolute);
    
    If &rsResult = Null Then
       throw CreateException(&PSXP_MsgSet, 3222, &Exception_RowSetEmpty);
@@ -139,7 +140,7 @@ method addJSONDataImpl
          End-If;
          &nActiveRow = &nActiveRow + 1;
          If &parentNode.StartObjectReturnsTrue(&sRowXsdName) Then
-            &parentNode.AddProperty("rownumber", String(&nActiveRow));
+            &parentNode.AddProperty("@rownumber", String(&nActiveRow));
             
             /* Create rowset row */
             rem &baseNode = &parentNode.AddElement(&sRowXsdName);
@@ -179,11 +180,42 @@ method addJSONDataImpl
                &sSubRowsetXsdName = &Tag_Rowset | &sSubRowsetName;
                
                rem &thisNode = &baseNode.AddElement(&sSubRowsetXsdName);
-               &parentNode.AddProperty("rowsetname", &sSubRowsetXsdName);
                rem &thisNode.AddAttribute("rowsetname", &sSubRowsetName);
-               &nRowCount2 = &oRowset.RowCount;
                rem &thisNode.AddAttribute("numrows", String(&nRowCount2));
                rem %This.addXMLDataImpl(&parentNode, &oRowset);
+               &nRowCount2 = &oRowset.RowCount;
+               /* 
+               If &parentNode.StartObjectReturnsTrue(&sSubRowsetXsdName) Then
+                  &parentNode.AddProperty("numrows", String(&nRowCount2));
+                  rem &parentNode.AddProperty("" | &sSubRowsetXsdName | "", &sSubRowsetName);
+                  &parentNode.AddProperty("rowsetname", &sSubRowsetName);
+                  %This.addJSONDataImpl(&parentNode, &oRowset);
+                  &parentNode.EndObject(&sSubRowsetXsdName);
+               End-If;
+               */
+               /*
+               If &parentNode.StartArrayReturnsTrue(&sSubRowsetXsdName) Then
+                  &parentNode.StartObject(&sSubRowsetXsdName);
+                  &parentNode.AddProperty("numrows", String(&nRowCount2));
+                  rem &parentNode.AddProperty("" | &sSubRowsetXsdName | "", &sSubRowsetName);
+                  &parentNode.AddProperty("rowsetname", &sSubRowsetName);
+                  %This.addJSONDataImpl(&parentNode, &oRowset);
+                  &parentNode.EndObject(&sSubRowsetXsdName);
+                  &parentNode.EndArray(&sSubRowsetXsdName);
+               End-If;
+               */
+               If &parentNode.StartObjectReturnsTrue(&sSubRowsetXsdName) Then
+                  &parentNode.AddProperty("@numrows", String(&nRowCount2));
+                  &parentNode.AddProperty("@rowsetname", &sSubRowsetName);
+                  If &parentNode.StartArrayReturnsTrue(&sSubRowsetXsdName) Then
+                     %This.addJSONDataImpl(&parentNode, &oRowset);
+                     &parentNode.AddNullElement();
+                     &parentNode.EndArray(&sSubRowsetXsdName);
+                     &logFile_.WriteLine("Inside StartArray : " | &sSubRowsetXsdName | " : for the : " | &j | " time.");
+                     &logFile_.Close();
+                  End-If;
+                  &parentNode.EndObject(&sSubRowsetXsdName);
+               End-If;
             End-For;
             
             &parentNode.EndObject(&sRowXsdName);
