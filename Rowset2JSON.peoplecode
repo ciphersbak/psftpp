@@ -83,9 +83,9 @@ method getJSONData
    Local JsonNode &jNode = &oJsonBldr_.GetRootNode();
    rem MessageBox(0, "", 0, 0, "BuildMode " | &iBldMode);
    If &oJsonBldr_.StartObjectReturnsTrue("") Then
-      &oJsonBldr_.AddProperty("rowsetname", &sRowsetName);
       &nActiveRowCount = &rsResult.ActiveRowCount;
-      &oJsonBldr_.AddProperty("numrows", String(&nActiveRowCount));
+      &oJsonBldr_.AddProperty("@numrows", String(&nActiveRowCount));
+      &oJsonBldr_.AddProperty("@rowsetname", &sRowsetName);
       %This.addJSONDataImpl(&oJsonBldr_, &rsResult);
       &oJsonBldr_.EndObject("");
    End-If;
@@ -142,7 +142,7 @@ method addJSONDataImpl
          &nActiveRow = &nActiveRow + 1;
          If &parentNode.StartObjectReturnsTrue(&sRowXsdName) Then
             &parentNode.AddProperty("@rownumber", String(&nActiveRow));
-            
+            &logFile_.WriteLine("Inside Object ||\/: " | &sRowXsdName | " : for the : " | &i | " time.");
             /* Create rowset row */
             rem &baseNode = &parentNode.AddElement(&sRowXsdName);
             rem &baseNode.AddAttribute("rownumber", String(&nActiveRow));
@@ -212,13 +212,15 @@ method addJSONDataImpl
                      %This.addJSONDataImpl(&parentNode, &oRowset);
                      &parentNode.AddNullElement();
                      &parentNode.EndArray(&sSubRowsetXsdName);
-                     &logFile_.WriteLine("Inside StartArray : " | &sSubRowsetXsdName | " : for the : " | &j | " time.");
+                     &logFile_.WriteLine("Inside StartArray ||/\: " | &sSubRowsetXsdName | " : for the : " | &j | " time.");
                   End-If;
                   &parentNode.EndObject(&sSubRowsetXsdName);
                End-If;
             End-For;
             
             &parentNode.EndObject(&sRowXsdName);
+         Else
+            &logFile_.WriteLine("Returned FALSE");
          End-If;
          
       End-For;
