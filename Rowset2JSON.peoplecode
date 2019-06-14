@@ -25,6 +25,7 @@ private
    instance JavaObject &meta_chars_;
    instance JavaObject &unsafe_chars_pattern_;
    instance JavaObject &int_;
+   instance File &logFile_;
    
    Constant &Tag_Rowset = "rs_";
    Constant &Tag_Row = "row_";
@@ -39,6 +40,7 @@ end-class;
 
 method RowsetJS
    &UsedFieldTypes = "";
+   &logFile_ = GetFile("/tmp/LogFile_" | %Datetime | ".txt", "W", "A", %FilePath_Absolute);
 end-method;
 
 method getRowSetName
@@ -87,7 +89,7 @@ method getJSONData
       %This.addJSONDataImpl(&oJsonBldr_, &rsResult);
       &oJsonBldr_.EndObject("");
    End-If;
-   
+   &logFile_.Close();
    /* Add rowset data */
    rem %This.addJSONDataImpl(&oJsonBldr_, &rsResult);
    Return &oJsonBldr_.ToString();
@@ -111,7 +113,6 @@ method addJSONDataImpl
    Local number &nRowCount, &nRecCount, &nColCount, &nRowsetCount, &nRowCount2;
    Local number &nActiveRow, &nActiveRowCount;
    Local number &i, &j, &k;
-   Local File &logFile_ = GetFile("/tmp/LogFile_" | %Datetime | ".txt", "W", "A", %FilePath_Absolute);
    
    If &rsResult = Null Then
       throw CreateException(&PSXP_MsgSet, 3222, &Exception_RowSetEmpty);
@@ -212,7 +213,6 @@ method addJSONDataImpl
                      &parentNode.AddNullElement();
                      &parentNode.EndArray(&sSubRowsetXsdName);
                      &logFile_.WriteLine("Inside StartArray : " | &sSubRowsetXsdName | " : for the : " | &j | " time.");
-                     &logFile_.Close();
                   End-If;
                   &parentNode.EndObject(&sSubRowsetXsdName);
                End-If;
