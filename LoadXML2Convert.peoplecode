@@ -1,0 +1,67 @@
+REM Allow user to upload an XML file;
+Local string &strLocalURL_ = "record://X_PPXML_ATT_X";
+Local string &strUploadedFile_;
+Local File &fileXMLFile_, &fileInput_, &fileOutput_;
+Local string &strReadLine_, &strFileString_;
+Local XmlDoc &xmlDummyXMLDoc_;
+Local boolean &bool_;
+Local integer &retcode_;
+
+If %Component = Component.X_PP_IB_TEST_CMP_X Then
+   X_PP_DEV_WRK_X.DESCR150_MIXED.Enabled = True;
+Else
+   X_PP_DEV_WRK_X.DESCR150_MIXED.Enabled = False;
+End-If;
+
+&retcode_ = AddAttachment(&strLocalURL_, "", ".xml", &strUploadedFile_, 0); /* Upload XML file */
+
+If &retcode_ <> %Attachment_Success Then /* Check return code (integer or constant) */
+   Exit;
+End-If;
+
+try
+   &retcode_ = GetAttachment(&strLocalURL_, &strUploadedFile_, "IB_XML.TXT", "PS_FILEDIR"); /* Get the uploaded XML file */
+catch Exception &error_
+   &retcode_ = GetAttachment(&strLocalURL_, &strUploadedFile_, "/files/" | "IB_XML.TXT", "PS_SERVDIR");
+end-try;
+
+If &retcode_ <> %Attachment_Success Then
+   MessageBox(0, "", 158, 653, "Error retrieving file from database");
+   Exit;
+End-If;
+REM Need to check the encoding of the XML file. Make sure Encoding is always UTF-8;
+&fileInput_ = GetFile("IB_XML.TXT", "R", "UTF8");
+&fileOutput_ = GetFile("IB_XML-UTF16.TXT", "W", "UCS2");
+While &fileInput_.ReadLine(&strReadLine_)
+   &fileOutput_.WriteLine(&strReadLine_);
+End-While;
+&fileInput_.Delete();
+&fileOutput_.Close();
+&fileXMLFile_ = GetFile("IB_XML-UTF16.TXT", "R", "UCS2");
+
+If &fileXMLFile_ = Null Then
+   MessageBox(0, "", 158, 653, "Error opening file from application server");
+   Exit;
+End-If;
+
+While &fileXMLFile_.ReadLine(&strReadLine_)
+   &strFileString_ = &strFileString_ | &strReadLine_;
+End-While;
+&fileXMLFile_.Delete();
+&retcode_ = DeleteAttachment(&strLocalURL_, &strUploadedFile_);
+/* Format XML using an XMLDoc object.*/
+&xmlDummyXMLDoc_ = CreateXmlDoc("");
+try
+   &bool_ = &xmlDummyXMLDoc_.ParseXmlString(&strFileString_);
+   If &bool_ Then
+      X_PP_DEV_WRK_X.DESCRLONG_NOTES = &xmlDummyXMLDoc_.GenFormattedXmlString();
+   Else
+      
+   End-If;
+catch Exception &error2_
+   
+   X_PP_DEV_WRK_X.DESCRLONG_NOTES = "";
+   MessageBox(0, MsgGetText(158, 702, "Message"), 158, 715, "Invalid XML detected.  Unable to load XMLDoc object.");
+   X_PP_DEV_WRK_X.DESCRLONG_NOTES = &strFileString_;
+   
+end-try;
