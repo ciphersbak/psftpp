@@ -29,7 +29,11 @@ Local boolean &boolval_ = &SomeXMLDoc_.ParseXmlString(&strXML);
 Local string &newoutStr_ = &SomeXMLDoc_.GenFormattedXmlString();
 If &BCFile_.IsOpen Then
    &BCFile_.WriteLine(&newoutStr_);
+   &startTime = %PerfTime;
    &sJSONReply_ = &oRS2JSON_.getJSONData(&rsLvl0_);
+   &End = %PerfTime;
+   &TimeDiff = NumberToString("%6.3", Value(&End - &startTime));
+   MessageBox(0, "", 0, 0, "Time taken to generate JSON for " | GetLevel0()(1).GetRowset(Scroll.PO_LINE).RowCount | " line PO: " | &TimeDiff);
    &BCFile_.WriteLine("**** JSON START ****");
    &BCFile_.WriteLine(&sJSONReply_);
    &BCFile_.Close();
