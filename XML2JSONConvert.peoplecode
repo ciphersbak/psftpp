@@ -1,0 +1,22 @@
+import X_PP_IB_HNDLR_X:*;
+
+Local X_PP_IB_HNDLR_X:PPGetCIXMLJSON &PP_IB_OnRequest_;
+Local string &strJSONString_;
+Local boolean &bool_;
+Component XmlDoc &RespXML_;
+
+If (None(&PP_IB_OnRequest_)) Then
+   &PP_IB_OnRequest_ = create X_PP_IB_HNDLR_X:PPGetCIXMLJSON();
+End-If;
+REM Check for loaded XML and then convert to JSON;
+If All(X_PP_DEV_WRK_X.DESCRLONG_NOTES.Value) Then
+   /* Format XML using an XMLDoc object.*/
+   &RespXML_ = CreateXmlDoc("");
+   &bool_ = &RespXML_.ParseXmlString(X_PP_DEV_WRK_X.DESCRLONG_NOTES.Value);
+   rem MessageBox(0, "", 0, 0, "XML: " | &RespXML_.GenFormattedXmlString());
+   REM Start the conversion;
+   &strJSONString_ = &PP_IB_OnRequest_.getJSONFromXMLDoc(&RespXML_, &PP_IB_OnRequest_.emptyspaces_);
+   X_PP_DEV_WRK_X.DESCRLONG4.Value = &strJSONString_; /* JSON Response */
+Else
+   MessageBox(0, "", 0, 0, "No file to convert.");
+End-If;
