@@ -26,6 +26,7 @@ private
    instance JavaObject &unsafe_chars_pattern_;
    instance JavaObject &int_;
    instance File &logFile_;
+   instance time &startTime;
    
    Constant &Tag_Rowset = "rs_";
    Constant &Tag_Row = "row_";
@@ -71,7 +72,7 @@ method getJSONData
    If &rsResult = Null Then
       throw CreateException(&PSXP_MsgSet, 3222, &Exception_RowSetEmpty);
    End-If;
-   
+   &startTime = %PerfTime;
    rem MessageBox(0, "", 0, 0, "&sRowsetName " | %This.getRowSetName(&rsResult));
    &sRowsetName = %This.getRowSetName(&rsResult);
    &sRowsetXsdName = &Tag_Rowset | &sRowsetName;
@@ -142,7 +143,7 @@ method addJSONDataImpl
          &nActiveRow = &nActiveRow + 1;
          If &parentNode.StartObjectReturnsTrue(&sRowXsdName) Then
             &parentNode.AddProperty("@rownumber", String(&nActiveRow));
-            &logFile_.WriteLine("Inside Object ||\/: " | &sRowXsdName | " : for the : " | &i | " time.");
+            &logFile_.WriteLine("Inside Object ||\/: " | &sRowXsdName | " : for the : " | &i | " time --> " | NumberToString("%6.3", Value(%PerfTime - &startTime)));
             /* Create rowset row */
             rem &baseNode = &parentNode.AddElement(&sRowXsdName);
             rem &baseNode.AddAttribute("rownumber", String(&nActiveRow));
@@ -211,13 +212,14 @@ method addJSONDataImpl
                   If &parentNode.StartArrayReturnsTrue(&sSubRowsetXsdName) Then
                      %This.addJSONDataImpl(&parentNode, &oRowset);
                      &parentNode.AddNullElement();
-                     &parentNode.EndArray(&sSubRowsetXsdName);
-                     &logFile_.WriteLine("Inside StartArray ||/\: " | &sSubRowsetXsdName | " : for the : " | &j | " time.");
+                     rem &parentNode.EndArray(&sSubRowsetXsdName);
+                     &logFile_.WriteLine("Inside StartArray ||/\: " | &sSubRowsetXsdName | " : for the : " | &j | " time --> " | NumberToString("%6.3", Value(%PerfTime - &startTime)));
                   End-If;
-                  &parentNode.EndObject(&sSubRowsetXsdName);
+                  &parentNode.EndArray(&sSubRowsetXsdName);
+                  rem &parentNode.EndObject(&sSubRowsetXsdName);
                End-If;
+               &parentNode.EndObject(&sSubRowsetXsdName);
             End-For;
-            
             &parentNode.EndObject(&sRowXsdName);
          Else
             &logFile_.WriteLine("Returned FALSE");
