@@ -8,6 +8,10 @@ import PSXP_XMLGEN:RowSetDS:*;
 REM **** PP ADD END ****;
 
 REM **** PP ADD START ****;
+&startTime = %PerfTime;
+REM **** PP ADD END ****;
+
+REM **** PP ADD START ****;
 Local XmlDoc &SomeXMLDoc_;
 Local Rowset &rsLvl0_;
 Local Record &recPPWrk_;
@@ -19,8 +23,12 @@ Local PP_UTIL_PKG:RowsetJS &oRS2JSON_;
 &oRS2JSON_ = create PP_UTIL_PKG:RowsetJS();
 
 &rsLvl0_ = GetLevel0();
-rem &recPPWrk_ = &rsLvl0_(1).GetRecord(Record.PP_DERIVED_WRK);
-rem Local File &BCFile_ = GetFile("//slcnas564/DEP_LOGS/E92PP858/ENT_DEV_TP_DB_EP920MST_C612_I1_190411_1906040500/06092019_2018/LOGS/appserv/testfile_" | %Datetime | ".txt", "W", "A", %FilePath_Absolute);
+&sJSONReply_ = &oRS2JSON_.getJSONData(&rsLvl0_);
+&End = %PerfTime;
+&TimeDiff = NumberToString("%6.3", Value(&End - &startTime));
+MessageBox(0, "", 0, 0, "Time taken to generate JSON for " | GetLevel0()(1).GetRowset(Scroll.PO_LINE).RowCount | " line PO: " | &TimeDiff);
+
+/* 
 Local File &BCFile_ = GetFile("/tmp/POComponentFile_" | %Datetime | ".txt", "W", "A", %FilePath_Absolute);
 &SomeXMLDoc_ = CreateXmlDoc("");
 
@@ -29,17 +37,13 @@ Local boolean &boolval_ = &SomeXMLDoc_.ParseXmlString(&strXML);
 Local string &newoutStr_ = &SomeXMLDoc_.GenFormattedXmlString();
 If &BCFile_.IsOpen Then
    &BCFile_.WriteLine(&newoutStr_);
-   &startTime = %PerfTime;
-   &sJSONReply_ = &oRS2JSON_.getJSONData(&rsLvl0_);
-   &End = %PerfTime;
-   &TimeDiff = NumberToString("%6.3", Value(&End - &startTime));
-   MessageBox(0, "", 0, 0, "Time taken to generate JSON for " | GetLevel0()(1).GetRowset(Scroll.PO_LINE).RowCount | " line PO: " | &TimeDiff);
    &BCFile_.WriteLine("**** JSON START ****");
    &BCFile_.WriteLine(&sJSONReply_);
    &BCFile_.Close();
 Else
    MessageBox(0, "", 0, 0, "File is NOT OPEN");
 End-If;
+*/
 rem MessageBox(0, "", 0, 0, "&sJSONReply_ " | &sJSONReply_);
 rem &recPPWrk_.DESCRLONG.Value = "";
 rem &recPPWrk_.DESCRLONG.Value = &sJSONReply_;
