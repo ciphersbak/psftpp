@@ -1,0 +1,285 @@
+class CompIntUtils
+   method CompIntUtils();
+   method someCI();
+   method getXMLNodeFromCI(&CIObject As ApiObject, &boolRootCollection As boolean, &property As ApiObject, &xmlNodeElement As XmlNode);
+   method getJSONFromXMLDoc(&xmlDocObj As XmlDoc, &strSpaces As string) Returns string;
+   method getJSONFromXMLNode(&xmlDocObj As XmlDoc, &xmlNode As XmlNode, &strSpaces As string) Returns string;
+   method isXMLNodeIsCollection(&xmlNode As XmlNode) Returns boolean;
+   method getJSONFromDuplicateXMLNode(&xmlDocObj As XmlDoc, &xmlNode As XmlNode, &strSpaces As string) Returns string;
+   method strEncode(&input As string) Returns string;
+   property File logXMLFile_;
+   property File logJSONFile_;
+   property XmlDoc returnXMLDoc_;
+   property XmlNode xmlNodeResponse_;
+   rem property string strJSONString_;
+   property string strComponentInterfaceName_;
+   property string CRLF_;
+   property string emptyspaces_;
+   
+private
+   instance JavaObject &meta_chars_;
+   instance JavaObject &unsafe_chars_pattern_;
+   instance JavaObject &int_;
+   
+   Constant &sXMLVersionStr_ = "<?xml version='1.0'?><Response/>";
+   Constant &sGeneratedXMLDoc_ = "Generated XMLDoC: ";
+   Constant &nMsgSetNbr#_ = 18022;
+   Constant &nMsgNbr#_ = 54;
+   Constant &sSessionFailureMsg_ = "Could not establish a SESSION connection";
+   Constant &sCIGetFailureMsg_ = "Could not get an instance of CI";
+   
+   method init();
+   
+end-class;
+
+method CompIntUtils
+end-method;
+
+method someCI
+   
+   Local ApiObject &Session_, &CI_WEB_PROF_;
+   Local ApiObject &PROPINFO_0, &PROPITEM_0, &PROPINFO_1, &PROPITEM_1, &PROPINFO_2, &PROPITEM_2;
+   Local ApiObject &CISession_, &CIInstance_, &CIMessageCollection_;
+   Local string &str_, &str2_, &msgName_, &KEY_VALUE1_;
+   Local number &KEY_VALUE2_;
+   Local Rowset &LevelZRS_, &RS_;
+   Local boolean &ret_;
+   Local XmlDoc &xmlstr_;
+   Local string &somestring_, &sMethodName_, &strJSONString_;
+   Local boolean &bDebug_;
+   rem Local string &CRLF_ = Char(13) | Char(10);
+   Local number &I, &J, &K;
+   Local string &S1;
+   Local array of XmlNode &xmlNode1_, &xmlNode2_, &xmlNode3_;
+   
+   /* Get Session and set the Message Mode */
+   &CISession_ = %Session;
+   &CISession_.PSMessagesMode = 1;
+   /* Clear all the errors in the collection, Delete all messages in queue */
+   &CIMessageCollection_ = &CISession_.PSMessages;
+   &CIMessageCollection_.DeleteAll();
+   %This.strComponentInterfaceName_ = "PO_EXPRESS_CI"; /* Set the CI name here */
+   rem &xmlNode1_ = &RespXMLDoc_.GetElementsByTagName("CI_NAME");
+   rem %This.strComponentInterfaceName_ = &xmlNode1_ [1].NodeValue;
+   
+   If All(&CISession_) Then
+      /* Get the Component Interface */
+      &CIInstance_ = &CISession_.GetCompIntfc(@("CompIntfc." | %This.strComponentInterfaceName_));
+      &CIInstance_.InteractiveMode = False;
+      &CIInstance_.GetHistoryItems = True;
+      &CIInstance_.EditHistoryItems = True;
+      &CIInstance_.StopOnFirstError = True;
+      /* Local integer &intChildIndex;
+         Local XmlNode &xmlNodeRootNode = &RespXMLDoc_.DocumentElement;
+         REM We start the below loop from 2 because the first node is always the CI NAME and we have read that earlier;
+         For &intChildIndex = 2 To &xmlNodeRootNode.ChildNodeCount
+            Local XmlNode &xmlNodeKeyNode = &xmlNodeRootNode.GetChildNode(&intChildIndex);
+            &CIInstance_.setpropertybyname(&xmlNodeKeyNode.NodeName, &xmlNodeKeyNode.NodeValue);
+         End-For;
+      */
+      &CIInstance_.BUSINESS_UNIT = "US001";
+      &CIInstance_.PO_ID = "PPPO_001";
+      If Not &CIInstance_.get() Then
+         Error (&sCIGetFailureMsg_);
+         Exit (1);
+      End-If;
+   Else
+      Error MsgGet(&nMsgSetNbr#_, &nMsgNbr#_, &sSessionFailureMsg_);
+      Exit (1);
+   End-If;
+   %This.logXMLFile_ = GetFile("/tmp/X_PPGetCIXMLJSON_X_" | %PerfTime | ".txt", "W", "A", %FilePath_Absolute);
+   %This.returnXMLDoc_ = CreateXmlDoc(&sXMLVersionStr_); /* Create the response XML */
+   %This.xmlNodeResponse_ = %This.returnXMLDoc_.DocumentElement.AddElement("Get_" | %This.strComponentInterfaceName_); /* Create the Root Node for Response XML */
+   REM Call method to create XMLDoc;
+   %This.getXMLNodeFromCI(&CIInstance_, True, &CIInstance_, %This.xmlNodeResponse_); /* Generate XML, First call is always with True for root collection*/
+   rem %This.logXMLFile_.WriteLine(&sGeneratedXMLDoc_);
+   rem %This.logXMLFile_.WriteLine(%This.returnXMLDoc_.GenFormattedXmlString()); /* Write the generated XML to file */
+   rem &respMsg_.SetXmlDoc(%This.returnXMLDoc_);
+   <* 
+   &strJSONString_ = %This.getJSONFromXMLDoc(%This.returnXMLDoc_, %This.emptyspaces_); /* Use the generated XML as input to convert to JSON */
+   rem &strJSONString_ = %This.getJSONFromXMLDoc(&respMsg_.GetXmlDoc(), %This.emptyspaces_); /* Use the generated XML as input to convert to JSON */
+   %This.logJSONFile_ = GetFile("/tmp/" | %This.strComponentInterfaceName_ | "_JSON_" | %PerfTime | ".txt", "W", %FilePath_Absolute);
+   %This.logJSONFile_.WriteLine(&strJSONString_);
+   %This.logJSONFile_.Close();
+   *>
+   %This.logXMLFile_.Close();
+   
+end-method;
+
+method getXMLNodeFromCI
+   /+ &CIObject as ApiObject, +/
+   /+ &boolRootCollection as Boolean, +/
+   /+ &property as ApiObject, +/
+   /+ &xmlNodeElement as XmlNode +/
+   
+   Local integer &intPropertyInfoCollectionIndex;
+   Local ApiObject &propertyInfoCollection, &CICollection;
+   Local XmlNode &xmlNodeChildNode, &xmlNodeValueNode;
+   Local XmlNode &xmlNodeRootElement;
+   If &boolRootCollection Then
+      &xmlNodeRootElement = &xmlNodeElement.AddElement("PROPERTIES"); /* All CIs have this at Level Zero */
+      /* Since this is the root collection, it will only have one row */
+      &propertyInfoCollection = &CIObject.PropertyInfoCollection;
+      For &intPropertyInfoCollectionIndex = 1 To &propertyInfoCollection.Count
+         &property = &propertyInfoCollection.Item(&intPropertyInfoCollectionIndex);
+         If &property.IsCollection Then
+            &CICollection = &CIObject.GetPropertyByName(&property.Name);
+            &xmlNodeChildNode = &xmlNodeRootElement.AddElement(&property.Name);
+            %This.getXMLNodeFromCI(&CICollection, False, &property, &xmlNodeChildNode); /* Boolean is set to False as it is for levels other than level ZERO */
+         Else
+            &xmlNodeChildNode = &xmlNodeRootElement.AddElement(&property.Name);
+            &xmlNodeValueNode = &xmlNodeChildNode.AddText(&CIObject.GetPropertyByName(&property.Name));
+         End-If;
+      End-For;
+   Else
+      /* For all levels except ZERO, there can be multiple rows for collection(s) */
+      Local integer &intCICollectionIndex;
+      rem %This.logXMLFile_.WriteLine("Name: " | &property.Name | " count: " | &CIObject.Count);
+      Local string &strCollectionName = &property.Name;
+      &propertyInfoCollection = &property.PropertyInfoCollection;
+      For &intCICollectionIndex = 1 To &CIObject.Count
+         If &intCICollectionIndex > 1 Then
+            &xmlNodeElement = &xmlNodeElement.ParentNode.AddElement(&strCollectionName);
+         End-If;
+         Local ApiObject &lvlCIObject = &CIObject.Item(&intCICollectionIndex);
+         rem %This.logXMLFile_.WriteLine("Count of &propertyInfoCollection: " | &propertyInfoCollection.Name);
+         For &intPropertyInfoCollectionIndex = 1 To &propertyInfoCollection.Count
+            &property = &propertyInfoCollection.Item(&intPropertyInfoCollectionIndex);
+            rem %This.logXMLFile_.WriteLine("Property Name: " | &property.Name);
+            If &property.IsCollection Then
+               &CICollection = &lvlCIObject.GetPropertyByName(&property.Name);
+               &xmlNodeChildNode = &xmlNodeElement.AddElement(&property.Name);
+               %This.getXMLNodeFromCI(&CICollection, False, &property, &xmlNodeChildNode); /* Boolean is set to False as it is for levels other than level ZERO */
+            Else
+               &xmlNodeChildNode = &xmlNodeElement.AddElement(&property.Name);
+               &xmlNodeValueNode = &xmlNodeChildNode.AddText(&lvlCIObject.GetPropertyByName(&property.Name));
+            End-If;
+         End-For;
+      End-For;
+   End-If;
+   
+end-method;
+
+method getJSONFromXMLDoc
+   /+ &xmlDocObj as XmlDoc, +/
+   /+ &strSpaces as String +/
+   /+ Returns String +/
+   
+   Local string &strJSONString_;
+   
+   Return &strJSONString_;
+end-method;
+
+method getJSONFromXMLNode
+   /+ &xmlDocObj as XmlDoc, +/
+   /+ &xmlNode as XmlNode, +/
+   /+ &strSpaces as String +/
+   /+ Returns String +/
+   
+   Local string &strJSONString_;
+   
+   Return &strJSONString_;
+end-method;
+
+method getJSONFromDuplicateXMLNode
+   /+ &xmlDocObj as XmlDoc, +/
+   /+ &xmlNode as XmlNode, +/
+   /+ &strSpaces as String +/
+   /+ Returns String +/
+   
+   Local string &strJSONString_;
+   
+   Return &strJSONString_;
+end-method;
+
+method isXMLNodeIsCollection /* DO NOT DELETE THIS METHOD */
+   /+ &xmlNode as XmlNode +/
+   /+ Returns Boolean +/
+   REM This condition checks for XML Nodes which have an end tag e.g., <XML_NODE_NAME></XML_NODE_NAME>;
+   If &xmlNode.GetChildNode(1).NodeName = "#text" Then /* WTF IS THIS */
+      Return False; /* IsProperty */
+   End-If;
+   REM This condition checks for XML Nodes which do not have an end tag e.g., <XML_NODE_NAME/>;
+   If &xmlNode.ChildNodeCount = 0 Then
+      Return False;
+   End-If;
+   
+   Return True; /* IsCollection */
+end-method;
+
+method strEncode
+   /+ &input as String +/
+   /+ Returns String +/
+   
+   Local JavaObject &matcher;
+   Local string &output = &input;
+   Local string &replacement;
+   Local string &match;
+   Local number &offset = 1;
+   
+   REM ** Run lazy init if needed;
+   REM ** Protects against stateless PeopleCode/Stateful JVM;
+   %This.init();
+   
+   &matcher = &unsafe_chars_pattern_.matcher(CreateJavaObject("java.lang.String", &input));
+   
+   While &matcher.find()
+      &match = &matcher.group();
+      
+      If (&meta_chars_.containsKey(&match)) Then
+         REM ** replace meta characters first;
+         &replacement = &meta_chars_.get(&match).toString();
+      Else
+         REM ** not meta, so convert to a unicode escape sequence;
+         &replacement = "\u" | Right("0000" | &int_.toHexString(Code(&match)), 4);
+      End-If;
+      &output = Replace(&output, &matcher.start() + &offset, (&matcher.end() - &matcher.start()), &replacement);
+      
+      REM ** move the starting position based on the size of the string after replacement;
+      &offset = &offset + Len(&replacement) - (&matcher.end() - &matcher.start());
+   End-While;
+   
+   Return &output;
+end-method;
+
+method init
+   REM ** None only works on local vars, so get a pointer;
+   Local JavaObject &int = &int_;
+   
+   REM ** if &int has no value, then initialize all JavaObject vars;
+   /*
+    * JavaObject vars will have no value in two scenarios:
+    *
+    *   1. First use, never initialized
+    *   2. Think time function, global variable, anything that causes state
+    *      serialization.
+    *
+    * The first case is obvious. The second case, however, is not. PeopleSoft
+    * allows you to make App Classes Global and Component scoped objects, but
+    * not JavaObject variables. By using JavaObject variables in Component and
+    * Global scope, you can get into a bit of trouble. Retesting these values
+    * on each use ensures they are always initialized. The same will happen if
+    * you use a think-time function like Prompt or a Yes/No/Cancel MessageBox.
+    */
+   If (None(&int)) Then
+      REM ** Lazy initialize Integer class;
+      &int_ = GetJavaClass("java.lang.Integer");
+      
+      REM ** Lazy initialize the regular expression;
+      REM ** List other unsafe characters;
+      &unsafe_chars_pattern_ = GetJavaClass("java.util.regex.Pattern").compile("[\\""\x00-\x1f\x7f-\x9f\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]");
+      
+      REM ** Lazy initialize the hashtable;
+      &meta_chars_ = CreateJavaObject("java.util.Hashtable");
+      
+      REM ** setup meta characters;
+      &meta_chars_.put(Char(8), "\b");
+      &meta_chars_.put(Char(9), "\t");
+      &meta_chars_.put(Char(10), "\n");
+      &meta_chars_.put(Char(12), "\f");
+      &meta_chars_.put(Char(13), "\r");
+      &meta_chars_.put("\", "\\");
+      &meta_chars_.put("""", "\""");
+   End-If;
+   
+end-method;
