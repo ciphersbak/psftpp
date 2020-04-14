@@ -1,4 +1,4 @@
-rem construct multipart/form-data and send to IDR;
+rem construct multipart/form-data and send to Svc;
 import X_PP_IB_HNDLR_X:StringBuffer;
 import X_PP_IB_HNDLR_X:PS2IDR;
 
