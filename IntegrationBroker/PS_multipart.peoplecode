@@ -194,7 +194,7 @@ end-method;
 /*
  * Configure JWT Assertion
  * Setup psft client
- * Pass token to IDCS.
+ * Pass token to Identity Provider.
  * DOES NOT WORK yet.
  */
 method buildAuth
