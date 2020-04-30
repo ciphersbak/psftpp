@@ -1,0 +1,207 @@
+Function report_HTTP_Request_Environment() Returns string
+   
+   /*
+   This Signon PeopleCode extracts and reports the HTTP request data.
+   It returns all the information in a single string variable.
+   */
+   
+   Local string &result;
+   Local string &indent = "    ";
+   Local string &EOL = Char(10);
+   
+   Local array of string &headerNames_array;
+   Local array of string &cookieNames_array;
+   Local array of string &parameterNames_array;
+   Local array of string &parameterValues_array;
+   
+   
+   /* -------------------------------------------------------------------------------- */
+   &result = &result | "***** HTTP Request Headers" | &EOL;
+   
+   &headerNames_array = %Request.GetHeaderNames();
+   For &IX = 1 To &headerNames_array.Len;
+      If &headerNames_array [&IX] = "Cookie" Then
+         &result = &result | &indent | &headerNames_array [&IX] | " = <not printed here>" | &EOL;
+      Else
+         &result = &result | &indent | &headerNames_array [&IX] | " = " | %Request.GetHeader(&headerNames_array [&IX]) | &EOL;
+      End-If
+   End-For;
+   
+   
+   /* -------------------------------------------------------------------------------- */
+   &result = &result | &EOL;
+   &result = &result | "***** HTTP Request Cookies" | &EOL;
+   
+   &cookieNames_array = %Request.GetCookieNames();
+   For &IX = 1 To &cookieNames_array.Len;
+      &result = &result | &indent | &cookieNames_array [&IX] | " = " | %Request.GetCookieValue(&cookieNames_array [&IX]) | &EOL;
+   End-For;
+   
+   
+   /* -------------------------------------------------------------------------------- */
+   &result = &result | &EOL;
+   &result = &result | "***** HTTP Request Parameters" | &EOL;
+   
+   &parameterNames_array = %Request.GetParameterNames();
+   For &IX = 1 To &parameterNames_array.Len;
+      &result = &result | &indent | &parameterNames_array [&IX] | " = " | %Request.GetParameter(&parameterNames_array [&IX]) | &EOL;
+      
+      &parameterValues_array = %Request.GetParameterValues(&parameterNames_array [&IX]);
+      For &JX = 1 To &parameterValues_array.Len;
+         &result = &result | &indent | &indent | &parameterNames_array [&IX] | "." | &JX | " = " | &parameterValues_array [&JX] | &EOL;
+      End-For;
+   End-For;
+   
+   
+   /* -------------------------------------------------------------------------------- */
+   &result = &result | &EOL;
+   &result = &result | "***** HTTP Request class Properties" | &EOL;
+   
+   &result = &result | &indent | " AuthTokenDomain = " | %Request.AuthTokenDomain | &EOL;
+   &result = &result | &indent | " AuthType = " | %Request.AuthType | &EOL;
+   &result = &result | &indent | " BrowserDeviceFormFactor [Fluid Only] = " | %Request.BrowserDeviceFormFactor | &EOL;
+   &result = &result | &indent | " BrowserDeviceType [Fluid Only] = " | %Request.BrowserDeviceType | &EOL;
+   &result = &result | &indent | " BrowserFluidCapable [Fluid Only] = " | %Request.BrowserFluidCapable | &EOL;
+   &result = &result | &indent | " BrowserPlatform = " | %Request.BrowserPlatform | &EOL;
+   &result = &result | &indent | " BrowserPlatformClass [Fluid Only] = " | %Request.BrowserPlatformClass | &EOL;
+   &result = &result | &indent | " BrowserType = " | %Request.BrowserType | &EOL;
+   &result = &result | &indent | " BrowserTypeClass [Fluid Only] = " | %Request.BrowserTypeClass | &EOL;
+   &result = &result | &indent | " BrowserVersion = " | %Request.BrowserVersion | &EOL;
+   &result = &result | &indent | " ByPassSignOn = " | %Request.ByPassSignOn | &EOL;
+   &result = &result | &indent | " ContentURI = " | %Request.ContentURI | &EOL;
+   &result = &result | &indent | " ExpireMeta = " | %Request.ExpireMeta | &EOL;
+   &result = &result | &indent | " ExtraLarge [Fluid Only] = " | %Request.ExtraLarge | &EOL;
+   &result = &result | &indent | " FullURI = " | %Request.FullURI | &EOL;
+   &result = &result | &indent | " HTTPMethod = " | %Request.HTTPMethod | &EOL;
+   &result = &result | &indent | " Large [Fluid Only] = " | %Request.Large | &EOL;
+   &result = &result | &indent | " LogoutURL = " | %Request.LogoutURL | &EOL;
+   &result = &result | &indent | " Medium [Fluid Only] = " | %Request.Medium | &EOL;
+   &result = &result | &indent | " PathInfo = " | %Request.PathInfo | &EOL;
+   &result = &result | &indent | " Protocol = " | %Request.Protocol | &EOL;
+   &result = &result | &indent | " QueryString = " | %Request.QueryString | &EOL;
+   &result = &result | &indent | " RelativeURL = " | %Request.RelativeURL | &EOL;
+   &result = &result | &indent | " RemoteAddr = " | %Request.RemoteAddr | &EOL;
+   &result = &result | &indent | " RemoteHost = " | %Request.RemoteHost | &EOL;
+   &result = &result | &indent | " RemoteUser = " | %Request.RemoteUser | &EOL;
+   &result = &result | &indent | " RequestURI = " | %Request.RequestURI | &EOL;
+   &result = &result | &indent | " Scheme = " | %Request.Scheme | &EOL;
+   &result = &result | &indent | " ServerName = " | %Request.ServerName | &EOL;
+   &result = &result | &indent | " ServerPort = " | %Request.ServerPort | &EOL;
+   &result = &result | &indent | " ServletPath = " | %Request.ServletPath | &EOL;
+   &result = &result | &indent | " Small [Fluid Only] = " | %Request.Small | &EOL;
+   &result = &result | &indent | " Timeout = " | %Request.Timeout | &EOL;
+   
+   
+   /* -------------------------------------------------------------------------------- */
+   &result = &result | &EOL;
+   &result = &result | "***** Other HTTP Request Content" | &EOL;
+   
+   &result = &result | &indent | " GetContentBody() = " | %Request.GetContentBody() | &EOL;
+   &result = &result | &indent | " GetDeviceInfo()" | &EOL;
+   &result = &result | &indent | &indent | " GetDeviceInfo(""canvas"") = " | %Request.GetDeviceInfo("canvas") | &EOL;
+   &result = &result | &indent | &indent | " GetDeviceInfo(""clientHeight"") = " | %Request.GetDeviceInfo("clientHeight") | &EOL;
+   &result = &result | &indent | &indent | " GetDeviceInfo(""clientWidth"") = " | %Request.GetDeviceInfo("clientWidth") | &EOL;
+   &result = &result | &indent | &indent | " GetDeviceInfo(""datepicker"") = " | %Request.GetDeviceInfo("datepicker") | &EOL;
+   &result = &result | &indent | &indent | " GetDeviceInfo(""dnd"") = " | %Request.GetDeviceInfo("dnd") | &EOL;
+   &result = &result | &indent | &indent | " GetDeviceInfo(""dtpicker"") = " | %Request.GetDeviceInfo("dtpicker") | &EOL;
+   &result = &result | &indent | &indent | " GetDeviceInfo(""geolocation"") = " | %Request.GetDeviceInfo("geolocation") | &EOL;
+   &result = &result | &indent | &indent | " GetDeviceInfo(""hc"") = " | %Request.GetDeviceInfo("hc") | &EOL;
+   &result = &result | &indent | &indent | " GetDeviceInfo(""height"") = " | %Request.GetDeviceInfo("height") | &EOL;
+   &result = &result | &indent | &indent | " GetDeviceInfo(""history"") = " | %Request.GetDeviceInfo("history") | &EOL;
+   &result = &result | &indent | &indent | " GetDeviceInfo(""localstorage"") = " | %Request.GetDeviceInfo("localstorage") | &EOL;
+   &result = &result | &indent | &indent | " GetDeviceInfo(""maf"") = " | %Request.GetDeviceInfo("maf") | &EOL;
+   &result = &result | &indent | &indent | " GetDeviceInfo(""pixelratio"") = " | %Request.GetDeviceInfo("pixelratio") | &EOL;
+   &result = &result | &indent | &indent | " GetDeviceInfo(""postmessage"") = " | %Request.GetDeviceInfo("postmessage") | &EOL;
+   &result = &result | &indent | &indent | " GetDeviceInfo(""sessionstorage"") = " | %Request.GetDeviceInfo("sessionstorage") | &EOL;
+   &result = &result | &indent | &indent | " GetDeviceInfo(""svg"") = " | %Request.GetDeviceInfo("svg") | &EOL;
+   &result = &result | &indent | &indent | " GetDeviceInfo(""timepicker"") = " | %Request.GetDeviceInfo("timepicker") | &EOL;
+   &result = &result | &indent | &indent | " GetDeviceInfo(""touch"") = " | %Request.GetDeviceInfo("touch") | &EOL;
+   &result = &result | &indent | &indent | " GetDeviceInfo(""websockets"") = " | %Request.GetDeviceInfo("websockets") | &EOL;
+   &result = &result | &indent | &indent | " GetDeviceInfo(""webworkers"") = " | %Request.GetDeviceInfo("webworkers") | &EOL;
+   &result = &result | &indent | &indent | " GetDeviceInfo(""width"") = " | %Request.GetDeviceInfo("width") | &EOL;
+   
+   
+   /* -------------------------------------------------------------------------------- */
+   &result = &result | &EOL;
+   &result = &result | "***** PeopleCode system variables" | &EOL;
+   
+   &result = &result | &indent | " %AllowNotification = " | %AllowNotification | &EOL;
+   &result = &result | &indent | " %AllowRecipientLookup = " | %AllowRecipientLookup | &EOL;
+   &result = &result | &indent | " %ApplicationLogFence = " | %ApplicationLogFence | &EOL;
+   &result = &result | &indent | " %AsOfDate = " | %AsOfDate | &EOL;
+   &result = &result | &indent | " %AuthenticationToken = " | %AuthenticationToken | &EOL;
+   &result = &result | &indent | " %ClientDate = " | %ClientDate | &EOL;
+   &result = &result | &indent | " %ClientTimeZone = " | %ClientTimeZone | &EOL;
+   &result = &result | &indent | " %CompIntfcName = " | %CompIntfcName | &EOL;
+   &result = &result | &indent | " %Component = " | %Component | &EOL;
+   &result = &result | &indent | " %ContentID = " | %ContentID | &EOL;
+   &result = &result | &indent | " %ContentType = " | %ContentType | &EOL;
+   &result = &result | &indent | " %Copyright = " | %Copyright | &EOL;
+   &result = &result | &indent | " %Currency = " | %Currency | &EOL;
+   &result = &result | &indent | " %Date = " | %Date | &EOL;
+   &result = &result | &indent | " %DateTime = " | %Datetime | &EOL;
+   &result = &result | &indent | " %DbName = " | %DbName | &EOL;
+   &result = &result | &indent | " %DbServerName = " | %DbServerName | &EOL;
+   &result = &result | &indent | " %DbType = " | %DbType | &EOL;
+   &result = &result | &indent | " %EmailAddress = " | %EmailAddress | &EOL;
+   &result = &result | &indent | " %EmployeeId = " | %EmployeeId | &EOL;
+   &result = &result | &indent | " %HPTabName = " | %HPTabName | &EOL;
+   &result = &result | &indent | " %IB_JSON = " | %IB_JSON | &EOL;
+   &result = &result | &indent | " %IB_XML = " | %IB_XML | &EOL;
+   &result = &result | &indent | " %Import = " | %Import | &EOL;
+   &result = &result | &indent | " %IntBroker = " | %IntBroker | &EOL;
+   &result = &result | &indent | " %IsMultiLanguageEnabled = " | %IsMultiLanguageEnabled | &EOL;
+   &result = &result | &indent | " %Language = " | %Language | &EOL;
+   &result = &result | &indent | " %Language_Base = " | %Language_Base | &EOL;
+   &result = &result | &indent | " %Language_Data = " | %Language_Data | &EOL;
+   &result = &result | &indent | " %Language_User = " | %Language_User | &EOL;
+   &result = &result | &indent | " %LocalNode = " | %LocalNode | &EOL;
+   &result = &result | &indent | " %Market = " | %Market | &EOL;
+   &result = &result | &indent | " %MaxMessageSize = " | %MaxMessageSize | &EOL;
+   &result = &result | &indent | " %MaxNbrSegments = " | %MaxNbrSegments | &EOL;
+   &result = &result | &indent | " %Menu = " | %Menu | &EOL;
+   &result = &result | &indent | " %Mode = " | %Mode | &EOL;
+   &result = &result | &indent | " %NavigatorHomePermissionList = " | %NavigatorHomePermissionList | &EOL;
+   &result = &result | &indent | " %Node = " | %Node | &EOL;
+   &result = &result | &indent | " %OperatorClass [Obsolete] = " | %OperatorClass | &EOL;
+   &result = &result | &indent | " %OperatorId [Obsolete] = " | %OperatorId | &EOL;
+   &result = &result | &indent | " %OperatorRowLevelSecurityClass [Obsolete] = " | %OperatorRowLevelSecurityClass | &EOL;
+   &result = &result | &indent | " %Page = " | %Page | &EOL;
+   &result = &result | &indent | " %Panel [Obsolete] = " | %Panel | &EOL;
+   &result = &result | &indent | " %PanelGroup [Obsolete] = " | %PanelGroup | &EOL;
+   &result = &result | &indent | " %PasswordExpired = " | %PasswordExpired | &EOL;
+   &result = &result | &indent | " %PerfTime = " | %PerfTime | &EOL;
+   &result = &result | &indent | " %PermissionLists " | &EOL;
+   For &IX = 1 To %PermissionLists.Len;
+      &result = &result | &indent | &indent | " %PermissionLists [" | &IX | "] = " | %PermissionLists [&IX] | &EOL;
+   End-For;
+   &result = &result | &indent | " %PID = " | %PID | &EOL;
+   &result = &result | &indent | " %Portal = " | %Portal | &EOL;
+   &result = &result | &indent | " %PrimaryPermissionList = " | %PrimaryPermissionList | &EOL;
+   &result = &result | &indent | " %ProcessProfilePermissionList = " | %ProcessProfilePermissionList | &EOL;
+   &result = &result | &indent | " %PSAuthResult = " | %PSAuthResult | &EOL;
+   &result = &result | &indent | " %Roles " | &EOL;
+   For &IX = 1 To %Roles.Len;
+      &result = &result | &indent | &indent | " %Roles [" | &IX | "] = " | %Roles [&IX] | &EOL;
+   End-For;
+   &result = &result | &indent | " %RowSecurityPermissionList = " | %RowSecurityPermissionList | &EOL;
+   &result = &result | &indent | " %RunningInPortal = " | %RunningInPortal | &EOL;
+   &result = &result | &indent | " %ServerTimeZone = " | %ServerTimeZone | &EOL;
+   &result = &result | &indent | " %Session = " | %Session | &EOL;
+   &result = &result | &indent | " %SMTPBlackberryReplyTo = " | %SMTPBlackberryReplyTo | &EOL;
+   &result = &result | &indent | " %SMTPGuaranteed = " | %SMTPGuaranteed | &EOL;
+   &result = &result | &indent | " %SMTPSender = " | %SMTPSender | &EOL;
+   &result = &result | &indent | " %Time = " | %Time | &EOL;
+   &result = &result | &indent | " %ToolsRelease = " | %ToolsRelease | &EOL;
+   &result = &result | &indent | " %UserDescription = " | %UserDescription | &EOL;
+   &result = &result | &indent | " %UserId  = " | %UserId | &EOL;
+   &result = &result | &indent | " %WLInstanceID = " | %WLInstanceId | &EOL;
+   &result = &result | &indent | " %WLName = " | %WLName | &EOL;
+   
+   
+   Return &result;
+   
+End-Function;
+
+
+PSHTTPDUMP.PT_LPROPVALUE = report_HTTP_Request_Environment();
