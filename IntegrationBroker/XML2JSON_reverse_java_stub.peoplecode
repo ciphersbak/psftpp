@@ -2,7 +2,7 @@ import PT_INTEGRATION:CIRESTDefinition;
 
 Local PT_INTEGRATION:CIRESTDefinition &oConvert_ = create PT_INTEGRATION:CIRESTDefinition();
 Local string &sJSON_, &sXML_;
-Local XmlDoc &xmlDoc_;
+Local XmlDoc &xmlDoc_, &retXmlDoc_;
 
 &sXML_ = GetHTMLText(HTML.X_PP_HTML_X);
 &xmlDoc_ = CreateXmlDoc(&sXML_);
@@ -12,3 +12,7 @@ WinMessage(&sJSON_, 64);
 
 REM Structure of the XML. It is saved as an HTML object;
 REM Copy XML from here - https://docs.microsoft.com/en-us/previous-versions/windows/desktop/ms762271(v%3Dvs.85);
+
+REM X_PP_JSON_X - create an HTML object and paste the JSON from above into this HTML so that it can be compared with the original XML;
+&retXmlDoc_ = &oConvert_.convertJSONtoXML(GetHTMLText(HTML.X_PP_JSON_X));
+WinMessage(&retXmlDoc_.GenFormattedXmlString(), 64);
