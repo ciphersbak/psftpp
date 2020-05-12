@@ -1,0 +1,35 @@
+rem check PT_INTEGRATION:CIRESTDefinition;
+
+method convertXMLtoJSON
+   /+ &theXmlDoc as XmlDoc +/
+   /+ Returns String +/
+   
+   Local JavaObject &jsonObject = CreateJavaObject("org.json.JSONObject");
+   Local JavaObject &xmlObject = CreateJavaObject("org.json.XML");
+   
+   Local string &xml_data = &theXmlDoc.GenXmlString();
+   &jsonObject = &xmlObject.toJSONObject(&xml_data);
+   
+   Return &jsonObject.toString();
+end-method;
+
+method convertJSONtoXML
+   /+ &theJSON as String +/
+   /+ Returns XmlDoc +/
+   Local JavaObject &jsonStr = CreateJavaObject("java.lang.String", &theJSON);
+   Local JavaObject &constructorArgTypes = CreateJavaObject("java.lang.Class[]", &jsonStr.getClass());
+   
+   Local JavaObject &jsonClass = CreateJavaObject("org.json.JSONObject").getClass();
+   Local JavaObject &constructor = &jsonClass.getConstructor(&constructorArgTypes);
+   Local JavaObject &parserObject = &constructor.newInstance(CreateJavaObject("java.lang.Object[]", &jsonStr));
+   Local JavaObject &roleJson = &jsonClass.cast(&parserObject);
+   
+   Local JavaObject &xmlObject = CreateJavaObject("org.json.XML");
+   
+   Local string &XMLData = "<?xml version='1.0'?>";
+   &XMLData = &XMLData | &xmlObject.toString(&roleJson);
+   
+   Local XmlDoc &xmlDoc = CreateXmlDoc(&XMLData);
+   Return &xmlDoc;
+   
+end-method;
