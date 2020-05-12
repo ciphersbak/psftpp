@@ -1,0 +1,14 @@
+import PT_INTEGRATION:CIRESTDefinition;
+
+Local PT_INTEGRATION:CIRESTDefinition &oConvert_ = create PT_INTEGRATION:CIRESTDefinition();
+Local string &sJSON_, &sXML_;
+Local XmlDoc &xmlDoc_;
+
+&sXML_ = GetHTMLText(HTML.X_PP_HTML_X);
+&xmlDoc_ = CreateXmlDoc(&sXML_);
+&sJSON_ = &oConvert_.convertXMLtoJSON(&xmlDoc_);
+
+WinMessage(&sJSON_, 64);
+
+REM Structure of the XML. It is saved as an HTML object;
+REM Copy XML from here - https://docs.microsoft.com/en-us/previous-versions/windows/desktop/ms762271(v%3Dvs.85);
