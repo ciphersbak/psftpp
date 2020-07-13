@@ -1,0 +1,432 @@
+--Manage CREF
+/** This class allows the developer to create a CREF (PORTAL_REFTYPE = 'C') on the fly.
+ ** This functionality is currently restricted and is only used by HCM File Integration Utility
+ ** This class requires the following inputs:
+   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   1-Dimensional - Primary Array
+   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   1. Portal Name,
+   2. Existing Portal Object Name,
+   3. New Portal Object Name,
+   4. Menu Name,
+   5. Component Name,
+   6. Market,
+   7. Label for New CREF,
+   8. Folder under which the new CREF will be created
+   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   2-Dimensional - Parameter Array
+   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   1. Parameters as inputs ([1][1] = [Parameter Name] [Parameter Value], [2][2] = [Parameter Name] [Parameter Value], etc.,)
+ ** The Class will create a new content reference definition within a pre-defined folder for a unique combination of
+ ** New Portal Object Name and Parameter(s). 
+ ** Content Reference properties are copied over from the Existing Portal Object Name.
+ ** In case you wish to override these, make changes to the private CopyPropCREF method in this class.
+ ** To access the Absolute URL for the new CREF, declare the following variable in your code
+ ** Component string &CREFURLStr_;
+ **/
+class ManageCREF
+   method ManageCREF();
+   method ValidateCREFArray(&CREFPrimArray_ As array of string, &CREFParamArray_ As array of array of string) Returns boolean;
+   method CREFExist(&sCrefName As string) Returns boolean;
+   
+   property integer SequenceNumber_;
+   property string FolderName_;
+   property string CREFlabel_;
+   property string NodeName_;
+   property string AbsURL_;
+   property string OwnerID_;
+   property string UsageType_;
+   property string TemplateType_;
+   property string URLType_;
+   property string CREFLongDesc_;
+   property string Product_;
+   property string StorageType_;
+   property date ValidFrom_;
+   property date ValidTo_;
+   REM AttributeValue Class Properties;
+   property string AttribLabel_;
+   property string AttribValue_;
+   property string AttribTranslatable_;
+   
+private
+   instance string &PortalName_, &CurrentCREFName_, &NewCREFName_, &MenuName_, &ComponentName_, &Market_, &newCREFLabel_, &newCREFFolder_;
+   instance string &ParamName1_, &ParamName2_, &ParamName3_, &FolderPath_;
+   instance string &sMethodName_, &selectedFolderName_, &sCREFURL_, &PgltQSParams_;
+   instance string &nCreateCREFStr_, &ArrVarName_, &sQueryString_, &errmsg_;
+   instance boolean &ValCREFBool_, &nBoolFlag_;
+   instance ApiObject &Portal_, &TestCRef_, &CurrentCRef_, &Attribs_, &CRefColl_, &Folder_, &CRef_;
+   instance ApiObject &PermColl, &Perm, &PrntFldr, &PrntFldrPermColl, &RolePermColl, &PrntFldrPerm;
+   instance ApiObject &CurrentCRef;
+   method CopyPropCREF(&nCurrentCREFName_ As string, &nNewCREFName_ As string, &nCompName_ As string, &nCRef_ As ApiObject, &nAttribs_ As ApiObject, &sNewCREFLabel_ As string, &sNewCREFFolder_ As string);
+   method CreateCREFArray(&nPortalName_ As string, &nCurrentCREFName_ As string, &nNewCREFName_ As string, &nMenuName_ As string, &nCompName_ As string, &nMarket_ As string, &nnewCREFLabel_ As string, &nnewCREFFolder_ As string, &nCREFParamArray_ As array of array of string) Returns string;
+   method ObjectSerialization();
+   
+end-class;
+
+Declare Function PortalOpen PeopleCode FUNCLIB_PORTAL.PORTAL_GEN_FUNC FieldFormula;
+Declare Function GetFolderPath PeopleCode FUNCLIB_PORTAL.CREATE_HREF FieldFormula;
+Declare Function PortalAPIError PeopleCode FUNCLIB_PORTAL.CREATE_HREF FieldFormula;
+Declare Function IsValid PeopleCode FUNCLIB_PORTAL.PORTAL_GEN_FUNC FieldFormula;
+Declare Function IsObjectNameClean PeopleCode FUNCLIB_PORTAL.PORTAL_NAME_FUNC FieldFormula;
+Declare Function getExceptionText PeopleCode FUNCLIB_PTPP.FUNCLIB FieldFormula;
+Declare Function DeletePortalObj PeopleCode FUNCLIB_PTPP.PTPP_CREF_OBJ FieldFormula;
+rem Declare Function GetQueryString PeopleCode PORTAL_CREF_ADM.PORTAL_OBJNAME SavePreChange;
+
+rem Component array of string &CREFPrimArray_;
+Component string &CREFURLStr_;
+
+/**
+ * Constructor.
+ * 
+ * @param 			none.
+ * @return			none.
+ */
+
+method ManageCREF
+   
+   try
+      &sMethodName_ = "ManageCREF";
+      REM Check to see if the Portal IsOpen;
+      &Portal_ = PortalOpen();
+   catch Exception &ex
+      &ex.Output();
+      Error (MsgGetText(18130, 15001, "Unhandled exception occurred in %1.", &sMethodName_));
+   end-try;
+   
+end-method;
+
+method ObjectSerialization
+   
+   try
+      &sMethodName_ = "ManageCREF:ObjectSerialization";
+      REM Set all API Objects to Null to avoid triggering serialization errors;
+      &Portal_ = Null;
+      &Folder_ = Null;
+      &CRefColl_ = Null;
+      &CRef_ = Null;
+      &TestCRef_ = Null;
+      &CurrentCRef_ = Null;
+      &Attribs_ = Null;
+      
+      &PermColl = Null;
+      &RolePermColl = Null;
+      &Perm = Null;
+      &PrntFldr = Null;
+      &PrntFldrPermColl = Null;
+      &PrntFldrPerm = Null;
+      
+      &CurrentCRef = Null;
+      
+   catch Exception &ex
+      &ex.Output();
+      Error (MsgGetText(18130, 15001, "Unhandled exception occurred in %1.", &sMethodName_));
+   end-try;
+end-method;
+
+method ValidateCREFArray
+   /+ &CREFPrimArray_ as Array of String, +/
+   /+ &CREFParamArray_ as Array2 of String +/
+   /+ Returns Boolean +/
+   
+   try
+      &sMethodName_ = "ManageCREF:ValidateCREFArray";
+      &ValCREFBool_ = False;
+      &nBoolFlag_ = False;
+      Local number &len_ = &CREFPrimArray_.Len;
+      Local number &ArrIndex_;
+      REM read the array;
+      If (&len_ > 0) Then
+         &ArrIndex_ = 0;
+         While &CREFPrimArray_.Next(&ArrIndex_);
+            &ArrVarName_ = &CREFPrimArray_ [&ArrIndex_];
+         End-While;
+         REM Check the length of the array to make sure that it contains the required variables to create CREF;
+         Evaluate &len_
+            /** This array needs to have the following defined
+             @1 = Portal
+             @2 = Current CREF
+             @3 = New CREF
+             @4 = Menu
+             @5 = Component
+             @6 = Market
+             @7 = Label for the new CREF
+             @8 = Folder under which the new CREF will be created
+             **/
+         When 8
+            &nBoolFlag_ = True;
+         When-Other;
+            &nBoolFlag_ = False;
+            Break;
+         End-Evaluate;
+         If All(&CREFPrimArray_ [1]) Then
+            &PortalName_ = &CREFPrimArray_ [1];
+         Else
+            &PortalName_ = %Portal;
+         End-If;
+         If All(&CREFPrimArray_ [2]) Then
+            &CurrentCREFName_ = &CREFPrimArray_ [2];
+         End-If;
+         If All(&CREFPrimArray_ [3]) Then
+            &NewCREFName_ = &CREFPrimArray_ [3];
+         End-If;
+         If All(&CREFPrimArray_ [4]) Then
+            &MenuName_ = &CREFPrimArray_ [4];
+         End-If;
+         If All(&CREFPrimArray_ [5]) Then
+            &ComponentName_ = &CREFPrimArray_ [5];
+         End-If;
+         If All(&CREFPrimArray_ [6]) Then
+            &Market_ = &CREFPrimArray_ [6];
+         End-If;
+         If All(&CREFPrimArray_ [7]) Then
+            &newCREFLabel_ = &CREFPrimArray_ [7];
+         End-If;
+         If All(&CREFPrimArray_ [8]) Then
+            &newCREFFolder_ = &CREFPrimArray_ [8];
+         End-If;
+      End-If;
+      
+      If &CREFPrimArray_.Len <> 0 Then
+         REM Check if the new CREF value passed already exists;
+         &TestCRef_ = &Portal_.FindCRefByName(&NewCREFName_);
+         If &TestCRef_ <> Null Then
+            &Portal_.Close();
+            &ValCREFBool_ = False;
+            MessageBox(0, "", 95, 5031, "FindCRefByName failed for: %1", &TestCRef_);
+            PortalAPIError(&Portal_);
+            Error MsgGet(95, 5001, "The name for this object is not unique, please enter a unique name.");
+         Else /** Call the CreateCREF method once you have verified both the arrays **/
+            If (&nBoolFlag_ = True) Then
+               &nCreateCREFStr_ = %This.CreateCREFArray(&PortalName_, &CurrentCREFName_, &NewCREFName_, &MenuName_, &ComponentName_, &Market_, &newCREFLabel_, &newCREFFolder_, &CREFParamArray_);
+               If (Len(&nCreateCREFStr_) = 0) Then
+                  REM Return String is Blank;
+                  &ValCREFBool_ = False;
+               Else
+                  REM Set bool to True;
+                  &ValCREFBool_ = True;
+                  %This.ObjectSerialization();
+                  rem %This.SetTrace(&nTraceFileName_, False);
+               End-If;
+            End-If; /** If &nBoolFlag_ **/
+         End-If; /** If TestCRef **/
+      Else
+         REM Array length is Zero, set the return boolean as false;
+         &ValCREFBool_ = False;
+      End-If; /** If Array Length **/
+      
+      Return &ValCREFBool_;
+      
+   catch Exception &ex
+      &ex.Output();
+      &errmsg_ = getExceptionText(&ex);
+      Error (MsgGetText(18130, 15001, "Unhandled exception occurred in %1.", &sMethodName_));
+   end-try;
+   
+end-method;
+
+method CopyPropCREF
+   /+ &nCurrentCREFName_ as String, +/
+   /+ &nNewCREFName_ as String, +/
+   /+ &nCompName_ as String, +/
+   /+ &nCRef_ as ApiObject, +/
+   /+ &nAttribs_ as ApiObject, +/
+   /+ &sNewCREFLabel_ as String, +/
+   /+ &sNewCREFFolder_ as String +/
+   
+   REM This method will copy properties from current CREF/Component to the new CREF;
+   REM Properties have been defined in case they need to manipulated before being assigned to the new CREF;
+   try
+      &sMethodName_ = "ManageCREF:CopyPropCREF";
+      REM Use current CREF Name to retrieve properties;
+      &CurrentCRef_ = &Portal_.FindCRefByName(&nCurrentCREFName_);
+      If &CurrentCRef_ <> Null Then
+         &Attribs_ = &CurrentCRef_.Attributes;
+         %This.FolderName_ = &CurrentCRef_.ParentName;
+         REM %This.SequenceNumber_ = 999;
+         %This.SequenceNumber_ = &CurrentCRef_.SequenceNumber;
+         %This.NodeName_ = &CurrentCRef_.ContentProvider;
+         %This.CREFlabel_ = &CurrentCRef_.label;
+         %This.AbsURL_ = &CurrentCRef_.AbsoluteContentURL;
+         %This.OwnerID_ = &CurrentCRef_.OwnerId;
+         %This.UsageType_ = &CurrentCRef_.UsageType;
+         %This.TemplateType_ = &CurrentCRef_.TemplateType;
+         %This.URLType_ = &CurrentCRef_.URLType;
+         %This.CREFLongDesc_ = &CurrentCRef_.Description;
+         %This.Product_ = &CurrentCRef_.Product;
+         %This.StorageType_ = &CurrentCRef_.StorageType;
+         %This.ValidFrom_ = &CurrentCRef_.ValidFrom;
+         %This.ValidTo_ = &CurrentCRef_.ValidTo;
+         
+         REM AttributeValue Class Properties;
+         rem &Attribs_.Name R/O;
+         %This.AttribLabel_ = &Attribs_.Label;
+         %This.AttribTranslatable_ = &Attribs_.Translatable;
+         %This.AttribValue_ = &Attribs_.Value;
+         
+         REM Properties which need to be changed for the new CREF;
+         %This.CREFlabel_ = &sNewCREFLabel_;
+         If (Len(%This.CREFlabel_) > 30) Then
+            %This.CREFlabel_ = Substring(%This.CREFlabel_, 1, 30);
+         End-If;
+         %This.CREFLongDesc_ = &CurrentCRef_.Description;
+         If (Len(%This.CREFLongDesc_) > 254) Then
+            %This.CREFLongDesc_ = Substring(%This.CREFLongDesc_, 1, 254);
+         End-If;
+         REM Important to set the ParentName property of the new CREF to the Folder being passed;
+         %This.FolderName_ = &sNewCREFFolder_;
+         
+         REM Retrieve Attributes;
+         &nAttribs_ = &nCRef_.Attributes;
+         REM Assign R/W properties to new CREF;
+         &nCRef_.ParentName = %This.FolderName_;
+         &nCRef_.SequenceNumber = %This.SequenceNumber_;
+         &nCRef_.ContentProvider = %This.NodeName_;
+         &nCRef_.label = %This.CREFlabel_;
+         &nCRef_.OwnerId = %This.OwnerID_;
+         &nCRef_.UsageType = %This.UsageType_;
+         &nCRef_.TemplateType = %This.TemplateType_;
+         &nCRef_.URLType = %This.URLType_;
+         &nCRef_.Description = %This.CREFLongDesc_;
+         &nCRef_.Product = %This.Product_;
+         &nCRef_.StorageType = %This.StorageType_;
+         &nCRef_.ValidFrom = %This.ValidFrom_;
+         &nCRef_.ValidTo = %This.ValidTo_;
+         REM AttributeValue Class Properties;
+         &nAttribs_.Label = %This.AttribLabel_;
+         &nAttribs_.Translatable = %This.AttribTranslatable_;
+         &nAttribs_.Value = %This.AttribValue_;
+      Else
+         MessageBox(0, "", 18137, 9003, "Could not find the current CREF", &sMethodName_);
+      End-If;
+      
+   catch Exception &ex
+      &ex.Output();
+      Error (MsgGetText(18137, 9002, "Unhandled exception occurred", &sMethodName_));
+   end-try;
+   
+end-method;
+
+method CreateCREFArray
+   /+ &nPortalName_ as String, +/
+   /+ &nCurrentCREFName_ as String, +/
+   /+ &nNewCREFName_ as String, +/
+   /+ &nMenuName_ as String, +/
+   /+ &nCompName_ as String, +/
+   /+ &nMarket_ as String, +/
+   /+ &nnewCREFLabel_ as String, +/
+   /+ &nnewCREFFolder_ as String, +/
+   /+ &nCREFParamArray_ as Array2 of String +/
+   /+ Returns String +/
+   
+   try
+      &sMethodName_ = "ManageCREF:CreateCREFArray";
+      Local string &nParamName1_, &nParamValue1_, &nParamName2_, &nParamValue2_, &CreateCREFString_;
+      Local number &ParamCount_, &J;
+      If None(&nCREFParamArray_) Then
+         Error MsgGet(18137, 9001, "Message not found.");;
+      End-If;
+      For &ParamCount_ = 1 To &nCREFParamArray_.Len
+         &sQueryString_ = &sQueryString_ | Char(38) | &nCREFParamArray_ [&ParamCount_][1] | Char(61) | &nCREFParamArray_ [&ParamCount_][2];
+         rem &sQueryString_ = &sQueryString_ | &nCREFParamArray_.Join(Char(38), "", "");
+      End-For;
+      &sQueryString_ = Substring(&sQueryString_, 2, Len(&sQueryString_));
+      rem MessageBox(0, "", 95, 9073, "Create Content Reference(s)");
+      
+      If All(&nPortalName_, &nCurrentCREFName_, &nNewCREFName_, &nMenuName_, &nCompName_, &nMarket_, &nnewCREFLabel_, &nnewCREFFolder_) Then
+         &Folder_ = &Portal_.FindFolderByName(&nnewCREFFolder_);
+         &FolderPath_ = GetFolderPath(&Portal_);
+         If (&Folder_ <> Null) Then
+            REM Don't allow invalid characters for an object name;
+            If Not IsObjectNameClean(&nNewCREFName_) Then
+               Error MsgGet(95, 5013, "Message not found.");
+            Else
+               &CRefColl_ = &Folder_.ContentRefs;
+               &CRef_ = &CRefColl_.InsertItem(&nNewCREFName_, &nnewCREFLabel_, "", "URL");
+               If &CRef_ <> Null Then
+                  rem &Attribs_ = &CRef_.Attributes;
+                  %This.CopyPropCREF(&nCurrentCREFName_, &nNewCREFName_, &nCompName_, &CRef_, &Attribs_, &nnewCREFLabel_, &nnewCREFFolder_);
+                  rem &CRef_.ParentName = &nnewCREFFolder_;
+                  REM reference to the portal service (psp) servlet;
+                  &sCREFURL_ = GenerateComponentPortalURL(%Portal, %Node, @("MenuName." | &nMenuName_), &nMarket_, @("Component." | &nCompName_), "", "U") | &sQueryString_;
+                  &CRef_.URL = "c/" | &nMenuName_ | "." | &nCompName_ | "." | &nMarket_ | "?" | &sQueryString_;
+                  &PgltQSParams_ = "c/" | &nMenuName_ | "." | &nCompName_ | "." | &nMarket_ | "?" | &sQueryString_;
+                  Local string &strURL_ = &CRef_.QualifiedURL;
+                  Local integer &strLen_ = Len(&strURL_);
+                  If Substring(&strURL_, &strLen_, 1) = "&" Then
+                     MessageBox(%MsgStyle_OK, "", 95, 9099, "Ampersand character at the end of your Portal URL");
+                  End-If;
+                  &CRef_.EditPageQueryString = &PgltQSParams_;
+                  REM Check for FluidMode;
+                  If %This.URLType_ = "UPGE" Then
+                     If IsFluidMode(&nCompName_, &nMarket_) = True Then
+                        &CRef_.IsFluid = 1;
+                     Else
+                        &CRef_.IsFluid = 0;
+                     End-If;
+                     If IsSmallFFOptimized(&nCompName_, &nMarket_) = True Then
+                        &CRef_.IsSmallFFOptimized = 1;
+                     Else
+                        &CRef_.IsSmallFFOptimized = 0;
+                     End-If;
+                  Else
+                     rem &CRef_.IsFluid = PORTAL_CREF_ADM.FLUIDMODE;
+                     rem &CRef_.IsSmallFFOptimized = PORTAL_CREF_ADM.SMALLFFOPT;
+                  End-If; /** URLType **/
+                  
+                  If Not &CRef_.Save() Then
+                     MessageBox(0, "", 95, 5030, "CRef save failed. Name = %1, URL = %2", &CRef_.Name, &CRef_.URL);
+                     PortalAPIError(&Portal_);
+                  Else
+                     rem MessageBox(0, "", 95, 9164, "New Content Reference Created - %1 , %2", &CRef_.Name, &CRef_.URL);
+                     &CreateCREFString_ = &CRef_.AbsolutePortalURL;
+                     &CREFURLStr_ = &CRef_.AbsolutePortalURL;
+                     CommitWork();
+                     If IsValid(&CRef_) Then
+                        REM CREF is valid;
+                     End-If;
+                     REM Check CREF Security;
+                     If Not &CRef_.Authorized Then
+                        Error MsgGet(95, 5054, "Error accessing this object.  You do not have permission for this object.");
+                     End-If;
+                  End-If; /** CREF Save **/
+               Else
+                  PortalAPIError(&Portal_);
+               End-If; /** CREF Error **/
+            End-If; /** ObjectNameClean **/
+         Else
+            MessageBox(0, "", 95, 129, "FindFolderByName failed for: %1", &Folder_);
+         End-If; /** Folder <NULL> **/
+      Else
+         MessageBox(0, "", 95, 10025, "Unable to add '%1' to '%2'", &nNewCREFName_, &nPortalName_);
+      End-If; /** All Array Values **/
+      
+      Return &CreateCREFString_;
+   catch Exception &ex
+      &ex.Output();
+      Error (MsgGetText(18137, 9002, "Unhandled exception occurred", &sMethodName_));
+   end-try;
+   
+end-method;
+
+method CREFExist
+   /+ &sCrefName as String +/
+   /+ Returns Boolean +/
+   
+   Local boolean &bCREFExist;
+   
+   try
+      &sMethodName_ = "ManageCREF:CREFExist";
+      &CurrentCRef = &Portal_.FindCRefByName(&sCrefName);
+      If &CurrentCRef <> Null Then
+         &bCREFExist = True;
+      Else
+         &bCREFExist = False;
+      End-If;
+      Return &bCREFExist;
+      
+   catch Exception &ex
+      &ex.Output();
+      Error (MsgGetText(18137, 9002, "Unhandled exception occurred", &sMethodName_));
+      Return False;
+   end-try;
+end-method;
