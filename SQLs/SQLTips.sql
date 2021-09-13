@@ -15,3 +15,8 @@ Insert into PSXLATITEM (FIELDNAME,FIELDVALUE,EFFDT,EFF_STATUS,XLATLONGNAME,XLATS
 
 --https://connor-mcdonald.com/2019/05/17/hacking-together-faster-inserts/
 --multi-table insert
+
+select s.name, st.value
+from v$statname s, v$mystat st
+where st.statistic# = s.statistic#
+and s.name like '%- undo records applied';
