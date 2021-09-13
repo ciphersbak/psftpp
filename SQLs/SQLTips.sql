@@ -13,3 +13,5 @@ Insert into PSXLATITEM (FIELDNAME,FIELDVALUE,EFFDT,EFF_STATUS,XLATLONGNAME,XLATS
 
 8 rows selected. 
 
+--https://connor-mcdonald.com/2019/05/17/hacking-together-faster-inserts/
+--multi-table insert
