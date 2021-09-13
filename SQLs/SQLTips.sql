@@ -20,3 +20,6 @@ select s.name, st.value
 from v$statname s, v$mystat st
 where st.statistic# = s.statistic#
 and s.name like '%- undo records applied';
+
+select count(*), count(distinct(dbms_rowid.rowid_block_number(rowid))) blks
+from PSXLATITEM;
