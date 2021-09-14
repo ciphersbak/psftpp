@@ -23,3 +23,32 @@ and s.name like '%- undo records applied';
 
 select count(*), count(distinct(dbms_rowid.rowid_block_number(rowid))) blks
 from PSXLATITEM;
+
+SELECT count(*) from dba_recyclebin;
+
+desc user_tab_partitions;
+select * from user_tab_partitions;
+
+with
+  function par_high_value(p_tname varchar2, p_parname varchar2)
+  return varchar2 is
+    l_high_value varchar2(4000);
+  begin
+    select high_value
+    into l_high_value
+    from user_tab_partitions
+    where table_name = p_tname
+    and partition_name = p_parname;
+    
+    return l_high_value;
+  end;
+select 
+  table_name,
+  partition_name,
+  par_high_value(table_name, partition_name) high_value
+from user_tab_partitions t
+where table_name in ('T', 'T1');
+
+select table_name, num_rows, blocks, avg_row_len
+from all_tables
+where table_name LIKE ('PS%');
