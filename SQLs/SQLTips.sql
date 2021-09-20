@@ -52,3 +52,17 @@ where table_name in ('T', 'T1');
 select table_name, num_rows, blocks, avg_row_len
 from all_tables
 where table_name LIKE ('PS%');
+
+
+--Hints
+select /*+ leading(e) use_hash(d) */ *
+from scott.emp e,
+     scott.dept d
+where e.deptno = d.deptno
+and   d.dname = 'SALES';
+
+--To handle query transformations (by the DB), ordered hints can be ignored.
+--Hence, when you have an inline view and would like the optimiser to use the ordered hint, use as follows
+
+select /*+ no_merge(inline view alias) ordered */ * from dual;
+
