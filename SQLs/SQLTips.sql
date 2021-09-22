@@ -66,3 +66,7 @@ and   d.dname = 'SALES';
 
 select /*+ no_merge(inline view alias) ordered */ * from dual;
 
+--Lag/Lead
+--https://www.youtube.com/watch?v=wezjYiBvKwc
+lag(status) over (partition by order_id order by status_date) lag_status
+lead(status) over (partition by order_id order by status_date) lead_status
