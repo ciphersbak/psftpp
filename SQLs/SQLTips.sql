@@ -78,3 +78,8 @@ from v$sqlstats
 where buffer_gets > 100000
 order by 2
 /
+
+select xmltype(other_xml) from v$sql_plan
+where other_xml is not null
+and sql_id = '3qyuxjtjy92m5'
+and child_number > 0
