@@ -68,18 +68,19 @@ select /*+ no_merge(inline view alias) ordered */ * from dual;
 
 --Lag/Lead
 --https://www.youtube.com/watch?v=wezjYiBvKwc
-lag(status) over (partition by order_id order by status_date) lag_status
-lead(status) over (partition by order_id order by status_date) lead_status
+--lag(status) over (partition by order_id order by status_date) lag_status
+--lead(status) over (partition by order_id order by status_date) lead_status
 
 --Buffer Gets
 --https://www.youtube.com/watch?v=z-4K9ncd0IU&list=PLJMaoEWvHwFIW2CUsD_qIi7v-etjhZJPo&index=5
 select sql_text, buffer_gets, executions
 from v$sqlstats
 where buffer_gets > 100000
-order by 2
+order by 2;
 /
 
 select xmltype(other_xml) from v$sql_plan
 where other_xml is not null
 and sql_id = '3qyuxjtjy92m5'
-and child_number > 0
+and child_number > 0;
+/
