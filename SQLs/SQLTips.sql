@@ -84,3 +84,7 @@ where other_xml is not null
 and sql_id = '3qyuxjtjy92m5'
 and child_number > 0;
 /
+
+--rowid
+select dump(rowid) from PS_CASH_FLOW_TR WHERE TR_SOURCE_CD IN ('D', 'X') AND SOURCE_BUS_UNIT = 'UNDP1' AND TR_SOURCE_ID IN ('DL00105210', 'BT00085232') AND AMOUNT < 0;
+/
