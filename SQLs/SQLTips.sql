@@ -88,3 +88,11 @@ and child_number > 0;
 --rowid
 select dump(rowid) from PS_CASH_FLOW_TR WHERE TR_SOURCE_CD IN ('D', 'X') AND SOURCE_BUS_UNIT = 'UNDP1' AND TR_SOURCE_ID IN ('DL00105210', 'BT00085232') AND AMOUNT < 0;
 /
+
+--Break down a HEX string
+--count the total characters and then divide by 2. That drives the last connect by level clause
+with str as
+(select '787903120E12311B2E0200' x from dual)
+select substr(x, level*2-1,2) hexstr
+from str
+connect by level <=11;
