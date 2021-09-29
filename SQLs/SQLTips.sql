@@ -96,3 +96,16 @@ with str as
 select substr(x, level*2-1,2) hexstr
 from str
 connect by level <=11;
+
+--convert to decimal
+with str as
+(select '787903120E12311B2E0200' x from dual)
+select to_number(substr(x, level*2-1,2), 'XX') DEC
+from str
+connect by level <= 7;
+
+--get the nanoseconds
+with str as
+(select '787903120E12311B2E0200' x from dual)
+select to_number(substr(x,15,8), 'XXXXXXXX') DEC
+from str;
