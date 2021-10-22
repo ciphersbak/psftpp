@@ -1,3 +1,6 @@
+info+ PSPRCSRQST;
+/
+
 select /*insert*/ * from PSXLATITEM WHERE FIELDNAME = 'PMT_STATUS';
 
 REM INSERTING into PSXLATITEM
