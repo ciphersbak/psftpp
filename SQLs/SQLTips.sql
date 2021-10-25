@@ -1,3 +1,8 @@
+--Get the host name
+select sys_context('USERENV', 'SERVER_HOST')
+from dual;
+
+--info command
 info+ PSPRCSRQST;
 /
 
