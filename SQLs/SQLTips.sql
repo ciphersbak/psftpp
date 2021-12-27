@@ -117,3 +117,7 @@ with str as
 (select '787903120E12311B2E0200' x from dual)
 select to_number(substr(x,15,8), 'XXXXXXXX') DEC
 from str;
+
+set autotrace traceonly stat
+select * from ps_BNK_CURR_RVL_VW where SETID = 'SHARE' AND BANK_CD = '00328' ORDER BY EFFDT DESC;
+/
