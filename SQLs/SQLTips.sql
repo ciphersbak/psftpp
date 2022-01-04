@@ -121,3 +121,19 @@ from str;
 set autotrace traceonly stat
 select * from ps_BNK_CURR_RVL_VW where SETID = 'SHARE' AND BANK_CD = '00328' ORDER BY EFFDT DESC;
 /
+
+--https://carlos-sierra.net/2013/09/12/function-to-compute-sql_id-out-of-sql_text/
+--https://www.perumal.org/computing-oracle-sql_id-and-hash_value/
+--https://www.youtube.com/watch?v=cJsNlcqh6_4
+
+SELECT /* RAM_VSQL */
+      'SQL_TEXT                     : ' || v.sql_text                                               || CHR(10) ||
+      'SQL_ID                       : ' || v.sql_id                                                 || CHR(10) ||
+      'HASH_VALUE                   : ' || v.hash_value                                             || CHR(10) ||
+      'HASH_VALUE_HEX               : ' || TO_CHAR (v.hash_value, 'FMXXXXXXXX')                     || CHR(10) ||
+      'EXACT_MATCHING_SIGNATURE     : ' || v.exact_matching_signature                               || CHR(10) ||
+      'EXACT_MATCHING_SIGNATURE_HEX : ' || TO_CHAR (exact_matching_signature, 'FMXXXXXXXXXXXXXXXX') || CHR(10) ||
+      'FORCE_MATCHING_SIGNATURE     : ' || v.force_matching_signature                               || CHR(10) ||
+      'FORCE_MATCHING_SIGNATURE_HEX : ' || TO_CHAR (force_matching_signature, 'FMXXXXXXXXXXXXXXXX') || CHR(10) AS stmt_information
+  FROM v$sql v
+ WHERE v.sql_text LIKE '%PS_PYMNT_VCHR_XREF where business_unit = ''SOM10'' and voucher_id = ''00159716''' AND v.sql_text NOT LIKE '%RAM_VSQL%';
